@@ -8,9 +8,6 @@ interface ProjectContext {
   currency?: string;
 }
 
-// --- CONFIGURAÇÃO DA CHAVE ---
-const API_KEY_INTERNAL = "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";
-
 export const analyzeProject = async (
   history: { role: 'user' | 'assistant'; content: string }[],
   context: ProjectContext,
@@ -18,9 +15,8 @@ export const analyzeProject = async (
 ): Promise<string> => {
   
   const { urbanContext } = useSettingsStore.getState();
-  const finalToken = API_KEY_INTERNAL || useSettingsStore.getState().apiKey;
 
-  // 2. Descobrir Coordenadas
+  // 1. Descobrir Coordenadas
   let locationContext = "Coordinates: Unknown";
   if (context.land.geometry?.coordinates) {
       const coord = context.land.geometry.coordinates[0][0]; 
@@ -29,7 +25,7 @@ export const analyzeProject = async (
 
   const curr = context.currency || 'USD';
 
-  // 3. Dados do Projeto
+  // 2. Dados do Projeto
   const dataSummary = `
     === PROJECT BLUEPRINT (${language}) ===
     LOCATION: ${locationContext}
@@ -44,7 +40,7 @@ export const analyzeProject = async (
     ${context.blocks.map((b, i) => `  ${i+1}. [${b.usage}] ${b.name}: ${b.height}m.`).join('\n')}
   `;
 
-  // 4. Prompt Refinado (Sem Markdown, Foco no Micro)
+  // 3. Prompt Refinado
   const systemPrompt = `
     You are Cytyos AI, an expert Urban Planner and Real Estate Developer.
     
@@ -71,25 +67,32 @@ export const analyzeProject = async (
   ];
 
   try {
-    if (!finalToken) return "⚠️ Configuration Error: No API Key found in system.";
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // --- MUDANÇA CRÍTICA AQUI ---
+    // Chamamos a nossa API interna (/api/chat) em vez da OpenAI diretamente.
+    // Isso resolve o erro de CORS e protege a sua chave.
+    
+    const response = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${finalToken}` },
+      headers: { 
+        "Content-Type": "application/json" 
+        // Nota: Não enviamos mais a senha aqui. O servidor Vercel injeta ela automaticamente.
+      },
       body: JSON.stringify({ 
           model: "gpt-4-turbo-preview", 
           messages: messages, 
           temperature: 0.7, 
-          max_tokens: 800 // Aumentado para evitar corte, mas com instrução de ser conciso
+          max_tokens: 800 
       })
     });
 
     const data = await response.json();
+    
     if (data.error) return `⚠️ OpenAI Error: ${data.error.message}`;
     return data.choices?.[0]?.message?.content || "No insight generated.";
 
   } catch (error) {
-    return "⚠️ Connection error.";
+    console.error(error);
+    return "⚠️ Connection error. Please checking your API setup.";
   }
 };
 
