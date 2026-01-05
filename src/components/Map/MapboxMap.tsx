@@ -10,11 +10,8 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
-// Get Token
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
-
-// Miami Brickell Center
-const DEFAULT_CENTER = [-80.1918, 25.7617];
+const DEFAULT_CENTER = [-80.1918, 25.7617]; // Miami Brickell
 
 export const MapboxMap = () => {
   const { t } = useTranslation();
@@ -33,6 +30,7 @@ export const MapboxMap = () => {
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
+      // Ensure dark mode for contrast
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
       zoom: 15.5,
@@ -57,7 +55,7 @@ export const MapboxMap = () => {
       loadAllLayers(m);
     });
 
-    // --- RULER ---
+    // --- RULER TOOLTIP LOGIC ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -95,7 +93,7 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
-    // --- DRAW CREATE ---
+    // --- ON DRAW CREATE ---
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -105,11 +103,9 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
 
         const area = turf.area(feature);
-        
         updateLand({ area: Math.round(area), geometry: feature.geometry });
         
-        // CORRECTION: Force the Cyan/Indigo look immediately upon creation
-        // We use 'residential' as default which maps to Cyan in our store
+        // Create default Podium with Cyan Neon color
         addBlock({
             name: 'Podium Base',
             type: 'podium',
@@ -119,7 +115,7 @@ export const MapboxMap = () => {
             setback: 0,
             baseArea: area,
             height: 12,
-            color: '#00f3ff' // Force Cyan Neon
+            color: '#00f3ff' // Neon Cyan default
         });
 
         useMapStore.getState().setIs3D(true); 
@@ -165,10 +161,10 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- VISUAL LAYERS CONFIGURATION ---
+  // --- VISUAL LAYERS SETUP ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
-      safeAddCityLayer(m); // Add the "Ghost City"
+      safeAddCityLayer(m); // Adds the context buildings
       redrawBlocks(m, useProjectStore.getState().blocks);
   };
 
@@ -177,32 +173,32 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. MAIN BODY (Darker Indigo base to simulate gradient bottom)
+      // 1. PROJECT BODY (Main volume color)
       m.addLayer({
           id: 'project-body',
           type: 'fill-extrusion',
           source: 'project-source',
           paint: {
-              'fill-extrusion-color': ['get', 'color'], // Dynamic color
+              'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.8,
-              // Vertical gradient creates shading
+              // High opacity for the main body so it stands out
+              'fill-extrusion-opacity': 0.9,
               'fill-extrusion-vertical-gradient': true 
           }
       });
 
-      // 2. NEON RIM (The "Glow" at the top/bottom)
-      // Simulates wireframe edges at the footprint
+      // 2. PROJECT GLOW (The Neon Halo at the base)
+      // VISUAL TWEAK: Increased width and blur heavily to simulate a light glow on the ground.
       m.addLayer({
         id: 'project-glow',
         type: 'line',
         source: 'project-source',
         paint: {
-            'line-color': '#00f3ff', // Cyan Glow
-            'line-width': 3,
-            'line-blur': 2,
-            'line-opacity': 1
+            'line-color': ['get', 'color'], // Glow matches the block color
+            'line-width': 8,  // Much thicker line
+            'line-blur': 6,   // Heavy blur creates the "halo" effect
+            'line-opacity': 0.8
         }
       });
   };
@@ -211,14 +207,12 @@ export const MapboxMap = () => {
       const source = m.getSource('project-source') as mapboxgl.GeoJSONSource;
       if (!source) return;
       
-      // Calculate Base/Heights
       const podium = currentBlocks.find(b => b.type === 'podium');
       const features = currentBlocks.map(block => {
           if (!block.coordinates) return null;
           let h = block.height;
           let b = 0;
           
-          // Stack logic
           if (block.type === 'tower' && podium) { 
               b = podium.height; 
               h = podium.height + block.height; 
@@ -228,7 +222,7 @@ export const MapboxMap = () => {
               type: 'Feature',
               geometry: { type: 'Polygon', coordinates: block.coordinates },
               properties: { 
-                  // If color is undefined, default to Cyan
+                  // Ensure a default neon color if none exists
                   color: block.color || '#00f3ff', 
                   height: h, 
                   base: b 
@@ -239,9 +233,7 @@ export const MapboxMap = () => {
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. GHOST CITY (WIRE-LIKE)
-  // To simulate "vazado", we use very low opacity.
-  // It allows seeing the project THROUGH the buildings.
+  // 3. CONTEXT CITY BUILDINGS
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
@@ -255,14 +247,14 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                // Dark Gray context
-                'fill-extrusion-color': '#333333', 
+                // VISUAL TWEAK: Darker matte gray for contrast
+                'fill-extrusion-color': '#222222', 
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
                 
-                // CRUCIAL: 5% Opacity makes them "Ghost/Wireframe-like"
-                // You can see through them, solving the occlusion issue.
-                'fill-extrusion-opacity': 0.05 
+                // VISUAL TWEAK: Increased opacity from 0.05 to 0.3 (30%)
+                // They are now visible dark shapes, framing the project.
+                'fill-extrusion-opacity': 0.3
             }
         }, labelLayerId);
     } catch (e) {}
