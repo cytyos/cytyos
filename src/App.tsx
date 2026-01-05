@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './components/LandingPage';
-import { MapboxMap } from './components/map/mapboxmap'; // CORRECT IMPORT PATH
+import { MapboxMap } from './components/map/MapboxMap'; // <-- ATENÇÃO: Importação corrigida
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PaywallModal } from './components/PaywallModal';
