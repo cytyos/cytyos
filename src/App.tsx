@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
-import { MapboxMap } from './components/map/MapboxMap'; // Import Name Matches File Name
+import { MapboxMap } from './components/map/MapboxMap'; // <-- Importação alinhada
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PaywallModal } from './components/PaywallModal';
@@ -14,10 +14,10 @@ function App() {
       <PaywallGlobal />
 
       <Routes>
-        {/* Route 1: Landing Page */}
+        {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Route 2: Main Platform */}
+        {/* Rota 2: App Principal */}
         <Route path="/app" element={
           <div className="h-screen w-screen overflow-hidden bg-black relative">
             {/* Map Component */}
@@ -40,7 +40,6 @@ function App() {
   );
 }
 
-// Helper for Global Paywall Logic
 const PaywallGlobal = () => {
   const isPaywallOpen = useSettingsStore((state) => state.isPaywallOpen);
   return isPaywallOpen ? <PaywallModal /> : null;
