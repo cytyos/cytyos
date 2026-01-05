@@ -29,7 +29,7 @@ export const LandingPage = () => {
           
           <div className="flex items-center gap-4">
             
-            {/* LANGUAGE DROPDOWN (FULL LIST) */}
+            {/* LANGUAGE DROPDOWN */}
             <div className="relative">
                 <button 
                     onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
@@ -61,7 +61,7 @@ export const LandingPage = () => {
               onClick={() => setPaywallOpen(true)}
               className="text-gray-300 hover:text-white text-xs font-bold transition-colors"
             >
-              Login
+              {t('landing.login')}
             </button>
             <button 
               onClick={() => setPaywallOpen(true)}
@@ -75,31 +75,27 @@ export const LandingPage = () => {
 
       {/* --- HERO SECTION --- */}
       <section className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-        {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-8 animate-fade-in-up">
           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-          Beta Live Now
+          {t('landing.hero.badge')}
         </div>
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white max-w-5xl leading-[1.1]">
-          {/* Static Part */}
-          The Operating System for <br className="hidden md:block" />
-          Real Estate Development. <br />
+          {t('landing.hero.title_prefix')} <br className="hidden md:block" />
+          {t('landing.hero.title_main')} <br />
           
-          {/* Animated Word Effect */}
           <span className="group relative inline-block cursor-pointer">
             <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-500"></span>
             <span className="relative bg-clip-text text-transparent bg-gradient-to-b from-gray-200 to-gray-500 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:via-indigo-400 group-hover:to-purple-400 transition-all duration-500">
-              Start Analyzing.
+              {t('landing.hero.title_anim')}
             </span>
           </span>
         </h1>
         
         <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed">
-          Cytyos transforms complex zoning data into investment decisions in seconds. 
-          Stop drawing manually. Start optimizing instantly.
+          {t('landing.hero.subtitle')}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
@@ -108,13 +104,13 @@ export const LandingPage = () => {
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10"
           >
             <Play className="w-4 h-4 fill-current" />
-            Try Beta Free
+            {t('landing.hero.btn_try')}
           </button>
           <button 
             onClick={() => setPaywallOpen(true)}
             className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500"
           >
-            View Early Bird Plans
+            {t('landing.hero.btn_plans')}
           </button>
         </div>
       </section>
@@ -130,19 +126,19 @@ export const LandingPage = () => {
               {t('roadmap.title')}
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              We are building the future of territorial intelligence. Secure your position now for lifetime access to future tools.
+              {t('landing.roadmap_intro')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             
-            {/* CARD 1: BETA (Today) */}
+            {/* CARD 1: BETA */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <CheckCircle2 className="w-24 h-24 text-green-500" />
               </div>
               <div className="inline-block px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-green-500/20">
-                Available Now
+                {t('roadmap.col1.tag')}
               </div>
               <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col1.title')}</h3>
               <div className="h-1 w-12 bg-green-500 rounded-full mb-6"></div>
@@ -157,10 +153,13 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (March) */}
-            <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10">
+            {/* CARD 2: V1.0 (March) - FIXED INTERACTIVITY */}
+            <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10 group hover:scale-[1.02] hover:border-indigo-400 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)] transition-all duration-300">
+              <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg border border-indigo-400 whitespace-nowrap">
+                {t('roadmap.col2.tag')}
+              </div>
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20">
-                Coming March
+                {t('roadmap.col2.subtag')}
               </div>
               <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col2.title')}</h3>
               <div className="h-1 w-12 bg-indigo-500 rounded-full mb-6"></div>
@@ -168,7 +167,7 @@ export const LandingPage = () => {
               <ul className="space-y-4 relative z-10">
                 {[1,2,3,4].map(n => (
                   <li key={n} className="flex items-start gap-3 text-sm text-white font-medium">
-                    <div className="mt-0.5 min-w-[16px]"><Rocket className="w-4 h-4 text-indigo-400" /></div>
+                    <div className="mt-0.5 min-w-[16px]"><Rocket className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" /></div>
                     <span>{t(`roadmap.col2.f${n}`)}</span>
                   </li>
                 ))}
@@ -181,7 +180,7 @@ export const LandingPage = () => {
                 <Sparkles className="w-24 h-24 text-purple-500" />
               </div>
               <div className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-purple-500/20">
-                2026 Vision
+                {t('roadmap.col3.tag')}
               </div>
               <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col3.title')}</h3>
               <div className="h-1 w-12 bg-purple-500 rounded-full mb-6"></div>
@@ -198,7 +197,7 @@ export const LandingPage = () => {
 
           </div>
 
-          {/* --- UNIFIED CTA (The "Bridge") --- */}
+          {/* --- UNIFIED CTA (Button removed from card) --- */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
             <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
@@ -226,27 +225,27 @@ export const LandingPage = () => {
                 <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
                     <MapIcon className="w-6 h-6 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Global & Local</h3>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.global.title')}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                    Mapbox integration allows analysis anywhere in the world, with specific metric systems (Imperial/Metric) adapted instantly.
+                    {t('landing.features.global.desc')}
                 </p>
             </div>
             <div className="space-y-4">
                 <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
                     <Layers className="w-6 h-6 text-indigo-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Smart Zoning</h3>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.zoning.title')}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                    Our AI reads zoning text and automatically applies constraints like FAR, Occupancy, and Setbacks to your 3D model.
+                    {t('landing.features.zoning.desc')}
                 </p>
             </div>
             <div className="space-y-4">
                 <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
                     <ShieldCheck className="w-6 h-6 text-green-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Secure Data</h3>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.secure.title')}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                    Your projects are private. We do not sell your data. Cytyos is built for professional developers and architects.
+                    {t('landing.features.secure.desc')}
                 </p>
             </div>
         </div>
@@ -257,7 +256,7 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
                 <img src={logoFull} alt="Cytyos" className="h-6 w-auto opacity-50" />
-                <span className="text-xs text-gray-600">© 2026 Cytyos Inc.</span>
+                <span className="text-xs text-gray-600">{t('landing.footer_rights')}</span>
             </div>
             <div className="text-center md:text-right">
                 <p className="text-[10px] text-gray-600 max-w-md">
