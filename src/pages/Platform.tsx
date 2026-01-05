@@ -55,13 +55,10 @@ export const Platform = () => {
       <MapboxMap />
       <SmartPanel />
       
-      {/* FIX: Adjusted 'bottom' to avoid overlap with new Footer.
-         - 'bottom-20' ensures it floats well above the footer.
-         - 'md:bottom-16' gives a bit less space on desktop but still safe.
-         - 'pointer-events-none' on wrapper allows clicks to pass through to map, 
-           but MapControls inside has 'pointer-events-auto'.
+      {/* ADJUSTMENT: 'bottom-14' puts it nicely above the thin footer. 
+        It floats independently from the sidebar now.
       */}
-      <div className="absolute bottom-24 md:bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-full flex justify-center">
+      <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-full flex justify-center">
         <MapControls />
       </div>
 
