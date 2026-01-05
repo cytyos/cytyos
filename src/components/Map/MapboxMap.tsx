@@ -10,15 +10,18 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
+// PLACEHOLDER TOKEN - Ensure you have VITE_MAPBOX_TOKEN in your .env file
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoiam9obmRvZSIsImEiOiJjbHR5eXJ6YnkwMDRoMmtyMHZ6eXJ6YnkwIn0.BxJ7...'; 
-const DEFAULT_CENTER = [-46.6333, -23.5505];
+
+// MIAMI COORDINATES (Brickell)
+const DEFAULT_CENTER = [-80.1918, 25.7617];
 
 export const MapboxMap = () => {
   const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null); // Referência para o Tooltip da Régua
+  const tooltipRef = useRef<HTMLDivElement>(null);
   
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { measurementSystem } = useSettingsStore();
@@ -34,8 +37,8 @@ export const MapboxMap = () => {
       container: mapContainer.current,
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11',
       center: DEFAULT_CENTER as [number, number],
-      zoom: 12,
-      pitch: is3D ? 60 : 0, // Inicia respeitando a configuração
+      zoom: 15, // Increased zoom to show buildings immediately
+      pitch: is3D ? 60 : 0,
       bearing: is3D ? -20 : 0,
       antialias: true,
       attributionControl: false 
@@ -54,48 +57,42 @@ export const MapboxMap = () => {
 
     m.on('load', () => {
       loadAllLayers(m);
+      
+      // If user has geolocation, fly there, otherwise stay in Miami
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => m.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16.5 }),
+          (pos) => {
+             // Optional: Only fly if user is significantly far? For now, we trust the button or explicit action.
+             // m.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16.5 })
+             console.log("User location detected:", pos.coords);
+          },
           (err) => console.warn(err)
         );
       }
     });
 
-    // --- LÓGICA DA RÉGUA (MEDIDA EM TEMPO REAL) ---
+    // --- RULER LOGIC (Real-time measurement) ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
 
         const mode = drawRef.current.getMode();
         
-        // Só calcula se estiver desenhando
         if (mode === 'draw_polygon') {
             const data = drawRef.current.getAll();
-            // Pega o polígono que está sendo desenhado (o último feature)
             const currentFeature = data.features[data.features.length - 1];
 
             if (currentFeature && currentFeature.geometry.type === 'Polygon') {
                 const coords = currentFeature.geometry.coordinates[0];
                 
-                // Precisa ter pelo menos 1 ponto clicado + a posição atual do mouse
                 if (coords.length > 0) {
-                    // O último ponto válido clicado (o penúltimo do array, pois o último é o mouse provisório)
-                    // Mapbox Draw as vezes adiciona pontos provisórios, mas vamos pegar o último fixo
-                    // Uma forma segura: Pegar a coordenada do mouse 'e.lngLat'
-                    const lastPoint = coords[coords.length - 2]; // O último ponto fixado
+                    const lastPoint = coords[coords.length - 2]; 
 
                     if (lastPoint) {
                         const from = turf.point(lastPoint);
                         const to = turf.point([e.lngLat.lng, e.lngLat.lat]);
-                        const distanceKm = turf.distance(from, to); // em km
+                        const distanceKm = turf.distance(from, to);
                         
                         let text = '';
-                        
-                        // Formatação Métrica vs Imperial
-                        // ATENÇÃO: Lendo diretamente do store.getState() seria o ideal, mas aqui vamos assumir métrico por padrão ou tentar pegar da prop
-                        // Como 'measurementSystem' está no escopo do componente, vai funcionar, mas cuidado com closures antigas.
-                        // Para garantir, vamos fazer o cálculo nas duas unidades ou usar a prop atual.
-                        
                         const isImp = useSettingsStore.getState().measurementSystem === 'imperial';
 
                         if (isImp) {
@@ -106,7 +103,6 @@ export const MapboxMap = () => {
                             text = `${meters.toFixed(0)} m`;
                         }
 
-                        // Atualiza o Tooltip
                         tooltipRef.current.style.display = 'block';
                         tooltipRef.current.style.left = `${e.point.x + 15}px`;
                         tooltipRef.current.style.top = `${e.point.y + 15}px`;
@@ -117,24 +113,22 @@ export const MapboxMap = () => {
             }
         }
         
-        // Se não estiver desenhando, esconde
         tooltipRef.current.style.display = 'none';
     });
     
-    // Esconde ao sair do mapa
     m.on('mouseout', () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
 
-    // --- QUANDO FINALIZAR O DESENHO ---
+    // --- ON DRAW COMPLETE ---
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
 
         draw.deleteAll();
         setDrawMode('simple_select');
-        if (tooltipRef.current) tooltipRef.current.style.display = 'none'; // Esconde régua
+        if (tooltipRef.current) tooltipRef.current.style.display = 'none';
 
         const area = turf.area(feature);
         const geometry = feature.geometry;
@@ -153,15 +147,13 @@ export const MapboxMap = () => {
             color: '#f59e0b'
         });
 
-        // Força modo 3D ao criar
         useMapStore.getState().setIs3D(true); 
     });
 
   }, []);
 
-  // --- REAÇÕES AOS ESTADOS ---
+  // --- REACTIONS TO STATE CHANGES ---
 
-  // 1. Toggling 3D (Pitch/Bearing)
   useEffect(() => {
       if (!map.current) return;
       if (is3D) {
@@ -171,7 +163,6 @@ export const MapboxMap = () => {
       }
   }, [is3D]);
 
-  // 2. Toggling Style
   useEffect(() => {
       if (!map.current) return;
       const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11';
@@ -179,7 +170,6 @@ export const MapboxMap = () => {
       map.current.once('style.load', () => loadAllLayers(map.current!));
   }, [mapStyle]);
 
-  // 3. Toggling Draw Mode
   useEffect(() => {
       if (!drawRef.current) return;
       if (drawMode === 'draw_polygon') {
@@ -192,16 +182,13 @@ export const MapboxMap = () => {
       }
   }, [drawMode]);
 
-  // 4. Fly To
   useEffect(() => {
       if (flyToCoords && map.current) {
           map.current.flyTo({ center: flyToCoords, zoom: 17, pitch: 45, duration: 2000 });
-          // Ao buscar, liga o 3D automaticamente
           if (!is3D) useMapStore.getState().setIs3D(true);
       }
   }, [flyToCoords]);
 
-  // 5. Update Blocks
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
     redrawBlocks(map.current, blocks);
@@ -269,7 +256,7 @@ export const MapboxMap = () => {
     <>
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
         
-        {/* TOOLTIP DA RÉGUA (FLUTUANTE) */}
+        {/* RULER TOOLTIP */}
         <div 
             ref={tooltipRef}
             className="absolute pointer-events-none bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono z-50 hidden shadow-xl backdrop-blur-sm"
