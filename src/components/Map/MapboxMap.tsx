@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
 
+// Ajuste os caminhos conforme sua estrutura de pastas
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
@@ -14,19 +14,16 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617]; 
 
 export const MapboxMap = () => {
-  const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
-  // State to track the "Heartbeat" phase (High vs Low)
   const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
 
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
-  // --- HEARTBEAT ANIMATION LOOP ---
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
@@ -34,7 +31,6 @@ export const MapboxMap = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Apply the pulse effect
   useEffect(() => {
     if (!map.current || !map.current.getLayer('project-body')) return;
 
@@ -82,7 +78,6 @@ export const MapboxMap = () => {
       loadAllLayers(m);
     });
 
-    // --- TOOLTIP / RULER ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -148,7 +143,6 @@ export const MapboxMap = () => {
 
   }, []);
 
-  // --- REACTIONS ---
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
@@ -185,8 +179,6 @@ export const MapboxMap = () => {
     redrawBlocks(map.current, blocks);
   }, [blocks]);
 
-
-  // --- VISUAL LAYERS ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
@@ -198,7 +190,6 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. PROJECT BODY
       m.addLayer({
           id: 'project-body',
           type: 'fill-extrusion',
@@ -213,7 +204,6 @@ export const MapboxMap = () => {
           }
       });
 
-      // 2. GLOW
       m.addLayer({
         id: 'project-glow',
         type: 'line',
@@ -251,7 +241,6 @@ export const MapboxMap = () => {
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. CONTEXT (Matte Dark)
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
