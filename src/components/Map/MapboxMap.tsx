@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -11,7 +11,7 @@ import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
-const DEFAULT_CENTER = [-80.1918, 25.7617]; // Miami Brickell
+const DEFAULT_CENTER = [-80.1918, 25.7617]; 
 
 export const MapboxMap = () => {
   const { t } = useTranslation();
@@ -20,35 +20,38 @@ export const MapboxMap = () => {
   const drawRef = useRef<MapboxDraw | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
-  // Reference for the Animation Frame ID (to stop it when leaving)
-  const animationFrameRef = useRef<number>();
+  // State to track the "Heartbeat" phase (High vs Low)
+  const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
 
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
-  // --- ANIMATION FUNCTION (The "Living" Glow) ---
-  const animateGlow = () => {
-    if (!map.current) return;
+  // --- HEARTBEAT ANIMATION LOOP (2 Second Cycle) ---
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setPulseState(prev => prev === 'low' ? 'high' : 'low');
+    }, 2000); // Toggle every 2 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-    // Create a smooth sine wave based on time
-    // Frequency: Time / 1000 * speed
-    const time = Date.now() / 1000;
-    
-    // 1. Oscillate Opacity between 0.4 and 1.0
-    const opacity = (Math.sin(time * 3) + 1) / 2 * 0.6 + 0.4;
-    
-    // 2. Oscillate Width between 4px and 12px (Pulsing size)
-    const width = (Math.sin(time * 3) + 1) / 2 * 8 + 4;
+  // Apply the pulse effect whenever state changes
+  useEffect(() => {
+    if (!map.current || !map.current.getLayer('project-body')) return;
 
-    // Apply to the glow layer if it exists
-    if (map.current.getLayer('project-glow')) {
-        map.current.setPaintProperty('project-glow', 'line-opacity', opacity);
-        map.current.setPaintProperty('project-glow', 'line-width', width);
+    if (pulseState === 'high') {
+        // STATE A: BRIGHT GLOW (Energetic)
+        map.current.setPaintProperty('project-body', 'fill-extrusion-opacity', 0.8);
+        map.current.setPaintProperty('project-glow', 'line-width', 15);
+        map.current.setPaintProperty('project-glow', 'line-opacity', 1.0);
+        map.current.setPaintProperty('project-glow', 'line-blur', 10);
+    } else {
+        // STATE B: DIM (Glassy)
+        map.current.setPaintProperty('project-body', 'fill-extrusion-opacity', 0.35);
+        map.current.setPaintProperty('project-glow', 'line-width', 4);
+        map.current.setPaintProperty('project-glow', 'line-opacity', 0.5);
+        map.current.setPaintProperty('project-glow', 'line-blur', 2);
     }
-
-    // Keep looping
-    animationFrameRef.current = requestAnimationFrame(animateGlow);
-  };
+  }, [pulseState]);
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
@@ -79,11 +82,9 @@ export const MapboxMap = () => {
 
     m.on('load', () => {
       loadAllLayers(m);
-      // Start the animation loop once layers are loaded
-      animateGlow();
     });
 
-    // --- RULER TOOLTIP LOGIC ---
+    // --- RULER ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -147,13 +148,6 @@ export const MapboxMap = () => {
         useMapStore.getState().setIs3D(true); 
     });
 
-    // CLEANUP: Stop animation when component unmounts
-    return () => {
-        if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-        }
-    };
-
   }, []);
 
   // --- REACTIONS ---
@@ -166,12 +160,7 @@ export const MapboxMap = () => {
       if (!map.current) return;
       const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
       map.current.setStyle(styleUrl);
-      map.current.once('style.load', () => {
-          loadAllLayers(map.current!);
-          // Restart animation if style changes
-          if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-          animateGlow();
-      });
+      map.current.once('style.load', () => loadAllLayers(map.current!));
   }, [mapStyle]);
 
   useEffect(() => {
@@ -199,7 +188,7 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- LAYERS ---
+  // --- VISUAL LAYERS ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
@@ -211,7 +200,7 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. PROJECT BODY (Matte Neon)
+      // 1. PROJECT BODY (Breathing Glass)
       m.addLayer({
           id: 'project-body',
           type: 'fill-extrusion',
@@ -220,21 +209,31 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.9,
+              'fill-extrusion-opacity': 0.4, // Initial State
+              
+              // NATIVE MAPBOX TRANSITION (The Magic)
+              // This tells mapbox to interpolate changes over 2000ms
+              'fill-extrusion-opacity-transition': { duration: 2000 }, 
+              
               'fill-extrusion-vertical-gradient': true 
           }
       });
 
-      // 2. PROJECT GLOW (Animated via animateGlow function)
+      // 2. GLOW (Pulsing Line)
       m.addLayer({
         id: 'project-glow',
         type: 'line',
         source: 'project-source',
         paint: {
-            'line-color': ['get', 'color'], // Matches block color
-            'line-width': 10,  // Base width (will animate)
-            'line-blur': 8,    // High blur for "Light" effect
-            'line-opacity': 0.8 // Base opacity (will animate)
+            'line-color': ['get', 'color'],
+            'line-width': 4,  
+            'line-blur': 2,   
+            'line-opacity': 0.5,
+            
+            // NATIVE TRANSITIONS
+            'line-width-transition': { duration: 2000 },
+            'line-opacity-transition': { duration: 2000 },
+            'line-blur-transition': { duration: 2000 }
         }
       });
   };
@@ -248,32 +247,23 @@ export const MapboxMap = () => {
           if (!block.coordinates) return null;
           let h = block.height;
           let b = 0;
-          
-          if (block.type === 'tower' && podium) { 
-              b = podium.height; 
-              h = podium.height + block.height; 
-          }
+          if (block.type === 'tower' && podium) { b = podium.height; h = podium.height + block.height; }
           
           return {
               type: 'Feature',
               geometry: { type: 'Polygon', coordinates: block.coordinates },
-              properties: { 
-                  color: block.color || '#00f3ff', 
-                  height: h, 
-                  base: b 
-              }
+              properties: { color: block.color || '#00f3ff', height: h, base: b }
           };
       }).filter(Boolean);
       
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. CONTEXT CITY (Matte Dark, 30% Opacity)
+  // 3. CONTEXT (Matte Dark)
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
         const labelLayerId = m.getStyle().layers?.find((l) => l.type === 'symbol' && l.layout?.['text-field'])?.id;
-        
         m.addLayer({
             'id': '3d-buildings',
             'source': 'composite',
@@ -282,10 +272,10 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                'fill-extrusion-color': '#111111', // Almost Black
+                'fill-extrusion-color': '#18181b', // Zinc-900
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
-                'fill-extrusion-opacity': 0.3 // Semi-transparent matte
+                'fill-extrusion-opacity': 0.3 
             }
         }, labelLayerId);
     } catch (e) {}
@@ -294,14 +284,7 @@ export const MapboxMap = () => {
   return (
     <>
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-        
-        <div 
-            ref={tooltipRef}
-            className="absolute pointer-events-none bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono z-50 hidden shadow-xl backdrop-blur-sm"
-            style={{ transform: 'translate(-50%, -100%)' }}
-        >
-            0 m
-        </div>
+        <div ref={tooltipRef} className="absolute pointer-events-none bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono z-50 hidden shadow-xl backdrop-blur-sm" style={{ transform: 'translate(-50%, -100%)' }}>0 m</div>
     </>
   );
 };
