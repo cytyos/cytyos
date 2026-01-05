@@ -6,9 +6,12 @@ interface SettingsState {
   isPaywallOpen: boolean;
   setPaywallOpen: (isOpen: boolean) => void;
   
-  // NEW: Zoning Modal State
   isZoningModalOpen: boolean;
   setZoningModalOpen: (isOpen: boolean) => void;
+
+  // NEW: Roadmap Modal State
+  isRoadmapOpen: boolean;
+  setRoadmapOpen: (isOpen: boolean) => void;
 
   urbanContext: string;
   setUrbanContext: (text: string) => void;
@@ -21,8 +24,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   isPaywallOpen: false,
   setPaywallOpen: (isOpen) => set({ isPaywallOpen: isOpen }),
 
-  isZoningModalOpen: false, // New
-  setZoningModalOpen: (isOpen) => set({ isZoningModalOpen: isOpen }), // New
+  isZoningModalOpen: false,
+  setZoningModalOpen: (isOpen) => set({ isZoningModalOpen: isOpen }),
+
+  // NEW
+  isRoadmapOpen: false,
+  setRoadmapOpen: (isOpen) => set({ isRoadmapOpen: isOpen }),
 
   urbanContext: '',
   setUrbanContext: (text) => set({ urbanContext: text }),
