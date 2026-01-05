@@ -323,7 +323,6 @@ export const SmartPanel = () => {
           {/* Editor */}
           {activeTab === 'editor' && (
             <>
-                {/* --- 1. SHOW ONLY IF WE HAVE BLOCKS --- */}
                 {blocks.length > 0 ? (
                     <>
                         <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
@@ -387,7 +386,6 @@ export const SmartPanel = () => {
                         </div>
                     </>
                 ) : (
-                    /* --- 2. EMPTY STATE (ONBOARDING) --- */
                     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
                          <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
                             <MapPin className="w-8 h-8 text-indigo-400" />
@@ -413,12 +411,8 @@ export const SmartPanel = () => {
                     <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
-                            
-                            {/* Inputs FAR & OCCUPANCY */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            
-                            {/* Standard Inputs */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
@@ -469,6 +463,7 @@ export const SmartPanel = () => {
             </div>
         )}
       </div>
+    </div>
     </>
   );
 };
