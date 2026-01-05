@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import { 
   Rocket, CheckCircle2, Sparkles, ArrowRight, 
   Layers, Map as MapIcon, ShieldCheck, Play, Globe, ChevronDown 
@@ -25,7 +25,7 @@ export const LandingPage = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // --- ACTION HANDLERS ---
+  // --- NAVIGATION LOGIC ---
   const handleEnterApp = () => {
       navigate('/app'); 
   };
@@ -66,7 +66,7 @@ export const LandingPage = () => {
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <section className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-8 animate-fade-in-up">
@@ -88,13 +88,13 @@ export const LandingPage = () => {
           <button onClick={handleEnterApp} className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10 z-10 cursor-pointer">
             <Play className="w-4 h-4 fill-current" /> {t('landing.hero.btn_try')}
           </button>
-          <button onClick={handleOpenPaywall} className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500 z-10 cursor-pointer">
+          <button onClick={scrollToRoadmap} className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500 z-10 cursor-pointer">
             {t('landing.hero.btn_plans')}
           </button>
         </div>
       </section>
 
-      {/* ROADMAP */}
+      {/* ROADMAP SECTION */}
       <section id="roadmap-section" className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -106,6 +106,7 @@ export const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-stretch">
+            
             {/* BOX 1 */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><CheckCircle2 className="w-24 h-24 text-green-500" /></div>
@@ -117,7 +118,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* BOX 2 - FIXED: Icon Added, Badge Removed, Aligned */}
+            {/* BOX 2 (Fixed: Added Icon, Removed Badge, Aligned) */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Rocket className="w-24 h-24 text-indigo-500" /></div>
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20 w-fit">{t('roadmap.col2.subtag')}</div>
