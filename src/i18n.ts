@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 const resources = {
+  // --- ENGLISH ---
   en: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -19,11 +20,13 @@ const resources = {
       map: { search_placeholder: "Search location (City, Address)...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline." },
       zoning: { title: "AI Zoning Analysis", placeholder: "Paste zoning laws here... Example: 'Max FAR 4.0, Occupancy 70%'", analyze_btn: "Analyze & Apply", ai_success: "Updated: FAR {{far}}, Occ {{occ}}%." },
+      
+      // ROADMAP & LANDING
       roadmap: {
         title: "The Vision & Roadmap", cta: "Secure Early Bird Access",
-        col1: { tag: "Live Now", title: "Get Today (Beta)", f1: "Instant 3D Zoning Visualization", f2: "Manual Plot Control", f3: "Basic ROI Calculator", f4: "Unlimited Projects" },
-        col2: { tag: "Most Popular", subtag: "Coming March", title: "Guarantee for March (v1.0)", f1: "Automatic Zoning Data", f2: "Site Comparison Tool", f3: "PDF Export for Investors", f4: "Smart Volumetry" },
-        col3: { tag: "The Vision 2026", title: "The Future 2026 (v2.0)", f1: "Predictive AI Heatmaps", f2: "Highest & Best Use Recommender", f3: "Global Expansion Pack", f4: "Multi-layer Intelligence" }
+        col1: { tag: "Live Now", title: "Get Today (Beta)", f1: "Instant 3D Zoning Visualization", f2: "Manual Plot Control", f3: "Basic ROI & GFA Calculator", f4: "Unlimited Projects" },
+        col2: { tag: "Included", subtag: "Coming March", title: "Guarantee for March (v1.0)", f1: "Automatic Zoning Data", f2: "Site Comparison Tool", f3: "PDF Export for Investors", f4: "Smart Volumetry" },
+        col3: { tag: "Founders Edition", title: "The Future 2026 (v2.0)", f1: "Predictive AI Heatmaps", f2: "Highest & Best Use Recommender", f3: "Global Expansion Pack", f4: "Multi-layer Intelligence" }
       },
       landing: {
         login: "Login",
@@ -34,6 +37,8 @@ const resources = {
       }
     }
   },
+
+  // --- PORTUGUESE ---
   pt: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -53,8 +58,8 @@ const resources = {
       roadmap: {
         title: "Visão & Roadmap", cta: "Garantir Acesso Early Bird",
         col1: { tag: "No Ar (Beta)", title: "Você Leva HOJE (Beta)", f1: "Visualização 3D Instantânea", f2: "Controle Manual de Terreno", f3: "Calculadora de VGV", f4: "Projetos Ilimitados" },
-        col2: { tag: "Popular", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" },
-        col3: { tag: "Visão 2026", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" }
+        col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" },
+        col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" }
       },
       landing: {
         login: "Entrar",
@@ -65,6 +70,8 @@ const resources = {
       }
     }
   },
+
+  // --- SPANISH (FULL) ---
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -84,8 +91,8 @@ const resources = {
       roadmap: {
         title: "Visión y Futuro", cta: "Acceso Early Bird",
         col1: { tag: "En Vivo", title: "Hoy (Beta)", f1: "Visualización 3D", f2: "Control Manual", f3: "Calculadora ROI", f4: "Proyectos Ilimitados" },
-        col2: { tag: "Popular", subtag: "Marzo", title: "Garantía Marzo (v1.0)", f1: "Datos Automáticos", f2: "Comparador", f3: "Exportar PDF", f4: "Volumetría Smart" },
-        col3: { tag: "Visión 2026", title: "Futuro 2026 (v2.0)", f1: "Mapas de Calor IA", f2: "Recomendador", f3: "Expansión Global", f4: "Multi-capas" }
+        col2: { tag: "Incluido", subtag: "Marzo", title: "Garantía Marzo (v1.0)", f1: "Datos Automáticos", f2: "Comparador", f3: "Exportar PDF", f4: "Volumetría Smart" },
+        col3: { tag: "Edición Founders", title: "Futuro 2026 (v2.0)", f1: "Mapas de Calor IA", f2: "Recomendador", f3: "Expansión Global", f4: "Multi-capas" }
       },
       landing: {
         login: "Ingresar",
@@ -96,6 +103,8 @@ const resources = {
       }
     }
   },
+
+  // --- FRENCH (FULL) ---
   fr: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -115,8 +124,8 @@ const resources = {
       roadmap: {
         title: "Vision", cta: "Accès Early Bird",
         col1: { tag: "En Ligne", title: "Aujourd'hui (Beta)", f1: "Visualisation 3D", f2: "Contrôle Manuel", f3: "Calculateur ROI", f4: "Projets Illimités" },
-        col2: { tag: "Populaire", subtag: "Mars", title: "Garanti Mars (v1.0)", f1: "Données Auto", f2: "Comparateur", f3: "Export PDF", f4: "Volumétrie Smart" },
-        col3: { tag: "Vision 2026", title: "Futur 2026 (v2.0)", f1: "Cartes Thermiques IA", f2: "Recommandations", f3: "Expansion Globale", f4: "Intelligence Multi-couches" }
+        col2: { tag: "Inclus", subtag: "Mars", title: "Garanti Mars (v1.0)", f1: "Données Auto", f2: "Comparateur", f3: "Export PDF", f4: "Volumétrie Smart" },
+        col3: { tag: "Édition Founders", title: "Futur 2026 (v2.0)", f1: "Cartes Thermiques IA", f2: "Recommandations", f3: "Expansion Globale", f4: "Intelligence Multi-couches" }
       },
       landing: {
         login: "Connexion",
@@ -127,6 +136,8 @@ const resources = {
       }
     }
   },
+
+  // --- CHINESE (FULL) ---
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -146,8 +157,8 @@ const resources = {
       roadmap: {
         title: "愿景", cta: "获取早鸟资格",
         col1: { tag: "在线", title: "今日 (Beta)", f1: "3D 可视化", f2: "手动控制", f3: "ROI 计算器", f4: "无限项目" },
-        col2: { tag: "热门", subtag: "三月", title: "三月更新 (v1.0)", f1: "自动数据", f2: "场地比较", f3: "PDF 导出", f4: "智能体量" },
-        col3: { tag: "2026 愿景", title: "未来 2026 (v2.0)", f1: "AI 热力图", f2: "最佳用途推荐", f3: "全球扩展", f4: "多层智能" }
+        col2: { tag: "包含", subtag: "三月", title: "三月更新 (v1.0)", f1: "自动数据", f2: "场地比较", f3: "PDF 导出", f4: "智能体量" },
+        col3: { tag: "创始人版", title: "未来 2026 (v2.0)", f1: "AI 热力图", f2: "最佳用途推荐", f3: "全球扩展", f4: "多层智能" }
       },
       landing: {
         login: "登录",
