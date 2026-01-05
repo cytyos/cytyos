@@ -88,7 +88,7 @@ export const LandingPage = () => {
           <button onClick={handleEnterApp} className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10 z-10 cursor-pointer">
             <Play className="w-4 h-4 fill-current" /> {t('landing.hero.btn_try')}
           </button>
-          <button onClick={scrollToRoadmap} className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500 z-10 cursor-pointer">
+          <button onClick={handleOpenPaywall} className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500 z-10 cursor-pointer">
             {t('landing.hero.btn_plans')}
           </button>
         </div>
@@ -117,7 +117,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* BOX 2 */}
+            {/* BOX 2 - FIXED: Icon Added, Badge Removed, Aligned */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Rocket className="w-24 h-24 text-indigo-500" /></div>
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20 w-fit">{t('roadmap.col2.subtag')}</div>
