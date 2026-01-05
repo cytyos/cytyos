@@ -9,14 +9,18 @@ import logoFull from '../assets/logo-full.png';
 
 export const LandingPage = () => {
   const { t, i18n } = useTranslation();
-  const { setPaywallOpen, setLandingPageOpen } = useSettingsStore(); // Added setLandingPageOpen
+  const { setPaywallOpen, setLandingPageOpen } = useSettingsStore();
   
-  // State for Language Dropdown
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setIsLangMenuOpen(false);
+  };
+
+  const scrollToRoadmap = () => {
+    const el = document.getElementById('roadmap-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -100,14 +104,14 @@ export const LandingPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
           <button 
-            onClick={() => setLandingPageOpen(false)} // ENTER PLATFORM
+            onClick={() => setLandingPageOpen(false)} // ACTION: CLOSE LANDING -> OPEN APP
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10"
           >
             <Play className="w-4 h-4 fill-current" />
             {t('landing.hero.btn_try')}
           </button>
           <button 
-            onClick={() => setPaywallOpen(true)} // OPEN GATEWAY (Payment)
+            onClick={() => setPaywallOpen(true)} // ACTION: OPEN PAYMENT MODAL
             className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500"
           >
             {t('landing.hero.btn_plans')}
@@ -116,7 +120,7 @@ export const LandingPage = () => {
       </section>
 
       {/* --- ROADMAP SECTION --- */}
-      <section className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
+      <section id="roadmap-section" className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -153,11 +157,11 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (March) - FIXED (No Button inside) */}
+            {/* CARD 2: V1.0 (March) - BADGE REMOVED */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10 group hover:scale-[1.02] hover:border-indigo-400 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)] transition-all duration-300">
-              <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg border border-indigo-400 whitespace-nowrap">
-                {t('roadmap.col2.tag')}
-              </div>
+              
+              {/* Removed "Most Popular" Badge here */}
+              
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20">
                 {t('roadmap.col2.subtag')}
               </div>
@@ -197,7 +201,7 @@ export const LandingPage = () => {
 
           </div>
 
-          {/* --- UNIFIED CTA (The "Bridge") --- */}
+          {/* --- UNIFIED CTA --- */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
             <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
