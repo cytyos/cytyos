@@ -10,10 +10,10 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
-// PLACEHOLDER TOKEN - Ensure you have VITE_MAPBOX_TOKEN in your .env file
+// Get Token
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 
-// MIAMI COORDINATES (Brickell)
+// Miami Brickell Center
 const DEFAULT_CENTER = [-80.1918, 25.7617];
 
 export const MapboxMap = () => {
@@ -29,16 +29,15 @@ export const MapboxMap = () => {
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
-    const token = import.meta.env.VITE_MAPBOX_TOKEN || MAPBOX_TOKEN;
-    mapboxgl.accessToken = token;
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || MAPBOX_TOKEN;
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
-      zoom: 15,
-      pitch: is3D ? 60 : 0,
-      bearing: is3D ? -20 : 0,
+      zoom: 15.5,
+      pitch: 60, 
+      bearing: -20,
       antialias: true,
       attributionControl: false 
     });
@@ -56,23 +55,15 @@ export const MapboxMap = () => {
 
     m.on('load', () => {
       loadAllLayers(m);
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => console.log("User location detected:", pos.coords),
-          (err) => console.warn(err)
-        );
-      }
     });
 
-    // --- RULER LOGIC ---
+    // --- RULER ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
-        
         if (mode === 'draw_polygon') {
             const data = drawRef.current.getAll();
             const currentFeature = data.features[data.features.length - 1];
-
             if (currentFeature && currentFeature.geometry.type === 'Polygon') {
                 const coords = currentFeature.geometry.coordinates[0];
                 if (coords.length > 0) {
@@ -80,14 +71,14 @@ export const MapboxMap = () => {
                     if (lastPoint) {
                         const from = turf.point(lastPoint);
                         const to = turf.point([e.lngLat.lng, e.lngLat.lat]);
-                        const distanceKm = turf.distance(from, to);
+                        const distance = turf.distance(from, to, { units: 'meters' });
+                        
                         let text = '';
                         const isImp = useSettingsStore.getState().measurementSystem === 'imperial';
-                        if (isImp) {
-                            text = `${(distanceKm * 3280.84).toFixed(0)} ft`;
-                        } else {
-                            text = `${(distanceKm * 1000).toFixed(0)} m`;
-                        }
+                        text = isImp 
+                            ? `${(distance * 3.28084).toFixed(0)} ft` 
+                            : `${distance.toFixed(0)} m`;
+
                         tooltipRef.current.style.display = 'block';
                         tooltipRef.current.style.left = `${e.point.x + 15}px`;
                         tooltipRef.current.style.top = `${e.point.y + 15}px`;
@@ -104,7 +95,7 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
-    // --- ON DRAW COMPLETE ---
+    // --- DRAW CREATE ---
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -114,21 +105,21 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
 
         const area = turf.area(feature);
-        const geometry = feature.geometry;
-
-        updateLand({ area: Math.round(area), geometry: geometry });
         
-        // Add default Podium (Retail - Purple)
+        updateLand({ area: Math.round(area), geometry: feature.geometry });
+        
+        // CORRECTION: Force the Cyan/Indigo look immediately upon creation
+        // We use 'residential' as default which maps to Cyan in our store
         addBlock({
             name: 'Podium Base',
             type: 'podium',
-            usage: 'retail',
+            usage: 'residential', 
             isCustom: true,
-            coordinates: geometry.coordinates,
+            coordinates: feature.geometry.coordinates,
             setback: 0,
             baseArea: area,
-            height: 9,
-            color: '#a855f7' 
+            height: 12,
+            color: '#00f3ff' // Force Cyan Neon
         });
 
         useMapStore.getState().setIs3D(true); 
@@ -174,10 +165,10 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- HELPERS (VISUALS) ---
+  // --- VISUAL LAYERS CONFIGURATION ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
-      safeAddCityLayer(m);
+      safeAddCityLayer(m); // Add the "Ghost City"
       redrawBlocks(m, useProjectStore.getState().blocks);
   };
 
@@ -186,30 +177,32 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. MAIN BUILDING VOLUME (Solid Neon)
+      // 1. MAIN BODY (Darker Indigo base to simulate gradient bottom)
       m.addLayer({
-          id: 'project-layer',
+          id: 'project-body',
           type: 'fill-extrusion',
           source: 'project-source',
           paint: {
-              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-color': ['get', 'color'], // Dynamic color
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.9, // High opacity to stand out against matte city
-              'fill-extrusion-vertical-gradient': true // Adds depth shading
+              'fill-extrusion-opacity': 0.8,
+              // Vertical gradient creates shading
+              'fill-extrusion-vertical-gradient': true 
           }
       });
 
-      // 2. NEON WIREFRAME OUTLINE (The "Wow" Glow)
-      // This draws a line at the base of the polygon
+      // 2. NEON RIM (The "Glow" at the top/bottom)
+      // Simulates wireframe edges at the footprint
       m.addLayer({
-        id: 'project-outline',
+        id: 'project-glow',
         type: 'line',
         source: 'project-source',
         paint: {
-            'line-color': '#ffffff', // White core outline
-            'line-width': 2,
-            'line-opacity': 0.6
+            'line-color': '#00f3ff', // Cyan Glow
+            'line-width': 3,
+            'line-blur': 2,
+            'line-opacity': 1
         }
       });
   };
@@ -217,27 +210,43 @@ export const MapboxMap = () => {
   const redrawBlocks = (m: mapboxgl.Map, currentBlocks: any[]) => {
       const source = m.getSource('project-source') as mapboxgl.GeoJSONSource;
       if (!source) return;
+      
+      // Calculate Base/Heights
       const podium = currentBlocks.find(b => b.type === 'podium');
       const features = currentBlocks.map(block => {
           if (!block.coordinates) return null;
           let h = block.height;
           let b = 0;
-          if (block.type === 'tower' && podium) { b = podium.height; h = podium.height + block.height; }
+          
+          // Stack logic
+          if (block.type === 'tower' && podium) { 
+              b = podium.height; 
+              h = podium.height + block.height; 
+          }
+          
           return {
               type: 'Feature',
               geometry: { type: 'Polygon', coordinates: block.coordinates },
-              properties: { color: block.color, height: h, base: b }
+              properties: { 
+                  // If color is undefined, default to Cyan
+                  color: block.color || '#00f3ff', 
+                  height: h, 
+                  base: b 
+              }
           };
       }).filter(Boolean);
+      
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. MATTE BLACK CITY (Solid Context)
-  // This solves the transparency overlap issue.
+  // 3. GHOST CITY (WIRE-LIKE)
+  // To simulate "vazado", we use very low opacity.
+  // It allows seeing the project THROUGH the buildings.
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
         const labelLayerId = m.getStyle().layers?.find((l) => l.type === 'symbol' && l.layout?.['text-field'])?.id;
+        
         m.addLayer({
             'id': '3d-buildings',
             'source': 'composite',
@@ -246,10 +255,14 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                'fill-extrusion-color': '#18181b', // Zinc-900 (Matte Dark)
+                // Dark Gray context
+                'fill-extrusion-color': '#333333', 
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
-                'fill-extrusion-opacity': 1 // Solid opacity avoids "ghosting" glitches
+                
+                // CRUCIAL: 5% Opacity makes them "Ghost/Wireframe-like"
+                // You can see through them, solving the occlusion issue.
+                'fill-extrusion-opacity': 0.05 
             }
         }, labelLayerId);
     } catch (e) {}
