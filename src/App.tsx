@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LandingPage } from './pages/LandingPage'; // <--- CAMINHO CORRIGIDO (PAGES)
-import { MapboxMap } from './components/map/MapboxMap'; 
+import { LandingPage } from './pages/LandingPage'; // Importando de src/pages/
+import { MapboxMap } from './components/map/MapboxMap'; // Importando de src/components/map/
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PaywallModal } from './components/PaywallModal';
