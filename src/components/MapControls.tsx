@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next'; // Import Hook
 import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2, Check } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 import { useProjectStore } from '../stores/useProjectStore';
 
-// MAPBOX TOKEN (Reads from .env or falls back to empty string)
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 interface SearchResult {
@@ -14,6 +14,8 @@ interface SearchResult {
 }
 
 export const MapControls = () => {
+  const { t } = useTranslation(); // Initialize Hook
+  
   // Global Stores
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
   const { mapStyle, setMapStyle, drawMode, setDrawMode, setFlyToCoords, is3D, setIs3D } = useMapStore();
@@ -29,20 +31,19 @@ export const MapControls = () => {
   // UX State: Confirmation Popover
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // Check if a drawing exists (to show/hide the trash button)
+  // Check if a drawing exists
   const hasDrawing = !!land.geometry;
 
   // Handle Clear Action
   const handleConfirmClear = () => {
       clearProject();
-      setDrawMode('simple_select'); // Reset tool state
-      setShowClearConfirm(false);   // Close popover
+      setDrawMode('simple_select');
+      setShowClearConfirm(false);
   };
 
   // --- AUTOCOMPLETE LOGIC ---
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      // Only search if input has 3 or more characters
       if (searchValue.length < 3) {
         setSearchResults([]);
         setShowResults(false);
@@ -51,7 +52,6 @@ export const MapControls = () => {
 
       setIsSearching(true);
       try {
-        // Fetch addresses and POIs
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`
         );
@@ -70,26 +70,23 @@ export const MapControls = () => {
       } finally {
         setIsSearching(false);
       }
-    }, 500); // Wait 500ms after typing stops
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchValue]);
 
-  // Select location from list
   const handleSelectLocation = (result: SearchResult) => {
-    setFlyToCoords(result.center); // Fly to coords
-    setSearchValue(result.place_name); // Fill input
-    setShowResults(false); // Hide list
+    setFlyToCoords(result.center);
+    setSearchValue(result.place_name);
+    setShowResults(false);
   };
 
-  // Clear search input
   const clearSearch = () => {
     setSearchValue('');
     setSearchResults([]);
     setShowResults(false);
   };
 
-  // Close list when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -125,7 +122,7 @@ export const MapControls = () => {
                 }}
                 onFocus={() => { if(searchResults.length > 0) setShowResults(true); }}
                 className="block w-full pl-10 pr-8 py-2.5 bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-xs md:text-sm shadow-xl"
-                placeholder="Search location (City, Address)..."
+                placeholder={t('map.search_placeholder')} // <-- TRANSLATED
             />
 
             {/* Clear Button */}
@@ -138,7 +135,7 @@ export const MapControls = () => {
                 </button>
             )}
 
-            {/* --- DROPDOWN LIST (AUTOCOMPLETE) --- */}
+            {/* --- DROPDOWN LIST --- */}
             {showResults && searchResults.length > 0 && (
                 <div className="absolute bottom-full mb-2 w-full bg-[#0f111a] border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar z-50">
                     <ul>
@@ -158,13 +155,13 @@ export const MapControls = () => {
                         ))}
                     </ul>
                     <div className="px-2 py-1 bg-black/20 text-[9px] text-right text-gray-600">
-                        Search via Mapbox
+                        {t('map.search_provider')} {/* <-- TRANSLATED */}
                     </div>
                 </div>
             )}
         </div>
 
-        {/* Unit Toggle (M / FT) */}
+        {/* Unit Toggle */}
         <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl p-1 flex items-center shadow-xl h-full">
             <button
                 onClick={() => setMeasurementSystem('metric')}
@@ -193,23 +190,21 @@ export const MapControls = () => {
       {/* --- 2. BOTTOM TOOLBAR --- */}
       <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl relative z-40">
         
-        {/* Map Styles */}
         <ControlButton 
             active={mapStyle === 'satellite'} 
             onClick={() => setMapStyle('satellite')} 
             icon={<MapIcon className="w-4 h-4" />} 
-            label="Sat" 
+            label={t('map.sat')} // <-- TRANSLATED
         />
         <ControlButton 
             active={mapStyle === 'streets'} 
             onClick={() => setMapStyle('streets')} 
             icon={<Layers className="w-4 h-4" />} 
-            label="Map" 
+            label={t('map.streets')} // <-- TRANSLATED
         />
 
         <div className="w-px h-6 bg-white/10 mx-1"></div>
 
-        {/* 3D Toggle */}
         <ControlButton 
             active={is3D} 
             onClick={() => setIs3D(!is3D)} 
@@ -217,7 +212,6 @@ export const MapControls = () => {
             label="3D" 
         />
 
-        {/* Draw Button */}
         <button
             onClick={() => setDrawMode(drawMode === 'draw_polygon' ? 'simple_select' : 'draw_polygon')}
             className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 group relative ${
@@ -227,8 +221,7 @@ export const MapControls = () => {
             }`}
         >
             <PenTool className="w-4 h-4 mb-0.5" />
-            <span className="text-[9px] font-bold">Draw</span>
-            {/* Pulsing indicator when active */}
+            <span className="text-[9px] font-bold">{t('map.draw')}</span> {/* <-- TRANSLATED */}
             {drawMode === 'draw_polygon' && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -237,30 +230,30 @@ export const MapControls = () => {
             )}
         </button>
 
-        {/* NEW: DELETE BUTTON WITH LEFT-SIDE POPOVER */}
+        {/* DELETE BUTTON WITH LEFT-SIDE POPOVER */}
         {hasDrawing && (
             <div className="relative">
-                 {/* Confirmation Popover (Moved to the LEFT) */}
                  {showClearConfirm && (
                     <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-right-2">
-                        <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">Delete design?</span>
+                        <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">
+                            {t('map.delete_confirm_title')} {/* <-- TRANSLATED */}
+                        </span>
                         <div className="flex gap-1">
                             <button 
                                 onClick={handleConfirmClear}
                                 className="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-1 rounded-lg transition-colors"
-                                title="Confirm Delete"
+                                title={t('map.confirm')} // <-- TRANSLATED
                             >
                                 <Check className="w-3 h-3" />
                             </button>
                             <button 
                                 onClick={() => setShowClearConfirm(false)}
                                 className="bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white p-1 rounded-lg transition-colors"
-                                title="Cancel"
+                                title={t('map.cancel')} // <-- TRANSLATED
                             >
                                 <X className="w-3 h-3" />
                             </button>
                         </div>
-                        {/* Little arrow pointing right (towards the button) */}
                         <div className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 bg-[#0f111a] border-t border-r border-red-500/50 rotate-45"></div>
                     </div>
                  )}
@@ -272,10 +265,10 @@ export const MapControls = () => {
                         ? 'bg-red-500/10 text-red-400' 
                         : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'
                     }`}
-                    title="Clear Design"
+                    title={t('map.clear')} // <-- TRANSLATED
                 >
                     <Trash2 className="w-4 h-4 mb-0.5" />
-                    <span className="text-[9px] font-bold">Clear</span>
+                    <span className="text-[9px] font-bold">{t('map.clear')}</span> {/* <-- TRANSLATED */}
                 </button>
             </div>
         )}
