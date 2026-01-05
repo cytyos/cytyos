@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
 import { 
   Rocket, CheckCircle2, Sparkles, ArrowRight, 
   Layers, Map as MapIcon, ShieldCheck, Play, Globe, ChevronDown 
@@ -11,9 +11,7 @@ import logoFull from '../assets/logo-full.png';
 export const LandingPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate(); 
-  
-  // Apenas ações de UI global no store
-  const setPaywallOpen = useSettingsStore((state) => state.setPaywallOpen);
+  const { setPaywallOpen } = useSettingsStore();
   
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
@@ -27,11 +25,14 @@ export const LandingPage = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // HANDLERS
+  // --- ACTION HANDLERS ---
+  
+  // 1. Enter the App (Platform)
   const handleEnterApp = () => {
-      navigate('/app'); // Navega para a rota da plataforma
+      navigate('/app'); 
   };
 
+  // 2. Open Payment Modal
   const handleOpenPaywall = () => {
       setPaywallOpen(true);
   };
@@ -45,7 +46,6 @@ export const LandingPage = () => {
           <img src={logoFull} alt="Cytyos" className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
           
           <div className="flex items-center gap-4">
-            {/* LANGUAGE DROPDOWN */}
             <div className="relative">
                 <button 
                     onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
@@ -132,7 +132,7 @@ export const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-stretch">
-            {/* CARD 1 */}
+            {/* CARD 1: BETA */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><CheckCircle2 className="w-24 h-24 text-green-500" /></div>
               <div className="inline-block px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-green-500/20 w-fit">{t('roadmap.col1.tag')}</div>
@@ -143,7 +143,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2 */}
+            {/* CARD 2: V1.0 */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Rocket className="w-24 h-24 text-indigo-500" /></div>
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20 w-fit">{t('roadmap.col2.subtag')}</div>
@@ -154,7 +154,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 3 */}
+            {/* CARD 3: V2.0 */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Sparkles className="w-24 h-24 text-purple-500" /></div>
               <div className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-purple-500/20 w-fit">{t('roadmap.col3.tag')}</div>
@@ -166,6 +166,7 @@ export const LandingPage = () => {
             </div>
           </div>
 
+          {/* UNIFIED CTA */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
             <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
@@ -177,15 +178,6 @@ export const LandingPage = () => {
                 </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* FEATURE HIGHLIGHTS */}
-      <section className="py-20 px-6 max-w-7xl mx-auto border-t border-white/5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
-            <div className="space-y-4"><div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0"><MapIcon className="w-6 h-6 text-blue-400" /></div><h3 className="text-xl font-bold text-white">{t('landing.features.global.title')}</h3><p className="text-sm text-gray-400 leading-relaxed">{t('landing.features.global.desc')}</p></div>
-            <div className="space-y-4"><div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0"><Layers className="w-6 h-6 text-indigo-400" /></div><h3 className="text-xl font-bold text-white">{t('landing.features.zoning.title')}</h3><p className="text-sm text-gray-400 leading-relaxed">{t('landing.features.zoning.desc')}</p></div>
-            <div className="space-y-4"><div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0"><ShieldCheck className="w-6 h-6 text-green-400" /></div><h3 className="text-xl font-bold text-white">{t('landing.features.secure.title')}</h3><p className="text-sm text-gray-400 leading-relaxed">{t('landing.features.secure.desc')}</p></div>
         </div>
       </section>
 
