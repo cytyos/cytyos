@@ -20,6 +20,7 @@ export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
+  // Stores
   const { 
       setPaywallOpen, 
       urbanContext, 
@@ -32,13 +33,15 @@ export const SmartPanel = () => {
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
+  const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false); // Used for Currency Dropdown
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
+  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -46,12 +49,13 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT ---
+  // --- LOGIC: ANALYZE ZONING TEXT (Local AI Parser) ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);       
       setIsAiLoading(true);
 
+      // Regex to catch: "CA 4", "FAR: 4.0", "TO 70%", "Taxa 0.7"
       const farRegex = /(?:far|c\.?a\.?|coeficiente)[^0-9]*(\d+(\.\d+)?)/i;
       const occRegex = /(?:occupancy|t\.?o\.?|taxa)[^0-9]*(\d+(\.\d+)?)/i;
 
@@ -69,7 +73,7 @@ export const SmartPanel = () => {
 
       if (occMatch && occMatch[1]) {
           let val = parseFloat(occMatch[1]);
-          if (val <= 1 && val > 0) val = val * 100; 
+          if (val <= 1 && val > 0) val = val * 100; // 0.7 -> 70%
           detectedOcc = val;
           foundSomething = true;
       }
@@ -88,13 +92,14 @@ export const SmartPanel = () => {
           } else {
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
-                  content: "I analyzed the text but couldn't strictly identify numbers. Try format: 'CA: 4.0' or 'TO: 70%'." 
+                  content: "I analyzed the text but couldn't find clear numbers. Please format as: 'CA: 4.0' or 'TO: 70%'." 
               }]);
           }
           setIsAiLoading(false);
       }, 1500);
   };
 
+  // --- HELPER FUNCTIONS ---
   const isImperial = measurementSystem === 'imperial';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
@@ -215,6 +220,23 @@ export const SmartPanel = () => {
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                
+                {/* --- CURRENCY SELECTOR (Restored) --- */}
+                <div className="relative">
+                    <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
+                        <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
+                    </button>
+                    {isCurrencyMenuOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
+                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider">{t('currency.main')}</div>
+                             {['USD', 'BRL', 'EUR'].map(c => <button key={c} onClick={() => changeCurrency(c)} className="block w-full text-left px-3 py-1.5 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 font-bold">{c}</button>)}
+                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider mt-1">{t('currency.latam')}</div>
+                             {['MXN', 'ARS', 'CLP', 'COP', 'UYU'].map(c => <button key={c} onClick={() => changeCurrency(c)} className="block w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-800 border-b border-gray-800/50">{c}</button>)}
+                        </div>
+                    )}
+                </div>
+
+                {/* --- LANGUAGE SELECTOR --- */}
                 <div className="relative">
                     <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
                         <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
@@ -350,14 +372,15 @@ export const SmartPanel = () => {
       <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-72' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
-                {/* --- CONTEXT BUTTON (CHAT CLOSED) --- */}
+                
+                {/* --- CONTEXT/ZONING BUTTON (WITH ATTENTION PULSE) --- */}
                 <button 
                     onClick={() => setZoningModalOpen(true)}
-                    className="h-full px-4 bg-gray-800 hover:bg-gray-700 text-indigo-300 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-0.5 transition-colors group"
+                    className={`h-full px-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-0.5 transition-all group ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 animate-pulse' : 'bg-gray-800 hover:bg-gray-700'}`}
                     title={t('header.zoning')}
                 >
-                    <FileText className="w-4 h-4 group-hover:text-white transition-colors" />
-                    <span className="text-[8px] font-bold uppercase group-hover:text-white">Lei</span>
+                    <FileText className={`w-4 h-4 transition-colors ${!urbanContext ? 'text-indigo-400' : 'text-gray-400 group-hover:text-white'}`} />
+                    <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
                 <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
@@ -373,8 +396,8 @@ export const SmartPanel = () => {
                     <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
                     
                     <div className="flex gap-2">
-                        {/* --- CONTEXT BUTTON (CHAT OPEN) --- */}
-                        <button onClick={() => setZoningModalOpen(true)} className="flex items-center gap-1 text-[9px] bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded transition-colors border border-gray-700">
+                        {/* --- CONTEXT BUTTON (MINI) --- */}
+                        <button onClick={() => setZoningModalOpen(true)} className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-colors border ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 text-indigo-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'}`}>
                             <FileText className="w-3 h-3" /> {t('header.zoning')}
                         </button>
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
