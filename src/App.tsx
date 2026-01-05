@@ -1,7 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LandingPage } from './pages/LandingPage';
-import { MapboxMap } from './components/map/MapboxMap'; // Importa de map/MapboxMap.tsx (Maiúsculo)
+
+// --- IMPORTAÇÕES CORRETAS ---
+// Certifique-se que o arquivo está na pasta src/pages/
+import { LandingPage } from './pages/LandingPage'; 
+
+// Certifique-se que o arquivo está na pasta src/components/map/ com M maiúsculo
+import { MapboxMap } from './components/map/MapboxMap'; 
+
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PaywallModal } from './components/PaywallModal';
@@ -12,11 +18,14 @@ function App() {
     <BrowserRouter>
       <PaywallGlobal />
       <Routes>
+        {/* ROTA 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
+        {/* ROTA 2: Plataforma (App) */}
         <Route path="/app" element={
           <div className="h-screen w-screen overflow-hidden bg-black relative">
             <MapboxMap />
+            
             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4">
               <div className="w-full flex justify-center pt-2">
                  <MapControls />
@@ -26,6 +35,7 @@ function App() {
           </div>
         } />
 
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
