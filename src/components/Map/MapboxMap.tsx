@@ -26,26 +26,24 @@ export const MapboxMap = () => {
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
-  // --- HEARTBEAT ANIMATION LOOP (2 Second Cycle) ---
+  // --- HEARTBEAT ANIMATION LOOP ---
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
-    }, 2000); // Toggle every 2 seconds
+    }, 2000); 
     return () => clearInterval(interval);
   }, []);
 
-  // Apply the pulse effect whenever state changes
+  // Apply the pulse effect
   useEffect(() => {
     if (!map.current || !map.current.getLayer('project-body')) return;
 
     if (pulseState === 'high') {
-        // STATE A: BRIGHT GLOW (Energetic)
         map.current.setPaintProperty('project-body', 'fill-extrusion-opacity', 0.8);
         map.current.setPaintProperty('project-glow', 'line-width', 15);
         map.current.setPaintProperty('project-glow', 'line-opacity', 1.0);
         map.current.setPaintProperty('project-glow', 'line-blur', 10);
     } else {
-        // STATE B: DIM (Glassy)
         map.current.setPaintProperty('project-body', 'fill-extrusion-opacity', 0.35);
         map.current.setPaintProperty('project-glow', 'line-width', 4);
         map.current.setPaintProperty('project-glow', 'line-opacity', 0.5);
@@ -84,7 +82,7 @@ export const MapboxMap = () => {
       loadAllLayers(m);
     });
 
-    // --- RULER ---
+    // --- TOOLTIP / RULER ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -200,7 +198,7 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. PROJECT BODY (Breathing Glass)
+      // 1. PROJECT BODY
       m.addLayer({
           id: 'project-body',
           type: 'fill-extrusion',
@@ -209,17 +207,13 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.4, // Initial State
-              
-              // NATIVE MAPBOX TRANSITION (The Magic)
-              // This tells mapbox to interpolate changes over 2000ms
+              'fill-extrusion-opacity': 0.4, 
               'fill-extrusion-opacity-transition': { duration: 2000 }, 
-              
               'fill-extrusion-vertical-gradient': true 
           }
       });
 
-      // 2. GLOW (Pulsing Line)
+      // 2. GLOW
       m.addLayer({
         id: 'project-glow',
         type: 'line',
@@ -229,8 +223,6 @@ export const MapboxMap = () => {
             'line-width': 4,  
             'line-blur': 2,   
             'line-opacity': 0.5,
-            
-            // NATIVE TRANSITIONS
             'line-width-transition': { duration: 2000 },
             'line-opacity-transition': { duration: 2000 },
             'line-blur-transition': { duration: 2000 }
