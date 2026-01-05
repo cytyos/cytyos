@@ -11,7 +11,8 @@ import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
 // PLACEHOLDER TOKEN - Ensure you have VITE_MAPBOX_TOKEN in your .env file
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoiam9obmRvZSIsImEiOiJjbHR5eXJ6YnkwMDRoMmtyMHZ6eXJ6YnkwIn0.BxJ7...'; 
+// Or paste it here temporarily for testing
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 
 // MIAMI COORDINATES (Brickell)
 const DEFAULT_CENTER = [-80.1918, 25.7617];
@@ -37,7 +38,7 @@ export const MapboxMap = () => {
       container: mapContainer.current,
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11',
       center: DEFAULT_CENTER as [number, number],
-      zoom: 15, // Increased zoom to show buildings immediately
+      zoom: 15,
       pitch: is3D ? 60 : 0,
       bearing: is3D ? -20 : 0,
       antialias: true,
@@ -45,7 +46,8 @@ export const MapboxMap = () => {
     });
     map.current = m;
 
-    m.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    // --- MUDANÇA AQUI: Zoom no Topo Direito ---
+    m.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     const draw = new MapboxDraw({
       displayControlsDefault: false,
@@ -57,13 +59,9 @@ export const MapboxMap = () => {
 
     m.on('load', () => {
       loadAllLayers(m);
-      
-      // If user has geolocation, fly there, otherwise stay in Miami
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-             // Optional: Only fly if user is significantly far? For now, we trust the button or explicit action.
-             // m.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16.5 })
              console.log("User location detected:", pos.coords);
           },
           (err) => console.warn(err)
@@ -263,12 +261,6 @@ export const MapboxMap = () => {
             style={{ transform: 'translate(-50%, -100%)' }}
         >
             0 m
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-7 bg-[#0f111a]/90 backdrop-blur-md border-t border-white/10 z-40 flex justify-center items-center px-4 shadow-lg pointer-events-none">
-            <span className="text-[9px] font-medium text-gray-400 uppercase tracking-widest text-center">
-                {t('footer.disclaimer') || "AI RESULTS MAY VARY. ALWAYS CONSULT A TECHNICAL PROFESSIONAL."}
-            </span>
         </div>
     </>
   );
