@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Globe, Building2, TrendingUp, CheckCircle2 } from 'lucide-react';
-import logoImage from '../assets/logo.png';
+// --- MUDANÇA 1: Importando o logo completo (Ícone + Texto) ---
+import logoFull from '../assets/logo-full.png';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
@@ -13,10 +14,15 @@ export const LandingPage = () => {
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#0f111a]/90 backdrop-blur-md h-20">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-              <img src={logoImage} alt="Cytyos" style={{ height: '36px', width: 'auto' }} className="object-contain" />
-              <div className="flex flex-col justify-center">
-                <span className="text-lg md:text-xl font-bold tracking-tight text-white leading-none">Cytyos</span>
-                <span className="text-[9px] md:text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Beta</span>
+              {/* --- MUDANÇA 2: Logo Full, sem texto duplicado ao lado --- */}
+              <img 
+                src={logoFull} 
+                alt="Cytyos" 
+                className="h-9 w-auto object-contain" 
+              />
+              {/* Mantemos apenas o Badge Beta, alinhado */}
+              <div className="flex flex-col justify-center h-full">
+                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 ml-2">Beta</span>
               </div>
           </div>
           <div className="flex items-center gap-4">
