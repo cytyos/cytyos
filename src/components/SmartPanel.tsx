@@ -9,7 +9,7 @@ import {
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, ChevronUp,
-  Trash2, Coins, Settings, FileText, PenTool, MapPin 
+  Trash2, Coins, FileText, PenTool, MapPin, FileSearch 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -20,11 +20,20 @@ export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
-  const { setPaywallOpen, urbanContext, setUrbanContext, measurementSystem } = useSettingsStore();
+  // Stores
+  const { 
+      setPaywallOpen, 
+      urbanContext, 
+      setUrbanContext, 
+      measurementSystem, 
+      isZoningModalOpen, // New State
+      setZoningModalOpen // New Action
+  } = useSettingsStore();
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'financial' | 'settings'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor'); // Removed 'settings' tab
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
@@ -32,6 +41,7 @@ export const SmartPanel = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
+  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -39,7 +49,64 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- UNIT CONVERSION FUNCTIONS (M/FT) ---
+  // --- LOGIC: ANALYZE ZONING TEXT (The "Brain") ---
+  const handleAnalyzeLaw = () => {
+      setZoningModalOpen(false); // Close modal
+      setIsChatOpen(true);       // Open chat
+      setIsAiLoading(true);
+
+      // Simulate AI Parsing with Regex (Client-side Intelligence)
+      // Look for patterns like "CA 4", "FAR 4.0", "TO 70%", "Occupancy 0.7"
+      
+      const farRegex = /(?:far|c\.?a\.?|coeficiente)\s*[:=]?\s*(\d+(\.\d+)?)/i;
+      const occRegex = /(?:occupancy|t\.?o\.?|taxa)\s*[:=]?\s*(\d+(\.\d+)?)/i;
+
+      const farMatch = urbanContext.match(farRegex);
+      const occMatch = urbanContext.match(occRegex);
+
+      let detectedFar = land.maxFar;
+      let detectedOcc = land.maxOccupancy;
+      let foundSomething = false;
+
+      if (farMatch && farMatch[1]) {
+          detectedFar = parseFloat(farMatch[1]);
+          foundSomething = true;
+      }
+
+      if (occMatch && occMatch[1]) {
+          let val = parseFloat(occMatch[1]);
+          // If value is small (e.g. 0.7), convert to percentage (70)
+          if (val <= 1) val = val * 100; 
+          detectedOcc = val;
+          foundSomething = true;
+      }
+
+      setTimeout(() => {
+          if (foundSomething) {
+              // UPDATE INPUTS AUTOMATICALLY
+              updateLand({ maxFar: detectedFar, maxOccupancy: detectedOcc });
+              
+              // Success Message
+              setChatMessages(prev => [...prev, { 
+                  role: 'assistant', 
+                  content: t('zoning.ai_success', { 
+                      text: urbanContext.substring(0, 15) + '...', 
+                      far: detectedFar, 
+                      occ: detectedOcc 
+                  }) 
+              }]);
+          } else {
+              // Fallback Message
+              setChatMessages(prev => [...prev, { 
+                  role: 'assistant', 
+                  content: "I read the text but couldn't strictly identify numeric FAR or Occupancy values. Please ensure they are formatted like 'FAR 4.0' or 'TO 70%'." 
+              }]);
+          }
+          setIsAiLoading(false);
+      }, 1500); // Fake processing delay
+  };
+
+  // --- UNIT CONVERSION FUNCTIONS ---
   const isImperial = measurementSystem === 'imperial';
 
   const fmtArea = (val: number) => {
@@ -137,6 +204,42 @@ export const SmartPanel = () => {
   const dec = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 2 }).format(val);
 
   return (
+    <>
+    {/* --- ZONING MODAL --- */}
+    {isZoningModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#0f111a] border border-gray-700 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+                    <h3 className="text-white font-bold flex items-center gap-2">
+                        <FileSearch className="w-5 h-5 text-indigo-400" />
+                        {t('zoning.title')}
+                    </h3>
+                    <button onClick={() => setZoningModalOpen(false)} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="p-4">
+                    <textarea 
+                        value={urbanContext}
+                        onChange={(e) => setUrbanContext(e.target.value)}
+                        placeholder={t('zoning.placeholder')}
+                        className="w-full h-48 bg-gray-900 border border-gray-700 rounded-xl p-4 text-sm text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed"
+                    />
+                </div>
+                <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex justify-end">
+                    <button 
+                        onClick={handleAnalyzeLaw}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-indigo-500/20"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        {t('zoning.analyze_btn')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
+
+    {/* --- MAIN PANEL --- */}
     <div 
         className={`
             fixed md:absolute 
@@ -188,8 +291,9 @@ export const SmartPanel = () => {
                     )}
                 </div>
 
-                <button onClick={() => setActiveTab(activeTab === 'settings' ? 'editor' : 'settings')} className={`p-1.5 rounded transition-all ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`} title="Settings & Context">
-                    <Settings className="w-4 h-4" />
+                {/* NEW: ZONING BUTTON (Replaced Settings) */}
+                <button onClick={() => setZoningModalOpen(true)} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors" title={t('header.zoning')}>
+                    <FileText className="w-4 h-4" />
                 </button>
 
                 <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
@@ -201,45 +305,25 @@ export const SmartPanel = () => {
             </div>
         </div>
         
-        {activeTab !== 'settings' && (
-            <>
-                <div className="flex justify-between items-start mb-2">
-                    <div>
-                        <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.revenue')}</span>
-                        <div className="text-xl font-bold text-white tracking-tight">{money(metrics.revenue)}</div>
-                    </div>
-                    <div className="text-right">
-                        <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.margin')}</span>
-                        <div className={`text-lg font-bold ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
-                    </div>
-                </div>
-                <div className="flex gap-1 p-1 bg-black/40 rounded-lg border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => setActiveTab('editor')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-                    <button onClick={() => setActiveTab('financial')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-                </div>
-            </>
-        )}
+        <div className="flex justify-between items-start mb-2">
+            <div>
+                <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.revenue')}</span>
+                <div className="text-xl font-bold text-white tracking-tight">{money(metrics.revenue)}</div>
+            </div>
+            <div className="text-right">
+                <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.margin')}</span>
+                <div className={`text-lg font-bold ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+            </div>
+        </div>
+        <div className="flex gap-1 p-1 bg-black/40 rounded-lg border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setActiveTab('editor')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+            <button onClick={() => setActiveTab('financial')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
+        </div>
       </div>
 
       {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
           
-          {/* Settings */}
-          {activeTab === 'settings' && (
-              <div className="p-4 space-y-4">
-                  <div className="space-y-2 flex-1 flex flex-col">
-                      <h3 className="text-xs font-bold text-white flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-blue-400"/> Urban Context / Laws</h3>
-                      <p className="text-[10px] text-gray-400">Paste zoning laws here. AI will use this.</p>
-                      <textarea 
-                        value={urbanContext}
-                        onChange={(e) => setUrbanContext(e.target.value)}
-                        placeholder="Ex: Zona ZM, Max FAR 4.0, Max Height 28m..."
-                        className="w-full h-48 bg-gray-900 border border-gray-700 rounded-lg p-3 text-xs text-gray-300 focus:border-blue-500 outline-none resize-none leading-relaxed"
-                      />
-                  </div>
-              </div>
-          )}
-
           {/* Editor */}
           {activeTab === 'editor' && (
             <>
@@ -307,7 +391,7 @@ export const SmartPanel = () => {
                         </div>
                     </>
                 ) : (
-                    /* --- 2. EMPTY STATE (ONBOARDING) - TRANSLATED --- */
+                    /* --- 2. EMPTY STATE (ONBOARDING) --- */
                     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
                          <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
                             <MapPin className="w-8 h-8 text-indigo-400" />
@@ -334,7 +418,7 @@ export const SmartPanel = () => {
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             
-                            {/* Inputs FAR & OCCUPANCY - TRANSLATED */}
+                            {/* Inputs FAR & OCCUPANCY */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             
@@ -389,6 +473,6 @@ export const SmartPanel = () => {
             </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
