@@ -3,19 +3,19 @@ import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2 } from 'lucide-re
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 
-// TOKEN DO MAPBOX (Tenta ler do .env ou usa string vazia para evitar crash se não configurado)
+// Get Mapbox Token from Env
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 export const MapControls = () => {
-  // Estados Globais (Conectados às Stores)
+  // Global State (Stores)
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
   const { mapStyle, setMapStyle, drawMode, setDrawMode, setFlyToCoords, is3D, setIs3D } = useMapStore();
   
-  // Estado Local da Busca
+  // Local Search State
   const [searchValue, setSearchValue] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // Função de Busca Real (Geocoding)
+  // Real Geocoding Function
   const handleSearch = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchValue.length > 3) {
       setIsSearching(true);
@@ -24,12 +24,15 @@ export const MapControls = () => {
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}`
         );
         const data = await response.json();
+        
         if (data.features && data.features.length > 0) {
           const [lng, lat] = data.features[0].center;
-          setFlyToCoords([lng, lat]); // Manda o mapa voar para o local
+          setFlyToCoords([lng, lat]); // Fly map to location
+          // Optional: Clear search after flying? 
+          // setSearchValue(''); 
         }
       } catch (error) {
-        console.error("Erro na busca:", error);
+        console.error("Search Error:", error);
       } finally {
         setIsSearching(false);
       }
@@ -39,10 +42,10 @@ export const MapControls = () => {
   return (
     <div className="flex flex-col gap-3 w-[90vw] max-w-md mx-auto pointer-events-auto">
       
-      {/* --- 1. BARRA DE BUSCA + SELETOR DE UNIDADES --- */}
+      {/* --- 1. SEARCH BAR + UNIT TOGGLE --- */}
       <div className="flex gap-2 w-full">
         
-        {/* Caixa de Busca Funcional */}
+        {/* Search Input */}
         <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 {isSearching ? (
@@ -61,7 +64,7 @@ export const MapControls = () => {
             />
         </div>
 
-        {/* Toggle M / FT */}
+        {/* Unit Toggle (M / FT) */}
         <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl p-1 flex items-center shadow-xl">
             <button
                 onClick={() => setMeasurementSystem('metric')}
@@ -87,10 +90,10 @@ export const MapControls = () => {
         </div>
       </div>
 
-      {/* --- 2. BARRA DE FERRAMENTAS INFERIOR --- */}
+      {/* --- 2. BOTTOM TOOLBAR --- */}
       <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl">
         
-        {/* Estilos de Mapa */}
+        {/* Map Styles */}
         <ControlButton 
             active={mapStyle === 'satellite'} 
             onClick={() => setMapStyle('satellite')} 
@@ -106,7 +109,7 @@ export const MapControls = () => {
 
         <div className="w-px h-6 bg-white/10 mx-1"></div>
 
-        {/* 3D Toggle (AGORA FUNCIONAL) */}
+        {/* 3D Toggle */}
         <ControlButton 
             active={is3D} 
             onClick={() => setIs3D(!is3D)} 
@@ -114,7 +117,7 @@ export const MapControls = () => {
             label="3D" 
         />
 
-        {/* Botão Draw (Desenhar) */}
+        {/* Draw Button */}
         <button
             onClick={() => setDrawMode(drawMode === 'draw_polygon' ? 'simple_select' : 'draw_polygon')}
             className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 group relative ${
@@ -125,7 +128,7 @@ export const MapControls = () => {
         >
             <PenTool className="w-4 h-4 mb-0.5" />
             <span className="text-[9px] font-bold">Draw</span>
-            {/* Indicador pulsante quando ativo */}
+            {/* Pulsing indicator when active */}
             {drawMode === 'draw_polygon' && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -139,7 +142,7 @@ export const MapControls = () => {
   );
 };
 
-// Componente Visual para Botões Padrão
+// Reusable Control Button Component
 const ControlButton = ({ active, onClick, icon, label }: any) => (
     <button
         onClick={onClick}
