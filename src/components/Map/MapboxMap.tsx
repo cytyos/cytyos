@@ -35,7 +35,7 @@ export const MapboxMap = () => {
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
-      // CHANGE 1: Switched default to 'dark-v11' for the "Cyberpunk/Glass" look
+      // Always dark mode for the Neon effect
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
       zoom: 15,
@@ -66,30 +66,23 @@ export const MapboxMap = () => {
       }
     });
 
-    // --- RULER LOGIC (Real-time measurement) ---
+    // --- RULER LOGIC ---
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
-
         const mode = drawRef.current.getMode();
-        
         if (mode === 'draw_polygon') {
             const data = drawRef.current.getAll();
             const currentFeature = data.features[data.features.length - 1];
-
             if (currentFeature && currentFeature.geometry.type === 'Polygon') {
                 const coords = currentFeature.geometry.coordinates[0];
-                
                 if (coords.length > 0) {
                     const lastPoint = coords[coords.length - 2]; 
-
                     if (lastPoint) {
                         const from = turf.point(lastPoint);
                         const to = turf.point([e.lngLat.lng, e.lngLat.lat]);
                         const distanceKm = turf.distance(from, to);
-                        
                         let text = '';
                         const isImp = useSettingsStore.getState().measurementSystem === 'imperial';
-
                         if (isImp) {
                             const feet = distanceKm * 3280.84;
                             text = `${feet.toFixed(0)} ft`;
@@ -97,7 +90,6 @@ export const MapboxMap = () => {
                             const meters = distanceKm * 1000;
                             text = `${meters.toFixed(0)} m`;
                         }
-
                         tooltipRef.current.style.display = 'block';
                         tooltipRef.current.style.left = `${e.point.x + 15}px`;
                         tooltipRef.current.style.top = `${e.point.y + 15}px`;
@@ -107,14 +99,12 @@ export const MapboxMap = () => {
                 }
             }
         }
-        
         tooltipRef.current.style.display = 'none';
     });
     
     m.on('mouseout', () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
-
 
     // --- ON DRAW COMPLETE ---
     m.on('draw.create', (e) => {
@@ -130,6 +120,7 @@ export const MapboxMap = () => {
 
         updateLand({ area: Math.round(area), geometry: geometry });
         
+        // Add default Podium (Retail - Pink/Fuchsia)
         addBlock({
             name: 'Podium Base',
             type: 'podium',
@@ -139,7 +130,7 @@ export const MapboxMap = () => {
             setback: 0,
             baseArea: area,
             height: 9,
-            color: '#f59e0b'
+            color: '#d946ef' // Fuchsia default
         });
 
         useMapStore.getState().setIs3D(true); 
@@ -147,7 +138,7 @@ export const MapboxMap = () => {
 
   }, []);
 
-  // --- REACTIONS TO STATE CHANGES ---
+  // --- REACTIONS ---
 
   useEffect(() => {
       if (!map.current) return;
@@ -160,7 +151,6 @@ export const MapboxMap = () => {
 
   useEffect(() => {
       if (!map.current) return;
-      // CHANGE 2: Ensure we toggle between Satellite and Dark (Glass Mode)
       const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
       map.current.setStyle(styleUrl);
       map.current.once('style.load', () => loadAllLayers(map.current!));
@@ -191,7 +181,7 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- HELPERS ---
+  // --- HELPERS (THE VISUAL MAGIC) ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
@@ -200,9 +190,11 @@ export const MapboxMap = () => {
 
   const safeSetupLayers = (m: mapboxgl.Map) => {
       if (m.getSource('project-source')) return;
+      
+      // Source for our project buildings
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // CHANGE 3: "Liquid Crystal" Style
+      // 1. FILL EXTRUSION (The Hologram Body)
       m.addLayer({
           id: 'project-layer',
           type: 'fill-extrusion',
@@ -211,9 +203,24 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.6, // Translucency for Glass Effect
+              'fill-extrusion-opacity': 0.7, // Semi-transparent for crystal effect
               'fill-extrusion-vertical-gradient': true
           }
+      });
+
+      // 2. GLOW LINE (The Neon Outline)
+      // Mapbox can't outline extrusions easily, so we add a line layer at the base
+      // This creates a "footprint" glow
+      m.addLayer({
+        id: 'project-outline',
+        type: 'line',
+        source: 'project-source',
+        paint: {
+            'line-color': '#ffffff', // White core
+            'line-width': 2,
+            'line-opacity': 0.8,
+            'line-blur': 1 // Glow effect
+        }
       });
   };
 
@@ -235,6 +242,7 @@ export const MapboxMap = () => {
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
+  // 3. GHOST CITY (Translucent Context)
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
@@ -247,10 +255,11 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                'fill-extrusion-color': '#222', // Darker context buildings
+                'fill-extrusion-color': '#000000', // Black Buildings
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
-                'fill-extrusion-opacity': 0.2 // Ghostly context
+                // CRUCIAL: Low opacity allows seeing THROUGH them to your project
+                'fill-extrusion-opacity': 0.15 
             }
         }, labelLayerId);
     } catch (e) {}
