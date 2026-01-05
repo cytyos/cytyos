@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X } from 'lucide-react';
+import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2 } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
+import { useProjectStore } from '../stores/useProjectStore';
 
-// TOKEN DO MAPBOX (Tenta ler do .env ou usa string vazia)
-// IMPORTANTE: Se o .env não estiver carregado, você pode colar seu token direto entre as aspas abaixo para testar.
+// MAPBOX TOKEN (Reads from .env or falls back to empty string)
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 interface SearchResult {
@@ -14,9 +14,10 @@ interface SearchResult {
 }
 
 export const MapControls = () => {
-  // Global State
+  // Global Stores
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
   const { mapStyle, setMapStyle, drawMode, setDrawMode, setFlyToCoords, is3D, setIs3D } = useMapStore();
+  const { land, clearProject } = useProjectStore();
   
   // Search State
   const [searchValue, setSearchValue] = useState('');
@@ -25,10 +26,21 @@ export const MapControls = () => {
   const [showResults, setShowResults] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // Check if a drawing exists (to show/hide the trash button)
+  const hasDrawing = !!land.geometry;
+
+  // Handle Clear Action
+  const handleClear = () => {
+      if (confirm("Are you sure you want to clear the current design?")) {
+          clearProject();
+          setDrawMode('simple_select'); // Reset tool state
+      }
+  };
+
   // --- AUTOCOMPLETE LOGIC ---
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      // Só busca se tiver 3 ou mais letras
+      // Only search if input has 3 or more characters
       if (searchValue.length < 3) {
         setSearchResults([]);
         setShowResults(false);
@@ -37,7 +49,7 @@ export const MapControls = () => {
 
       setIsSearching(true);
       try {
-        // Busca endereços e pontos de interesse
+        // Fetch addresses and POIs
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`
         );
@@ -52,30 +64,30 @@ export const MapControls = () => {
           setShowResults(true);
         }
       } catch (error) {
-        console.error("Erro na busca:", error);
+        console.error("Search error:", error);
       } finally {
         setIsSearching(false);
       }
-    }, 500); // Espera 500ms parar de digitar para buscar
+    }, 500); // Wait 500ms after typing stops
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchValue]);
 
-  // Selecionar um local da lista
+  // Select location from list
   const handleSelectLocation = (result: SearchResult) => {
-    setFlyToCoords(result.center); // Voa para o local
-    setSearchValue(result.place_name); // Preenche o input
-    setShowResults(false); // Esconde a lista
+    setFlyToCoords(result.center); // Fly to coords
+    setSearchValue(result.place_name); // Fill input
+    setShowResults(false); // Hide list
   };
 
-  // Limpar busca
+  // Clear search input
   const clearSearch = () => {
     setSearchValue('');
     setSearchResults([]);
     setShowResults(false);
   };
 
-  // Fecha a lista se clicar fora
+  // Close list when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -222,6 +234,18 @@ export const MapControls = () => {
                 </span>
             )}
         </button>
+
+        {/* NEW: DELETE BUTTON (Only shows if has drawing) */}
+        {hasDrawing && (
+             <button
+                onClick={handleClear}
+                className="flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 hover:bg-red-500/20 text-gray-400 hover:text-red-400 ml-1 border-l border-white/10"
+                title="Clear Design"
+            >
+                <Trash2 className="w-4 h-4 mb-0.5" />
+                <span className="text-[9px] font-bold">Clear</span>
+            </button>
+        )}
 
       </div>
     </div>
