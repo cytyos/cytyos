@@ -3,9 +3,7 @@ import { create } from 'zustand';
 type MeasurementSystem = 'metric' | 'imperial';
 
 interface SettingsState {
-  // Navigation State
-  isLandingPageOpen: boolean;
-  setLandingPageOpen: (isOpen: boolean) => void;
+  // Navigation state removido (o Router cuida disso)
 
   isPaywallOpen: boolean;
   setPaywallOpen: (isOpen: boolean) => void;
@@ -24,9 +22,6 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  isLandingPageOpen: true, // App starts at Landing Page
-  setLandingPageOpen: (isOpen) => set({ isLandingPageOpen: isOpen }),
-
   isPaywallOpen: false,
   setPaywallOpen: (isOpen) => set({ isPaywallOpen: isOpen }),
 
