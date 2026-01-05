@@ -27,7 +27,7 @@ const resources = {
       },
       landing: {
         login: "Login",
-        hero: { badge: "Beta Live Now", title_prefix: "The Operating System for", title_main: "Real Estate Development.", title_anim: "Start Analyzing.", subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds.", btn_try: "Try Beta Free", btn_plans: "View Early Bird Plans" },
+        hero: { badge: "Beta Live Now", title_prefix: "The Operating System for", title_main: "Real Estate Development.", title_anim: "Start Analyzing.", subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds.", btn_try: "Try Beta Free", btn_plans: "View Early Bird Plan" },
         features: { global: { title: "Global & Local", desc: "Mapbox integration allows analysis anywhere in the world." }, zoning: { title: "Smart Zoning", desc: "AI reads zoning text and applies constraints automatically." }, secure: { title: "Secure Data", desc: "Your projects are private. We do not sell your data." } },
         roadmap_intro: "We are building the future of territorial intelligence. Secure your position now.",
         footer_rights: "© 2026 Cytyos Inc."
@@ -58,7 +58,7 @@ const resources = {
       },
       landing: {
         login: "Entrar",
-        hero: { badge: "Beta Disponível", title_prefix: "O Sistema Operacional do", title_main: "Desenvolvimento Imobiliário.", title_anim: "Comece a Analisar.", subtitle: "Transforme dados de zoneamento em decisões de investimento em segundos.", btn_try: "Testar Beta Grátis", btn_plans: "Ver Planos" },
+        hero: { badge: "Beta Disponível", title_prefix: "O Sistema Operacional do", title_main: "Desenvolvimento Imobiliário.", title_anim: "Comece a Analisar.", subtitle: "Transforme dados de zoneamento em decisões de investimento em segundos.", btn_try: "Testar Beta Grátis", btn_plans: "Ver Plano Early Bird" },
         features: { global: { title: "Global & Local", desc: "Análises em qualquer lugar do mundo." }, zoning: { title: "Zoneamento Inteligente", desc: "IA lê leis e aplica restrições automaticamente." }, secure: { title: "Dados Seguros", desc: "Seus projetos são privados e seguros." } },
         roadmap_intro: "Estamos construindo o futuro da inteligência territorial.",
         footer_rights: "© 2026 Cytyos Inc."
@@ -89,7 +89,7 @@ const resources = {
       },
       landing: {
         login: "Ingresar",
-        hero: { badge: "Beta Disponible", title_prefix: "El Sistema Operativo del", title_main: "Desarrollo Inmobiliario.", title_anim: "Empieza a Analizar.", subtitle: "Transforma datos de zonificación en decisiones de inversión en segundos.", btn_try: "Probar Gratis", btn_plans: "Ver Planes" },
+        hero: { badge: "Beta Disponible", title_prefix: "El Sistema Operativo del", title_main: "Desarrollo Inmobiliario.", title_anim: "Empieza a Analizar.", subtitle: "Transforma datos de zonificación en decisiones de inversión en segundos.", btn_try: "Probar Gratis", btn_plans: "Ver Plan Early Bird" },
         features: { global: { title: "Global y Local", desc: "Análisis en cualquier parte del mundo." }, zoning: { title: "Zonificación Smart", desc: "IA lee normativas automáticamente." }, secure: { title: "Datos Seguros", desc: "Tus proyectos son privados." } },
         roadmap_intro: "Construyendo el futuro de la inteligencia territorial.",
         footer_rights: "© 2026 Cytyos Inc."
@@ -120,7 +120,7 @@ const resources = {
       },
       landing: {
         login: "Connexion",
-        hero: { badge: "Beta En Ligne", title_prefix: "Le Système d'Opération du", title_main: "Développement Immobilier.", title_anim: "Commencez l'Analyse.", subtitle: "Transformez les données de zonage en décisions d'investissement.", btn_try: "Essai Gratuit", btn_plans: "Voir les Plans" },
+        hero: { badge: "Beta En Ligne", title_prefix: "Le Système d'Opération du", title_main: "Développement Immobilier.", title_anim: "Commencez l'Analyse.", subtitle: "Transformez les données de zonage en décisions d'investissement.", btn_try: "Essai Gratuit", btn_plans: "Voir Plan Early Bird" },
         features: { global: { title: "Global & Local", desc: "Analyse partout dans le monde." }, zoning: { title: "Zonage Intelligent", desc: "L'IA applique les contraintes automatiquement." }, secure: { title: "Données Sécurisées", desc: "Vos projets sont privés." } },
         roadmap_intro: "Nous construisons le futur de l'intelligence territoriale.",
         footer_rights: "© 2026 Cytyos Inc."
@@ -151,7 +151,7 @@ const resources = {
       },
       landing: {
         login: "登录",
-        hero: { badge: "Beta 现已上线", title_prefix: "房地产开发的", title_main: "操作系统。", title_anim: "开始分析。", subtitle: "瞬间将复杂的区划数据转化为投资决策。", btn_try: "免费试用", btn_plans: "查看计划" },
+        hero: { badge: "Beta 现已上线", title_prefix: "房地产开发的", title_main: "操作系统。", title_anim: "开始分析。", subtitle: "瞬间将复杂的区划数据转化为投资决策。", btn_try: "免费试用", btn_plans: "查看早鸟计划" },
         features: { global: { title: "全球本地化", desc: "支持全球分析。" }, zoning: { title: "智能区划", desc: "AI 自动应用法规约束。" }, secure: { title: "数据安全", desc: "您的项目是私密的。" } },
         roadmap_intro: "我们正在构建领土智能的未来。",
         footer_rights: "© 2026 Cytyos Inc."
