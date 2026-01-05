@@ -9,7 +9,7 @@ import {
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, ChevronUp,
-  Trash2, Coins, Settings, FileText 
+  Trash2, Coins, Settings, FileText, PenTool 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -264,43 +264,70 @@ export const SmartPanel = () => {
                     </div>
                 </div>
 
+                {/* --- BLOCKS LIST OR EMPTY STATE --- */}
                 <div className="p-4 space-y-3 pb-24 md:pb-4">
-                    {blocks.map((block) => (
-                        <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
-                            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
-                                <div className="flex items-center gap-2 w-full group/name">
-                                    <Layers className={`w-3.5 h-3.5 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
-                                    <input className="bg-transparent text-white font-medium text-xs w-full outline-none" value={block.name} onChange={(e) => updateBlock(block.id, { name: e.target.value })} />
-                                    <Edit2 className="w-2.5 h-2.5 text-gray-600 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
-                                </div>
-                                <div className="flex gap-1">
-                                    <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
-                                </div>
-                            </div>
-                            <div className="space-y-3 pl-1">
-                                <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
-                                    {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                </select>
-                                <div>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                        <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
-                                    </div>
-                                    <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
-                                </div>
-                                {block.isCustom && (
-                                    <div className="p-2 bg-black/20 rounded border border-gray-700/50">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                            <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
-                                        </div>
-                                        <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
-                                    </div>
-                                )}
-                            </div>
+                    {blocks.length === 0 ? (
+                        /* EMPTY STATE (ONBOARDING) */
+                        <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 opacity-60">
+                             <div className="p-3 bg-gray-800/50 rounded-full border border-gray-700">
+                                <PenTool className="w-6 h-6 text-gray-400" />
+                             </div>
+                             <div>
+                                <h3 className="text-xs font-bold text-gray-300">Start Analysis</h3>
+                                {/* Instruction text as requested (English code, but meaning is: Choose address & draw outline) */}
+                                <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto leading-relaxed mt-1">
+                                    Search for an address and draw the lot outline to begin.
+                                </p>
+                             </div>
                         </div>
-                    ))}
+                    ) : (
+                        /* BLOCKS LIST */
+                        blocks.map((block) => (
+                            <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
+                                <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
+                                    {/* FIX: Aligned Header with Relative Input */}
+                                    <div className="flex items-center gap-2 w-full group/name relative mr-2">
+                                        <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
+                                        
+                                        <input 
+                                            className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" 
+                                            value={block.name} 
+                                            onChange={(e) => updateBlock(block.id, { name: e.target.value })} 
+                                        />
+                                        
+                                        {/* Edit Icon positioned absolutely but safely padded by input's pr-6 */}
+                                        <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
+                                    </div>
+
+                                    <div className="flex gap-1 shrink-0">
+                                        <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                                    </div>
+                                </div>
+                                <div className="space-y-3 pl-1">
+                                    <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
+                                        {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                    </select>
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
+                                            <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
+                                        </div>
+                                        <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
+                                    </div>
+                                    {block.isCustom && (
+                                        <div className="p-2 bg-black/20 rounded border border-gray-700/50">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
+                                            </div>
+                                            <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </>
           )}
@@ -313,11 +340,11 @@ export const SmartPanel = () => {
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             
-                            {/* --- NOVOS INPUTS DE ZONING (FAR & OCCUPANCY) --- */}
+                            {/* Inputs FAR & OCCUPANCY */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">Max FAR (C.A.)</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">Max Occ % (T.O.)</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             
-                            {/* Inputs Originais */}
+                            {/* Standard Inputs */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
