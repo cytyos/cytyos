@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2 } from 'lucide-react';
+import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2, Check } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 import { useProjectStore } from '../stores/useProjectStore';
@@ -26,15 +26,17 @@ export const MapControls = () => {
   const [showResults, setShowResults] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // UX State: Confirmation Popover
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   // Check if a drawing exists (to show/hide the trash button)
   const hasDrawing = !!land.geometry;
 
   // Handle Clear Action
-  const handleClear = () => {
-      if (confirm("Are you sure you want to clear the current design?")) {
-          clearProject();
-          setDrawMode('simple_select'); // Reset tool state
-      }
+  const handleConfirmClear = () => {
+      clearProject();
+      setDrawMode('simple_select'); // Reset tool state
+      setShowClearConfirm(false);   // Close popover
   };
 
   // --- AUTOCOMPLETE LOGIC ---
@@ -235,16 +237,47 @@ export const MapControls = () => {
             )}
         </button>
 
-        {/* NEW: DELETE BUTTON (Only shows if has drawing) */}
+        {/* NEW: DELETE BUTTON WITH CUSTOM POPOVER */}
         {hasDrawing && (
-             <button
-                onClick={handleClear}
-                className="flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 hover:bg-red-500/20 text-gray-400 hover:text-red-400 ml-1 border-l border-white/10"
-                title="Clear Design"
-            >
-                <Trash2 className="w-4 h-4 mb-0.5" />
-                <span className="text-[9px] font-bold">Clear</span>
-            </button>
+            <div className="relative">
+                 {/* Confirmation Popover */}
+                 {showClearConfirm && (
+                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-bottom-2">
+                        <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">Delete design?</span>
+                        <div className="flex gap-1">
+                            <button 
+                                onClick={handleConfirmClear}
+                                className="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-1 rounded-lg transition-colors"
+                                title="Confirm Delete"
+                            >
+                                <Check className="w-3 h-3" />
+                            </button>
+                            <button 
+                                onClick={() => setShowClearConfirm(false)}
+                                className="bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white p-1 rounded-lg transition-colors"
+                                title="Cancel"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                        {/* Little arrow down */}
+                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#0f111a] border-b border-r border-red-500/50 rotate-45"></div>
+                    </div>
+                 )}
+
+                 <button
+                    onClick={() => setShowClearConfirm(!showClearConfirm)}
+                    className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 ml-1 border-l border-white/10 ${
+                        showClearConfirm 
+                        ? 'bg-red-500/10 text-red-400' 
+                        : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'
+                    }`}
+                    title="Clear Design"
+                >
+                    <Trash2 className="w-4 h-4 mb-0.5" />
+                    <span className="text-[9px] font-bold">Clear</span>
+                </button>
+            </div>
         )}
 
       </div>
