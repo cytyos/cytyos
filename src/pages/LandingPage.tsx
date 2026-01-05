@@ -19,6 +19,11 @@ export const LandingPage = () => {
     setIsLangMenuOpen(false);
   };
 
+  const scrollToRoadmap = () => {
+    const el = document.getElementById('roadmap-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-[#050608] text-white overflow-x-hidden selection:bg-indigo-500 selection:text-white font-sans">
       
@@ -36,7 +41,7 @@ export const LandingPage = () => {
                     className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider transition-colors py-2"
                 >
                     <Globe className="w-3 h-3" />
-                    {i18n.language.substring(0,2)}
+                    {i18n.language ? i18n.language.substring(0,2) : 'EN'}
                     <ChevronDown className="w-3 h-3" />
                 </button>
 
@@ -100,14 +105,14 @@ export const LandingPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={() => setPaywallOpen(true)} // Open Paywall to Capture Lead
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10"
           >
             <Play className="w-4 h-4 fill-current" />
             {t('landing.hero.btn_try')}
           </button>
           <button 
-            onClick={() => setPaywallOpen(true)}
+            onClick={scrollToRoadmap} // Scroll to Roadmap
             className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500"
           >
             {t('landing.hero.btn_plans')}
@@ -116,7 +121,7 @@ export const LandingPage = () => {
       </section>
 
       {/* --- ROADMAP SECTION --- */}
-      <section className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
+      <section id="roadmap-section" className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -133,7 +138,7 @@ export const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             
             {/* CARD 1: BETA */}
-            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300">
+            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <CheckCircle2 className="w-24 h-24 text-green-500" />
               </div>
@@ -153,7 +158,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (March) - FIXED INTERACTIVITY */}
+            {/* CARD 2: V1.0 (March) */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10 group hover:scale-[1.02] hover:border-indigo-400 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)] transition-all duration-300">
               <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg border border-indigo-400 whitespace-nowrap">
                 {t('roadmap.col2.tag')}
@@ -175,7 +180,7 @@ export const LandingPage = () => {
             </div>
 
             {/* CARD 3: V2.0 (Vision) */}
-            <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300">
+            <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Sparkles className="w-24 h-24 text-purple-500" />
               </div>
@@ -197,7 +202,7 @@ export const LandingPage = () => {
 
           </div>
 
-          {/* --- UNIFIED CTA (Button removed from card) --- */}
+          {/* --- UNIFIED CTA (The "Bridge") --- */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
             <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
