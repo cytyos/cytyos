@@ -4,7 +4,6 @@ import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { analyzeProject } from '../services/aiService';
-// Import the full logo
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
@@ -146,7 +145,6 @@ export const SmartPanel = () => {
         className={`
             fixed md:absolute 
             left-0 md:left-4 
-            /* CHANGE HERE: md:bottom-12 creates space above footer */
             bottom-[40px] md:bottom-12 md:top-4 
             w-full md:w-96 
             flex flex-col 
@@ -314,6 +312,12 @@ export const SmartPanel = () => {
                     <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
+                            
+                            {/* --- NOVOS INPUTS DE ZONING (FAR & OCCUPANCY) --- */}
+                            <div><label className="text-[9px] text-gray-400 block mb-1">Max FAR (C.A.)</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                            <div><label className="text-[9px] text-gray-400 block mb-1">Max Occ % (T.O.)</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                            
+                            {/* Inputs Originais */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
