@@ -20,7 +20,6 @@ export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
-  // Stores
   const { 
       setPaywallOpen, 
       urbanContext, 
@@ -33,7 +32,6 @@ export const SmartPanel = () => {
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
@@ -41,7 +39,6 @@ export const SmartPanel = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
-  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -49,15 +46,14 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT (Local AI Parser) ---
+  // --- LOGIC: ANALYZE ZONING TEXT ---
   const handleAnalyzeLaw = () => {
-      setZoningModalOpen(false); // Close modal
-      setIsChatOpen(true);       // Open chat to show results
+      setZoningModalOpen(false); 
+      setIsChatOpen(true);       
       setIsAiLoading(true);
 
-      // Simulate AI Parsing with Regex to find FAR (CA) and Occupancy (TO)
-      const farRegex = /(?:far|c\.?a\.?|coeficiente)\s*[:=]?\s*(\d+(\.\d+)?)/i;
-      const occRegex = /(?:occupancy|t\.?o\.?|taxa)\s*[:=]?\s*(\d+(\.\d+)?)/i;
+      const farRegex = /(?:far|c\.?a\.?|coeficiente)[^0-9]*(\d+(\.\d+)?)/i;
+      const occRegex = /(?:occupancy|t\.?o\.?|taxa)[^0-9]*(\d+(\.\d+)?)/i;
 
       const farMatch = urbanContext.match(farRegex);
       const occMatch = urbanContext.match(occRegex);
@@ -73,7 +69,6 @@ export const SmartPanel = () => {
 
       if (occMatch && occMatch[1]) {
           let val = parseFloat(occMatch[1]);
-          // Convert decimals (0.7) to percentage (70) if needed
           if (val <= 1 && val > 0) val = val * 100; 
           detectedOcc = val;
           foundSomething = true;
@@ -81,9 +76,7 @@ export const SmartPanel = () => {
 
       setTimeout(() => {
           if (foundSomething) {
-              // Apply changes to the project
               updateLand({ maxFar: detectedFar, maxOccupancy: detectedOcc });
-              
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
                   content: t('zoning.ai_success', { 
@@ -95,44 +88,21 @@ export const SmartPanel = () => {
           } else {
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
-                  content: "I analyzed the text but couldn't find clear numbers for FAR (C.A.) or Occupancy (T.O.). Please ensure they are written like 'CA 4.0' or 'TO 70%'." 
+                  content: "I analyzed the text but couldn't strictly identify numbers. Try format: 'CA: 4.0' or 'TO: 70%'." 
               }]);
           }
           setIsAiLoading(false);
       }, 1500);
   };
 
-  // --- UNIT CONVERSION FUNCTIONS ---
   const isImperial = measurementSystem === 'imperial';
-
-  const fmtArea = (val: number) => {
-    if (isImperial) return (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²';
-    return val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
-  };
-
-  const fmtDist = (val: number) => {
-    if (isImperial) return (val * 3.28084).toFixed(1) + ' ft';
-    return val.toFixed(1) + ' m';
-  };
-
+  const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
+  const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
   const changeCurrency = (curr: string) => { setCurrency(curr); setIsCurrencyMenuOpen(false); };
-
-  const cycleMobileState = () => {
-    if (window.innerWidth >= 768) return; 
-    if (mobileState === 'min') setMobileState('mid');
-    else if (mobileState === 'mid') setMobileState('max');
-    else setMobileState('min');
-  };
-
-  const getMobileHeightClass = () => {
-    switch (mobileState) {
-        case 'mid': return 'h-[50vh]'; 
-        case 'max': return 'h-[95vh]'; 
-        default: return 'h-28'; 
-    }
-  };
-
+  const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
+  const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
+  
   const handleStartAnalysis = async () => {
     setIsChatOpen(true);
     if(window.innerWidth < 768) setMobileState('max'); 
@@ -157,20 +127,20 @@ export const SmartPanel = () => {
   };
 
   const handleSaveProject = () => {
-    const projectData = { version: '1.0', date: new Date().toISOString(), blocks, land, currency };
-    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const data = JSON.stringify({ version: '1.0', date: new Date().toISOString(), blocks, land, currency }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `cytyos-project.json`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => { try { loadProject(JSON.parse(e.target?.result as string)); } catch (err) { alert("Error loading file"); } };
+    reader.onload = (ev) => { try { loadProject(JSON.parse(ev.target?.result as string)); } catch (err) { alert("Error loading file"); } };
     reader.readAsText(file);
-    event.target.value = '';
+    e.target.value = '';
   };
 
   const handleSetbackChange = (blockId: string, newSetback: number) => {
@@ -180,9 +150,7 @@ export const SmartPanel = () => {
     try {
       const landPoly = turf.polygon(land.geometry.coordinates);
       const buffered = turf.buffer(landPoly, -newSetback, { units: 'meters' });
-      if (buffered && buffered.geometry) {
-        updateBlock(blockId, { setback: newSetback, coordinates: buffered.geometry.coordinates, baseArea: turf.area(buffered) });
-      }
+      if (buffered && buffered.geometry) updateBlock(blockId, { setback: newSetback, coordinates: buffered.geometry.coordinates, baseArea: turf.area(buffered) });
     } catch (e) { console.error(e); }
   };
 
@@ -203,8 +171,8 @@ export const SmartPanel = () => {
     <>
     {/* --- ZONING MODAL --- */}
     {isZoningModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-[#0f111a] border border-gray-700 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-[#0f111a] border border-gray-700 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
                     <h3 className="text-white font-bold flex items-center gap-2">
                         <FileSearch className="w-5 h-5 text-indigo-400" />
@@ -214,12 +182,12 @@ export const SmartPanel = () => {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <div className="p-4">
+                <div className="p-4 bg-[#0f111a]">
                     <textarea 
                         value={urbanContext}
                         onChange={(e) => setUrbanContext(e.target.value)}
                         placeholder={t('zoning.placeholder')}
-                        className="w-full h-48 bg-gray-900 border border-gray-700 rounded-xl p-4 text-sm text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed"
+                        className="w-full h-48 bg-gray-900/50 border border-gray-700 rounded-xl p-4 text-sm text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none leading-relaxed"
                     />
                 </div>
                 <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex justify-end">
@@ -236,49 +204,20 @@ export const SmartPanel = () => {
     )}
 
     {/* --- MAIN PANEL --- */}
-    <div 
-        className={`
-            fixed md:absolute 
-            left-0 md:left-4 
-            bottom-[40px] md:bottom-12 md:top-4 
-            w-full md:w-96 
-            flex flex-col 
-            shadow-2xl overflow-hidden 
-            rounded-t-3xl md:rounded-2xl 
-            border-t md:border border-gray-800 
-            bg-[#0f111a]/95 backdrop-blur-md z-[60]
-            transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1)
-            ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]
-        `}
-    >
+    <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
       {/* HEADER */}
       <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative cursor-pointer md:cursor-default" onClick={cycleMobileState}>
-        
         <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-700 rounded-full opacity-50"></div>
 
-        <div className="flex justify-between items-center mb-3 mt-2 md:mt-0">
+        <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
-            <div className="flex gap-1 items-center" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                 <div className="relative">
-                    <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 text-gray-400 hover:text-white rounded flex items-center gap-1 transition-colors ${isCurrencyMenuOpen ? 'bg-gray-800 text-white' : ''}`}>
-                        <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span><ChevronDown className="w-3 h-3" />
-                    </button>
-                    {isCurrencyMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
-                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider">{t('currency.main')}</div>
-                             {['USD', 'BRL', 'EUR'].map(c => <button key={c} onClick={() => changeCurrency(c)} className="block w-full text-left px-3 py-1.5 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 font-bold">{c}</button>)}
-                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider mt-1">{t('currency.latam')}</div>
-                             {['MXN', 'ARS', 'CLP', 'COP', 'UYU'].map(c => <button key={c} onClick={() => changeCurrency(c)} className="block w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-800 border-b border-gray-800/50">{c}</button>)}
-                        </div>
-                    )}
-                </div>
-
-                <div className="relative mr-2">
-                    <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className={`p-1.5 text-gray-400 hover:text-white rounded flex items-center gap-1 transition-colors ${isLangMenuOpen ? 'bg-gray-800 text-white' : ''}`}>
-                        <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span><ChevronDown className="w-3 h-3" />
+                    <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
+                        <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
                     </button>
                     {isLangMenuOpen && (
                         <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100]">
@@ -287,40 +226,34 @@ export const SmartPanel = () => {
                     )}
                 </div>
 
-                {/* BUTTON: ZONING (Replaced Settings) */}
-                <button onClick={() => setZoningModalOpen(true)} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors" title={t('header.zoning')}>
-                    <FileText className="w-4 h-4" />
-                </button>
-
-                <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
-                <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
-                
-                <button className="md:hidden p-1.5 text-gray-400" onClick={(e) => { e.stopPropagation(); cycleMobileState(); }}>
-                    {mobileState === 'max' ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </button>
+                <div className="flex gap-1">
+                    <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
+                    <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
+                </div>
             </div>
         </div>
         
-        <div className="flex justify-between items-start mb-2">
-            <div>
-                <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.revenue')}</span>
-                <div className="text-xl font-bold text-white tracking-tight">{money(metrics.revenue)}</div>
-            </div>
-            <div className="text-right">
-                <span className="text-[10px] text-gray-500 uppercase font-bold">{t('header.margin')}</span>
-                <div className={`text-lg font-bold ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
-            </div>
-        </div>
-        <div className="flex gap-1 p-1 bg-black/40 rounded-lg border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setActiveTab('editor')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-            <button onClick={() => setActiveTab('financial')} className={`flex-1 py-2 text-xs font-semibold rounded-md flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-        </div>
+        {activeTab !== 'settings' && (
+            <>
+                <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
+                        <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
+                        <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+                    </div>
+                </div>
+                <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+                    <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
+                </div>
+            </>
+        )}
       </div>
 
-      {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
-          
-          {/* Editor */}
           {activeTab === 'editor' && (
             <>
                 {blocks.length > 0 ? (
@@ -348,11 +281,7 @@ export const SmartPanel = () => {
                                     <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
                                         <div className="flex items-center gap-2 w-full group/name relative mr-2">
                                             <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
-                                            <input 
-                                                className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" 
-                                                value={block.name} 
-                                                onChange={(e) => updateBlock(block.id, { name: e.target.value })} 
-                                            />
+                                            <input className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" value={block.name} onChange={(e) => updateBlock(block.id, { name: e.target.value })} />
                                             <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
                                         </div>
                                         <div className="flex gap-1 shrink-0">
@@ -365,18 +294,12 @@ export const SmartPanel = () => {
                                             {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                         </select>
                                         <div>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                                <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
-                                            </div>
+                                            <div className="flex justify-between items-center mb-1"><span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span><span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span></div>
                                             <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
                                         </div>
                                         {block.isCustom && (
                                             <div className="p-2 bg-black/20 rounded border border-gray-700/50">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                                    <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
-                                                </div>
+                                                <div className="flex justify-between items-center mb-1"><span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span><span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span></div>
                                                 <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
                                             </div>
                                         )}
@@ -387,24 +310,17 @@ export const SmartPanel = () => {
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
-                         <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-                            <MapPin className="w-8 h-8 text-indigo-400" />
-                         </div>
+                         <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]"><MapPin className="w-8 h-8 text-indigo-400" /></div>
                          <div className="space-y-2 max-w-[240px]">
                             <h3 className="text-sm font-bold text-white tracking-wide">{t('onboarding.title')}</h3>
-                            <p className="text-[11px] text-gray-400 leading-relaxed">
-                                <Trans i18nKey="onboarding.text" components={{ 1: <span className="text-indigo-400 font-bold" /> }} />
-                            </p>
+                            <p className="text-[11px] text-gray-400 leading-relaxed"><Trans i18nKey="onboarding.text" components={{ 1: <span className="text-indigo-400 font-bold" /> }} /></p>
                          </div>
-                         <div className="pt-2 animate-bounce opacity-50">
-                            <ChevronDown className="w-4 h-4 text-gray-600" />
-                         </div>
+                         <div className="pt-2 animate-bounce opacity-50"><ChevronDown className="w-4 h-4 text-gray-600" /></div>
                     </div>
                 )}
             </>
           )}
 
-          {/* Financial */}
           {activeTab === 'financial' && (
              <div className="p-4 space-y-6 pb-24 md:pb-4">
                 <div className="space-y-2">
@@ -431,11 +347,20 @@ export const SmartPanel = () => {
           )}
       </div>
 
-      {/* CHATBOT FOOTER */}
       <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-72' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
-                <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
+                {/* --- CONTEXT BUTTON (CHAT CLOSED) --- */}
+                <button 
+                    onClick={() => setZoningModalOpen(true)}
+                    className="h-full px-4 bg-gray-800 hover:bg-gray-700 text-indigo-300 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-0.5 transition-colors group"
+                    title={t('header.zoning')}
+                >
+                    <FileText className="w-4 h-4 group-hover:text-white transition-colors" />
+                    <span className="text-[8px] font-bold uppercase group-hover:text-white">Lei</span>
+                </button>
+
+                <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Sparkles className="w-4 h-4" /> {t('ai.btn')}</>}
                 </button>
                 <button onClick={() => setPaywallOpen(true)} className="px-3 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 flex items-center justify-center"><Download className="w-4 h-4" /></button>
@@ -446,7 +371,14 @@ export const SmartPanel = () => {
             <div className="flex flex-col h-full">
                 <div className="px-3 py-2 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center shrink-0">
                     <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
-                    <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
+                    
+                    <div className="flex gap-2">
+                        {/* --- CONTEXT BUTTON (CHAT OPEN) --- */}
+                        <button onClick={() => setZoningModalOpen(true)} className="flex items-center gap-1 text-[9px] bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded transition-colors border border-gray-700">
+                            <FileText className="w-3 h-3" /> {t('header.zoning')}
+                        </button>
+                        <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
                     {chatMessages.map((m, i) => (
