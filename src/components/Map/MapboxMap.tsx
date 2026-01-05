@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
 
-// Ajuste os caminhos conforme sua estrutura de pastas
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
@@ -14,6 +14,7 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617]; 
 
 export const MapboxMap = () => {
+  const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
@@ -24,6 +25,7 @@ export const MapboxMap = () => {
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
+  // Animation Loop
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
@@ -31,6 +33,7 @@ export const MapboxMap = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Pulse Effect
   useEffect(() => {
     if (!map.current || !map.current.getLayer('project-body')) return;
 
@@ -78,6 +81,7 @@ export const MapboxMap = () => {
       loadAllLayers(m);
     });
 
+    // Tooltip logic
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -115,6 +119,7 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
+    // Draw Complete Logic
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -143,6 +148,7 @@ export const MapboxMap = () => {
 
   }, []);
 
+  // Reactions to Store Changes
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
@@ -179,6 +185,7 @@ export const MapboxMap = () => {
     redrawBlocks(map.current, blocks);
   }, [blocks]);
 
+  // Layers Setup
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
@@ -253,7 +260,7 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                'fill-extrusion-color': '#18181b', // Zinc-900
+                'fill-extrusion-color': '#18181b', 
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
                 'fill-extrusion-opacity': 0.3 
