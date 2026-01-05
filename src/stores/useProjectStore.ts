@@ -57,15 +57,14 @@ interface ProjectState {
   calculateMetrics: () => void;
 }
 
-// --- COLOR MAP BY USAGE (UPDATED: NEON CYBERPUNK PALETTE) ---
-// This creates the "Cyan to Indigo" gradient look requested
+// --- NEW NEON PALETTE (Cyan -> Indigo Theme) ---
 const USAGE_COLORS: Record<BlockUsage, string> = {
-  residential: '#06b6d4', // Cyan Neon (Main Residential)
-  corporate:   '#6366f1', // Indigo Neon (Main Corporate)
-  retail:      '#d946ef', // Fuchsia/Magenta (Vibrant Base)
-  hotel:       '#8b5cf6', // Violet
-  parking:     '#334155', // Dark Slate (Background)
-  amenities:   '#10b981'  // Emerald (Tech Green)
+  residential: '#00f3ff', // Electric Cyan (Main)
+  corporate:   '#4f46e5', // Deep Indigo
+  retail:      '#a855f7', // Vivid Purple
+  hotel:       '#d946ef', // Neon Fuchsia
+  parking:     '#1e293b', // Dark Slate (Matte)
+  amenities:   '#2dd4bf'  // Teal
 };
 
 // MIAMI DEFAULT SETTINGS (Brickell Area)
@@ -77,7 +76,6 @@ const INITIAL_LAND: Land = {
   maxFar: 4.0,
   maxOccupancy: 70,
   efficiency: 0.85,
-  // Initial Geometry set to Miami coordinates
   geometry: {
     type: 'Polygon',
     coordinates: [[
@@ -105,14 +103,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   addBlock: (blockData) => {
     const safeId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    
-    // Automatically assign color based on usage from the new Neon Palette
-    const assignedColor = USAGE_COLORS[blockData.usage] || '#06b6d4';
+    // Use the new Neon colors
+    const assignedColor = USAGE_COLORS[blockData.usage] || '#00f3ff';
 
     const newBlock: Block = {
       ...blockData,
       id: safeId,
-      color: assignedColor // Overwrite any color coming from map
+      color: assignedColor 
     };
     
     set((state) => ({ blocks: [...state.blocks, newBlock] }));
@@ -123,14 +120,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set((state) => ({
       blocks: state.blocks.map((b) => {
         if (b.id !== id) return b;
-
         const updatedBlock = { ...b, ...updates };
-
-        // If usage changed, update color automatically
         if (updates.usage) {
            updatedBlock.color = USAGE_COLORS[updates.usage] || b.color;
         }
-
         return updatedBlock;
       }),
     }));
