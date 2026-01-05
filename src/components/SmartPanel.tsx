@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { analyzeProject } from '../services/aiService';
-// ---CHANGED - USING THE CORRECT LOGO--
+// Import the full logo
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
@@ -146,13 +146,14 @@ export const SmartPanel = () => {
         className={`
             fixed md:absolute 
             left-0 md:left-4 
-            bottom-0 md:bottom-4 md:top-4 
+            /* CHANGE HERE: md:bottom-12 creates space above footer */
+            bottom-[40px] md:bottom-12 md:top-4 
             w-full md:w-96 
             flex flex-col 
             shadow-2xl overflow-hidden 
             rounded-t-3xl md:rounded-2xl 
             border-t md:border border-gray-800 
-            bg-[#0f111a]/95 backdrop-blur-md z-50
+            bg-[#0f111a]/95 backdrop-blur-md z-[60]
             transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1)
             ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]
         `}
@@ -165,7 +166,6 @@ export const SmartPanel = () => {
         <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-700 rounded-full opacity-50"></div>
 
         <div className="flex justify-between items-center mb-3 mt-2 md:mt-0">
-             {/* --- MUDANÇA AQUI: Usando logoFull e h-8 --- */}
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-1 items-center" onClick={(e) => e.stopPropagation()}>
