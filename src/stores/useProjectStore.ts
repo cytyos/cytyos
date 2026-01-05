@@ -57,14 +57,15 @@ interface ProjectState {
   calculateMetrics: () => void;
 }
 
-// --- COLOR MAP BY USAGE ---
+// --- COLOR MAP BY USAGE (UPDATED: NEON CYBERPUNK PALETTE) ---
+// This creates the "Cyan to Indigo" gradient look requested
 const USAGE_COLORS: Record<BlockUsage, string> = {
-  residential: '#4f46e5', // Indigo
-  corporate: '#0ea5e9',   // Sky Blue
-  retail: '#f59e0b',      // Amber
-  hotel: '#ec4899',       // Pink
-  parking: '#64748b',     // Slate
-  amenities: '#10b981'    // Emerald
+  residential: '#06b6d4', // Cyan Neon (Main Residential)
+  corporate:   '#6366f1', // Indigo Neon (Main Corporate)
+  retail:      '#d946ef', // Fuchsia/Magenta (Vibrant Base)
+  hotel:       '#8b5cf6', // Violet
+  parking:     '#334155', // Dark Slate (Background)
+  amenities:   '#10b981'  // Emerald (Tech Green)
 };
 
 // MIAMI DEFAULT SETTINGS (Brickell Area)
@@ -76,7 +77,7 @@ const INITIAL_LAND: Land = {
   maxFar: 4.0,
   maxOccupancy: 70,
   efficiency: 0.85,
-  // Initial Geometry set to Miami coordinates to force map centering
+  // Initial Geometry set to Miami coordinates
   geometry: {
     type: 'Polygon',
     coordinates: [[
@@ -105,8 +106,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   addBlock: (blockData) => {
     const safeId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     
-    // Automatically assign color based on usage
-    const assignedColor = USAGE_COLORS[blockData.usage] || '#4f46e5';
+    // Automatically assign color based on usage from the new Neon Palette
+    const assignedColor = USAGE_COLORS[blockData.usage] || '#06b6d4';
 
     const newBlock: Block = {
       ...blockData,
