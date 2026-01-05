@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -24,7 +24,6 @@ export const MapboxMap = () => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   
   const { blocks, updateLand, addBlock } = useProjectStore();
-  const { measurementSystem } = useSettingsStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
   useEffect(() => {
@@ -35,7 +34,6 @@ export const MapboxMap = () => {
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
-      // Always dark mode for the Neon effect
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
       zoom: 15,
@@ -70,9 +68,11 @@ export const MapboxMap = () => {
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
+        
         if (mode === 'draw_polygon') {
             const data = drawRef.current.getAll();
             const currentFeature = data.features[data.features.length - 1];
+
             if (currentFeature && currentFeature.geometry.type === 'Polygon') {
                 const coords = currentFeature.geometry.coordinates[0];
                 if (coords.length > 0) {
@@ -84,11 +84,9 @@ export const MapboxMap = () => {
                         let text = '';
                         const isImp = useSettingsStore.getState().measurementSystem === 'imperial';
                         if (isImp) {
-                            const feet = distanceKm * 3280.84;
-                            text = `${feet.toFixed(0)} ft`;
+                            text = `${(distanceKm * 3280.84).toFixed(0)} ft`;
                         } else {
-                            const meters = distanceKm * 1000;
-                            text = `${meters.toFixed(0)} m`;
+                            text = `${(distanceKm * 1000).toFixed(0)} m`;
                         }
                         tooltipRef.current.style.display = 'block';
                         tooltipRef.current.style.left = `${e.point.x + 15}px`;
@@ -120,7 +118,7 @@ export const MapboxMap = () => {
 
         updateLand({ area: Math.round(area), geometry: geometry });
         
-        // Add default Podium (Retail - Pink/Fuchsia)
+        // Add default Podium (Retail - Purple)
         addBlock({
             name: 'Podium Base',
             type: 'podium',
@@ -130,7 +128,7 @@ export const MapboxMap = () => {
             setback: 0,
             baseArea: area,
             height: 9,
-            color: '#d946ef' // Fuchsia default
+            color: '#a855f7' 
         });
 
         useMapStore.getState().setIs3D(true); 
@@ -139,14 +137,9 @@ export const MapboxMap = () => {
   }, []);
 
   // --- REACTIONS ---
-
   useEffect(() => {
       if (!map.current) return;
-      if (is3D) {
-          map.current.easeTo({ pitch: 60, bearing: -20, duration: 1500 });
-      } else {
-          map.current.easeTo({ pitch: 0, bearing: 0, duration: 1500 });
-      }
+      map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
   }, [is3D]);
 
   useEffect(() => {
@@ -181,7 +174,7 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- HELPERS (THE VISUAL MAGIC) ---
+  // --- HELPERS (VISUALS) ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
@@ -191,10 +184,9 @@ export const MapboxMap = () => {
   const safeSetupLayers = (m: mapboxgl.Map) => {
       if (m.getSource('project-source')) return;
       
-      // Source for our project buildings
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. FILL EXTRUSION (The Hologram Body)
+      // 1. MAIN BUILDING VOLUME (Solid Neon)
       m.addLayer({
           id: 'project-layer',
           type: 'fill-extrusion',
@@ -203,23 +195,21 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.7, // Semi-transparent for crystal effect
-              'fill-extrusion-vertical-gradient': true
+              'fill-extrusion-opacity': 0.9, // High opacity to stand out against matte city
+              'fill-extrusion-vertical-gradient': true // Adds depth shading
           }
       });
 
-      // 2. GLOW LINE (The Neon Outline)
-      // Mapbox can't outline extrusions easily, so we add a line layer at the base
-      // This creates a "footprint" glow
+      // 2. NEON WIREFRAME OUTLINE (The "Wow" Glow)
+      // This draws a line at the base of the polygon
       m.addLayer({
         id: 'project-outline',
         type: 'line',
         source: 'project-source',
         paint: {
-            'line-color': '#ffffff', // White core
+            'line-color': '#ffffff', // White core outline
             'line-width': 2,
-            'line-opacity': 0.8,
-            'line-blur': 1 // Glow effect
+            'line-opacity': 0.6
         }
       });
   };
@@ -242,7 +232,8 @@ export const MapboxMap = () => {
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. GHOST CITY (Translucent Context)
+  // 3. MATTE BLACK CITY (Solid Context)
+  // This solves the transparency overlap issue.
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
@@ -255,11 +246,10 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                'fill-extrusion-color': '#000000', // Black Buildings
+                'fill-extrusion-color': '#18181b', // Zinc-900 (Matte Dark)
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
-                // CRUCIAL: Low opacity allows seeing THROUGH them to your project
-                'fill-extrusion-opacity': 0.15 
+                'fill-extrusion-opacity': 1 // Solid opacity avoids "ghosting" glitches
             }
         }, labelLayerId);
     } catch (e) {}
