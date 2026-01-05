@@ -10,7 +10,7 @@ import logoFull from '../assets/logo-full.png';
 export const LandingPage = () => {
   const { t, i18n } = useTranslation();
   
-  // DIRECT ACCESS TO STORE ACTIONS
+  // ACESSO AO STORE PARA NAVEGAÇÃO
   const setPaywallOpen = useSettingsStore((state) => state.setPaywallOpen);
   const setLandingPageOpen = useSettingsStore((state) => state.setLandingPageOpen);
   
@@ -26,15 +26,13 @@ export const LandingPage = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // HANDLERS
+  // HANDLERS DE AÇÃO
   const handleEnterApp = () => {
-      console.log("Entering App..."); // Debug
-      setLandingPageOpen(false);
+      setLandingPageOpen(false); // Fecha a Landing Page -> Mostra o App
   };
 
   const handleOpenPaywall = () => {
-      console.log("Opening Paywall..."); // Debug
-      setPaywallOpen(true);
+      setPaywallOpen(true); // Abre o Modal de Pagamento
   };
 
   return (
@@ -148,11 +146,10 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          {/* GRID: ALIGNED HEIGHTS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-stretch">
             
             {/* CARD 1: BETA */}
-            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 flex flex-col h-full">
+            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <CheckCircle2 className="w-24 h-24 text-green-500" />
               </div>
@@ -172,10 +169,10 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (March) - FIXED BADGE REMOVED & ICON ADDED */}
-            <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full">
+            {/* CARD 2: V1.0 (March) */}
+            <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]">
               
-              {/* NEW BACKGROUND ICON */}
+              {/* ICONE ADICIONADO AO FUNDO */}
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Rocket className="w-24 h-24 text-indigo-500" />
               </div>
@@ -197,7 +194,7 @@ export const LandingPage = () => {
             </div>
 
             {/* CARD 3: V2.0 (Vision) */}
-            <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300 flex flex-col h-full">
+            <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Sparkles className="w-24 h-24 text-purple-500" />
               </div>
