@@ -9,7 +9,7 @@ import {
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, ChevronUp,
-  Trash2, Coins, FileText, PenTool, MapPin, FileSearch 
+  Trash2, Coins, FileText, PenTool, MapPin, FileSearch, Rocket, Map as MapIcon, Check 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -27,7 +27,9 @@ export const SmartPanel = () => {
       setUrbanContext, 
       measurementSystem,
       isZoningModalOpen, 
-      setZoningModalOpen 
+      setZoningModalOpen,
+      isRoadmapOpen, // NEW
+      setRoadmapOpen // NEW
   } = useSettingsStore();
 
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
@@ -36,12 +38,11 @@ export const SmartPanel = () => {
   // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false); // Used for Currency Dropdown
+  const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
-  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -49,13 +50,12 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT (Local AI Parser) ---
+  // --- LOGIC: ANALYZE ZONING TEXT ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);       
       setIsAiLoading(true);
 
-      // Regex to catch: "CA 4", "FAR: 4.0", "TO 70%", "Taxa 0.7"
       const farRegex = /(?:far|c\.?a\.?|coeficiente)[^0-9]*(\d+(\.\d+)?)/i;
       const occRegex = /(?:occupancy|t\.?o\.?|taxa)[^0-9]*(\d+(\.\d+)?)/i;
 
@@ -73,7 +73,7 @@ export const SmartPanel = () => {
 
       if (occMatch && occMatch[1]) {
           let val = parseFloat(occMatch[1]);
-          if (val <= 1 && val > 0) val = val * 100; // 0.7 -> 70%
+          if (val <= 1 && val > 0) val = val * 100; 
           detectedOcc = val;
           foundSomething = true;
       }
@@ -92,14 +92,13 @@ export const SmartPanel = () => {
           } else {
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
-                  content: "I analyzed the text but couldn't find clear numbers. Please format as: 'CA: 4.0' or 'TO: 70%'." 
+                  content: "I analyzed the text but couldn't strictly identify numbers. Try format: 'CA: 4.0' or 'TO: 70%'." 
               }]);
           }
           setIsAiLoading(false);
       }, 1500);
   };
 
-  // --- HELPER FUNCTIONS ---
   const isImperial = measurementSystem === 'imperial';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
@@ -174,6 +173,96 @@ export const SmartPanel = () => {
 
   return (
     <>
+    {/* --- ROADMAP MODAL --- */}
+    {isRoadmapOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="w-full max-w-5xl bg-[#0f111a] border border-gray-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                
+                {/* Modal Header */}
+                <div className="p-6 border-b border-gray-800 flex justify-between items-start bg-gradient-to-r from-gray-900 to-[#0f111a]">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <Rocket className="w-6 h-6 text-indigo-500" /> 
+                            {t('roadmap.title')}
+                        </h2>
+                        <p className="text-gray-400 text-sm mt-1">{t('roadmap.subtitle')}</p>
+                    </div>
+                    <button onClick={() => setRoadmapOpen(false)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Modal Body (Columns) */}
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        {/* COLUMN 1: BETA (Current) */}
+                        <div className="bg-gray-800/30 rounded-2xl p-5 border border-green-500/20 relative overflow-hidden group hover:border-green-500/40 transition-colors">
+                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <CheckCircle2 className="w-24 h-24 text-green-500" />
+                            </div>
+                            <h3 className="text-green-400 font-bold uppercase tracking-wider text-xs mb-1">Live Now</h3>
+                            <h4 className="text-xl font-bold text-white mb-4">{t('roadmap.col1.title')}</h4>
+                            <ul className="space-y-3">
+                                {[1,2,3,4].map(n => (
+                                    <li key={n} className="flex items-start gap-2 text-sm text-gray-300">
+                                        <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                        <span>{t(`roadmap.col1.f${n}`)}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* COLUMN 2: V1.0 (March) */}
+                        <div className="bg-gradient-to-b from-indigo-900/20 to-gray-900/50 rounded-2xl p-5 border border-indigo-500/50 relative overflow-hidden ring-1 ring-indigo-500/50">
+                            <div className="absolute top-3 right-3 bg-indigo-600 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wide shadow-lg">
+                                {t('roadmap.col2.badge')}
+                            </div>
+                            <h3 className="text-indigo-400 font-bold uppercase tracking-wider text-xs mb-1">Coming Soon</h3>
+                            <h4 className="text-xl font-bold text-white mb-4">{t('roadmap.col2.title')}</h4>
+                            <ul className="space-y-3">
+                                {[1,2,3,4].map(n => (
+                                    <li key={n} className="flex items-start gap-2 text-sm text-gray-200">
+                                        <Rocket className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+                                        <span>{t(`roadmap.col2.f${n}`)}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* COLUMN 3: V2.0 (Vision) */}
+                        <div className="bg-gray-800/30 rounded-2xl p-5 border border-purple-500/20 relative overflow-hidden group hover:border-purple-500/40 transition-colors">
+                            <div className="absolute top-3 right-3 bg-purple-900/50 text-purple-200 text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wide border border-purple-500/30">
+                                {t('roadmap.col3.badge')}
+                            </div>
+                            <h3 className="text-purple-400 font-bold uppercase tracking-wider text-xs mb-1">Future</h3>
+                            <h4 className="text-xl font-bold text-white mb-4">{t('roadmap.col3.title')}</h4>
+                            <ul className="space-y-3">
+                                {[1,2,3,4].map(n => (
+                                    <li key={n} className="flex items-start gap-2 text-sm text-gray-400">
+                                        <Sparkles className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                                        <span>{t(`roadmap.col3.f${n}`)}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* Footer CTA */}
+                <div className="p-6 border-t border-gray-800 bg-gray-900/80 flex justify-center">
+                    <button 
+                        onClick={() => setPaywallOpen(true)}
+                        className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105"
+                    >
+                        {t('roadmap.cta')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
+
     {/* --- ZONING MODAL --- */}
     {isZoningModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -221,6 +310,15 @@ export const SmartPanel = () => {
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                 
+                {/* --- NEW ROADMAP BUTTON --- */}
+                <button 
+                    onClick={() => setRoadmapOpen(true)}
+                    className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center transition-colors border border-gray-700"
+                    title={t('header.roadmap')}
+                >
+                    <MapIcon className="w-4 h-4" />
+                </button>
+
                 {/* --- CURRENCY SELECTOR (Restored) --- */}
                 <div className="relative">
                     <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
