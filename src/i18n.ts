@@ -9,7 +9,7 @@ const resources = {
       tabs: { design: "Design", economics: "Economics" },
       header: { 
         revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", 
-        roadmap: "Roadmap" // NEW
+        roadmap: "Roadmap"
       },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR (Floor Area Ratio)", occ: "Occupancy Rate" },
       assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %" },
@@ -40,12 +40,11 @@ const resources = {
         analyze_btn: "Analyze & Apply",
         ai_success: "I analyzed the text. Based on '{{text}}', I updated Max FAR to {{far}} and Occupancy to {{occ}}%. Check the 'Economics' tab to see the impact."
       },
-      // --- ROADMAP & SALES COPY ---
       roadmap: {
         title: "The Vision & Roadmap",
-        subtitle: "Cytyos is not a drawing tool. It is a decision system.",
         cta: "Secure Early Bird Access",
         col1: {
+          tag: "Live Now",
           title: "Get Today (Beta)",
           f1: "Instant 3D Zoning Visualization",
           f2: "Manual Plot Control (Draw any shape)",
@@ -53,21 +52,42 @@ const resources = {
           f4: "Unlimited Projects"
         },
         col2: {
+          tag: "Most Popular Strategy",
+          subtag: "Coming March",
           title: "Guarantee for March (v1.0)",
-          badge: "Included in Early Bird",
           f1: "Automatic Zoning Data (No manual input)",
           f2: "Site Comparison Tool (Side-by-side)",
           f3: "PDF Export for Investors",
           f4: "Smart Volumetry (Auto-Envelope)"
         },
         col3: {
+          tag: "The Vision 2026",
           title: "The Future 2026 (v2.0)",
-          badge: "Founders Edition",
           f1: "Predictive AI Heatmaps",
           f2: "Highest & Best Use Recommender",
           f3: "Global Expansion Pack",
           f4: "Multi-layer Intelligence"
         }
+      },
+      // --- NEW LANDING PAGE KEYS ---
+      landing: {
+        login: "Login",
+        hero: {
+          badge: "Beta Live Now",
+          title_prefix: "The Operating System for",
+          title_main: "Real Estate Development.",
+          title_anim: "Start Analyzing.",
+          subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds. Stop drawing manually. Start optimizing instantly.",
+          btn_try: "Try Beta Free",
+          btn_plans: "View Early Bird Plans"
+        },
+        features: {
+          global: { title: "Global & Local", desc: "Mapbox integration allows analysis anywhere in the world, with specific metric systems (Imperial/Metric) adapted instantly." },
+          zoning: { title: "Smart Zoning", desc: "Our AI reads zoning text and automatically applies constraints like FAR, Occupancy, and Setbacks to your 3D model." },
+          secure: { title: "Secure Data", desc: "Your projects are private. We do not sell your data. Cytyos is built for professional developers and architects." }
+        },
+        roadmap_intro: "We are building the future of territorial intelligence. Secure your position now for lifetime access to future tools.",
+        footer_rights: "© 2026 Cytyos Inc."
       }
     }
   },
@@ -75,10 +95,7 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
       tabs: { design: "Projeto", economics: "Viabilidade" },
-      header: { 
-        revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei",
-        roadmap: "Roadmap" // NEW
-      },
+      header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap" },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A. (Aproveitamento)", occ: "T.O. (Ocupação)" },
       assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)" },
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
@@ -108,12 +125,11 @@ const resources = {
         analyze_btn: "Analisar e Aplicar",
         ai_success: "Analisei o texto. Identifiquei C.A. {{far}} e T.O. {{occ}}%. Atualizei os parâmetros automaticamente. Verifique a aba 'Viabilidade' para ver o impacto."
       },
-      // --- ROADMAP & SALES COPY ---
       roadmap: {
         title: "Visão & Roadmap",
-        subtitle: "Cytyos não é uma ferramenta de desenho. É um sistema de decisão.",
         cta: "Garantir Acesso Early Bird",
         col1: {
+          tag: "No Ar (Beta)",
           title: "Você Leva HOJE (Beta)",
           f1: "Visualização 3D Instantânea",
           f2: "Controle Manual de Terreno",
@@ -121,24 +137,46 @@ const resources = {
           f4: "Projetos Ilimitados"
         },
         col2: {
+          tag: "Estratégia Popular",
+          subtag: "Chega em Março",
           title: "Garantia para MARÇO (v1.0)",
-          badge: "Incluso no Early Bird",
           f1: "Dados de Zoneamento Automáticos",
           f2: "Comparador de Terrenos",
           f3: "Exportação de PDF Investidor",
           f4: "Volumetria Inteligente"
         },
         col3: {
+          tag: "A Visão 2026",
           title: "O Futuro 2026 (v2.0)",
-          badge: "Edição Founders",
           f1: "Mapas de Calor Preditivos (IA)",
           f2: "Recomendador de 'Best Use'",
           f3: "Pacote de Expansão Global",
           f4: "Inteligência Multicamadas"
         }
+      },
+      // --- NEW LANDING PAGE KEYS TRANSLATED ---
+      landing: {
+        login: "Entrar",
+        hero: {
+          badge: "Beta Disponível",
+          title_prefix: "O Sistema Operacional do",
+          title_main: "Desenvolvimento Imobiliário.",
+          title_anim: "Comece a Analisar.",
+          subtitle: "O Cytyos transforma dados complexos de zoneamento em decisões de investimento em segundos. Pare de desenhar manualmente. Otimize agora.",
+          btn_try: "Testar Beta Grátis",
+          btn_plans: "Ver Planos Early Bird"
+        },
+        features: {
+          global: { title: "Global & Local", desc: "Integração Mapbox permite análises em qualquer lugar do mundo, adaptando sistemas métricos (Imperial/Métrico) instantaneamente." },
+          zoning: { title: "Zoneamento Inteligente", desc: "Nossa IA lê textos de leis e aplica automaticamente restrições como C.A., T.O. e Recuos ao seu modelo 3D." },
+          secure: { title: "Dados Seguros", desc: "Seus projetos são privados. Não vendemos seus dados. Cytyos é construído para incorporadores e arquitetos profissionais." }
+        },
+        roadmap_intro: "Estamos construindo o futuro da inteligência territorial. Garanta sua posição agora para ter acesso vitalício às ferramentas futuras.",
+        footer_rights: "© 2026 Cytyos Inc."
       }
     }
   },
+  // Mantendo suporte basico para outros
   es: { translation: { app: { title: "Cytyos Beta" } } },
   fr: { translation: { app: { title: "Cytyos Beta" } } },
   zh: { translation: { app: { title: "Cytyos Beta" } } }
