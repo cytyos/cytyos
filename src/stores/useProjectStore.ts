@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// Tipos
+// Types
 export type BlockType = 'podium' | 'tower';
 export type BlockUsage = 'residential' | 'corporate' | 'retail' | 'hotel' | 'parking' | 'amenities';
 
@@ -57,16 +57,17 @@ interface ProjectState {
   calculateMetrics: () => void;
 }
 
-// --- MAPA DE CORES POR USO (A Mágica acontece aqui) ---
+// --- COLOR MAP BY USAGE ---
 const USAGE_COLORS: Record<BlockUsage, string> = {
-  residential: '#4f46e5', // Indigo (Roxo Azulado)
-  corporate: '#0ea5e9',   // Sky Blue (Azul Claro)
-  retail: '#f59e0b',      // Amber (Laranja/Amarelo)
-  hotel: '#ec4899',       // Pink (Rosa)
-  parking: '#64748b',     // Slate (Cinza)
-  amenities: '#10b981'    // Emerald (Verde)
+  residential: '#4f46e5', // Indigo
+  corporate: '#0ea5e9',   // Sky Blue
+  retail: '#f59e0b',      // Amber
+  hotel: '#ec4899',       // Pink
+  parking: '#64748b',     // Slate
+  amenities: '#10b981'    // Emerald
 };
 
+// MIAMI DEFAULT SETTINGS (Brickell Area)
 const INITIAL_LAND: Land = {
   area: 2000,
   cost: 5000000,
@@ -75,7 +76,17 @@ const INITIAL_LAND: Land = {
   maxFar: 4.0,
   maxOccupancy: 70,
   efficiency: 0.85,
-  geometry: null
+  // Initial Geometry set to Miami coordinates to force map centering
+  geometry: {
+    type: 'Polygon',
+    coordinates: [[
+      [-80.1936, 25.7620], 
+      [-80.1936, 25.7635], 
+      [-80.1915, 25.7635], 
+      [-80.1915, 25.7620], 
+      [-80.1936, 25.7620]
+    ]]
+  }
 };
 
 const INITIAL_METRICS: Metrics = {
@@ -94,13 +105,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   addBlock: (blockData) => {
     const safeId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     
-    // Define a cor automaticamente com base no uso
+    // Automatically assign color based on usage
     const assignedColor = USAGE_COLORS[blockData.usage] || '#4f46e5';
 
     const newBlock: Block = {
       ...blockData,
       id: safeId,
-      color: assignedColor // Sobrescreve qualquer cor que venha do mapa
+      color: assignedColor // Overwrite any color coming from map
     };
     
     set((state) => ({ blocks: [...state.blocks, newBlock] }));
@@ -114,9 +125,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
         const updatedBlock = { ...b, ...updates };
 
-        // Se o uso mudou, atualiza a cor automaticamente
+        // If usage changed, update color automatically
         if (updates.usage) {
-            updatedBlock.color = USAGE_COLORS[updates.usage] || b.color;
+           updatedBlock.color = USAGE_COLORS[updates.usage] || b.color;
         }
 
         return updatedBlock;
