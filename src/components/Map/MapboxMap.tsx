@@ -11,7 +11,6 @@ import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 
 // PLACEHOLDER TOKEN - Ensure you have VITE_MAPBOX_TOKEN in your .env file
-// Or paste it here temporarily for testing
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 
 // MIAMI COORDINATES (Brickell)
@@ -36,7 +35,8 @@ export const MapboxMap = () => {
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
-      style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11',
+      // CHANGE 1: Switched default to 'dark-v11' for the "Cyberpunk/Glass" look
+      style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
       zoom: 15,
       pitch: is3D ? 60 : 0,
@@ -46,7 +46,6 @@ export const MapboxMap = () => {
     });
     map.current = m;
 
-    // --- MUDANÇA AQUI: Zoom no Topo Direito ---
     m.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     const draw = new MapboxDraw({
@@ -61,9 +60,7 @@ export const MapboxMap = () => {
       loadAllLayers(m);
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
-             console.log("User location detected:", pos.coords);
-          },
+          (pos) => console.log("User location detected:", pos.coords),
           (err) => console.warn(err)
         );
       }
@@ -163,7 +160,8 @@ export const MapboxMap = () => {
 
   useEffect(() => {
       if (!map.current) return;
-      const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11';
+      // CHANGE 2: Ensure we toggle between Satellite and Dark (Glass Mode)
+      const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
       map.current.setStyle(styleUrl);
       map.current.once('style.load', () => loadAllLayers(map.current!));
   }, [mapStyle]);
@@ -203,6 +201,8 @@ export const MapboxMap = () => {
   const safeSetupLayers = (m: mapboxgl.Map) => {
       if (m.getSource('project-source')) return;
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      
+      // CHANGE 3: "Liquid Crystal" Style
       m.addLayer({
           id: 'project-layer',
           type: 'fill-extrusion',
@@ -211,7 +211,8 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.95
+              'fill-extrusion-opacity': 0.6, // Translucency for Glass Effect
+              'fill-extrusion-vertical-gradient': true
           }
       });
   };
@@ -245,7 +246,12 @@ export const MapboxMap = () => {
             'filter': ['==', 'extrude', 'true'],
             'type': 'fill-extrusion',
             'minzoom': 14,
-            'paint': { 'fill-extrusion-color': '#aaa', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-base': ['get', 'min_height'], 'fill-extrusion-opacity': 0.3 }
+            'paint': { 
+                'fill-extrusion-color': '#222', // Darker context buildings
+                'fill-extrusion-height': ['get', 'height'], 
+                'fill-extrusion-base': ['get', 'min_height'], 
+                'fill-extrusion-opacity': 0.2 // Ghostly context
+            }
         }, labelLayerId);
     } catch (e) {}
   };
