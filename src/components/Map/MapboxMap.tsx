@@ -25,7 +25,6 @@ export const MapboxMap = () => {
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
-  // Animation Loop
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
@@ -33,7 +32,6 @@ export const MapboxMap = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Pulse Effect
   useEffect(() => {
     if (!map.current || !map.current.getLayer('project-body')) return;
 
@@ -81,7 +79,6 @@ export const MapboxMap = () => {
       loadAllLayers(m);
     });
 
-    // Tooltip logic
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -119,7 +116,6 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
-    // Draw Complete Logic
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -148,7 +144,6 @@ export const MapboxMap = () => {
 
   }, []);
 
-  // Reactions to Store Changes
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
@@ -185,7 +180,6 @@ export const MapboxMap = () => {
     redrawBlocks(map.current, blocks);
   }, [blocks]);
 
-  // Layers Setup
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
       safeAddCityLayer(m);
