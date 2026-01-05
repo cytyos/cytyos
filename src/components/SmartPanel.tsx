@@ -9,7 +9,7 @@ import {
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, ChevronUp,
-  Trash2, Coins, Settings, FileText, PenTool 
+  Trash2, Coins, Settings, FileText, PenTool, MapPin 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -226,7 +226,7 @@ export const SmartPanel = () => {
       </div>
 
       {/* SCROLLABLE CONTENT */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
           
           {/* Settings */}
           {activeTab === 'settings' && (
@@ -247,88 +247,88 @@ export const SmartPanel = () => {
           {/* Editor */}
           {activeTab === 'editor' && (
             <>
-                <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
-                    <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
-                            {metrics.isFarValid && metrics.isOccupancyValid ? <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> {t('compliance.legal')}</span> : <span className="text-[10px] text-red-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {t('compliance.violation')}</span>}
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.far')}</span><span className={metrics.isFarValid ? 'text-white' : 'text-red-400 font-bold'}>{dec(metrics.far)} / {dec(land.maxFar)}</span></div>
-                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isFarValid ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.far / land.maxFar) * 100, 100)}%` }} /></div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.occ')}</span><span className={metrics.isOccupancyValid ? 'text-white' : 'text-red-400 font-bold'}>{num(metrics.occupancy)}% / {num(land.maxOccupancy)}%</span></div>
-                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isOccupancyValid ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.occupancy / land.maxOccupancy) * 100, 100)}%` }} /></div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* --- BLOCKS LIST OR EMPTY STATE --- */}
-                <div className="p-4 space-y-3 pb-24 md:pb-4">
-                    {blocks.length === 0 ? (
-                        /* EMPTY STATE (ONBOARDING) */
-                        <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 opacity-60">
-                             <div className="p-3 bg-gray-800/50 rounded-full border border-gray-700">
-                                <PenTool className="w-6 h-6 text-gray-400" />
-                             </div>
-                             <div>
-                                <h3 className="text-xs font-bold text-gray-300">Start Analysis</h3>
-                                {/* Instruction text as requested (English code, but meaning is: Choose address & draw outline) */}
-                                <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto leading-relaxed mt-1">
-                                    Search for an address and draw the lot outline to begin.
-                                </p>
-                             </div>
-                        </div>
-                    ) : (
-                        /* BLOCKS LIST */
-                        blocks.map((block) => (
-                            <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
-                                <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
-                                    {/* FIX: Aligned Header with Relative Input */}
-                                    <div className="flex items-center gap-2 w-full group/name relative mr-2">
-                                        <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
-                                        
-                                        <input 
-                                            className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" 
-                                            value={block.name} 
-                                            onChange={(e) => updateBlock(block.id, { name: e.target.value })} 
-                                        />
-                                        
-                                        {/* Edit Icon positioned absolutely but safely padded by input's pr-6 */}
-                                        <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
-                                    </div>
-
-                                    <div className="flex gap-1 shrink-0">
-                                        <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
-                                        <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
-                                    </div>
+                {/* --- 1. SHOW ONLY IF WE HAVE BLOCKS --- */}
+                {blocks.length > 0 ? (
+                    <>
+                        <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
+                            <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
+                                    {metrics.isFarValid && metrics.isOccupancyValid ? <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> {t('compliance.legal')}</span> : <span className="text-[10px] text-red-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {t('compliance.violation')}</span>}
                                 </div>
-                                <div className="space-y-3 pl-1">
-                                    <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
-                                        {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                    </select>
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                            <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
-                                        </div>
-                                        <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
-                                    </div>
-                                    {block.isCustom && (
-                                        <div className="p-2 bg-black/20 rounded border border-gray-700/50">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                                <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
-                                            </div>
-                                            <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
-                                        </div>
-                                    )}
+                                <div>
+                                    <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.far')}</span><span className={metrics.isFarValid ? 'text-white' : 'text-red-400 font-bold'}>{dec(metrics.far)} / {dec(land.maxFar)}</span></div>
+                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isFarValid ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.far / land.maxFar) * 100, 100)}%` }} /></div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.occ')}</span><span className={metrics.isOccupancyValid ? 'text-white' : 'text-red-400 font-bold'}>{num(metrics.occupancy)}% / {num(land.maxOccupancy)}%</span></div>
+                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isOccupancyValid ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.occupancy / land.maxOccupancy) * 100, 100)}%` }} /></div>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
+                        </div>
+
+                        <div className="p-4 space-y-3 pb-24 md:pb-4">
+                            {blocks.map((block) => (
+                                <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
+                                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
+                                        {/* Header with Relative Input Alignment Fixed */}
+                                        <div className="flex items-center gap-2 w-full group/name relative mr-2">
+                                            <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
+                                            <input 
+                                                className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" 
+                                                value={block.name} 
+                                                onChange={(e) => updateBlock(block.id, { name: e.target.value })} 
+                                            />
+                                            <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
+                                        </div>
+                                        <div className="flex gap-1 shrink-0">
+                                            <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3 pl-1">
+                                        <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
+                                            {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                        </select>
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
+                                                <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
+                                            </div>
+                                            <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
+                                        </div>
+                                        {block.isCustom && (
+                                            <div className="p-2 bg-black/20 rounded border border-gray-700/50">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                    <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
+                                                </div>
+                                                <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    /* --- 2. EMPTY STATE (ONBOARDING) --- */
+                    /* Replaces the whole content when no blocks exist */
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
+                         <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
+                            <MapPin className="w-8 h-8 text-indigo-400" />
+                         </div>
+                         <div className="space-y-2 max-w-[240px]">
+                            <h3 className="text-sm font-bold text-white tracking-wide">Start Analysis</h3>
+                            <p className="text-[11px] text-gray-400 leading-relaxed">
+                                Search for a location or address, then use the <span className="text-indigo-400 font-bold">Draw</span> tool to define your lot outline.
+                            </p>
+                         </div>
+                         <div className="pt-2 animate-bounce opacity-50">
+                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                         </div>
+                    </div>
+                )}
             </>
           )}
 
