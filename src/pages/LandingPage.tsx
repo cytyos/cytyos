@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Rocket, CheckCircle2, Sparkles, ArrowRight, 
-  Layers, Map as MapIcon, ShieldCheck, Play 
+  Layers, Map as MapIcon, ShieldCheck, Play, Globe, ChevronDown 
 } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import logoFull from '../assets/logo-full.png'; 
@@ -10,15 +10,17 @@ import logoFull from '../assets/logo-full.png';
 export const LandingPage = () => {
   const { t, i18n } = useTranslation();
   const { setPaywallOpen } = useSettingsStore();
+  
+  // State for Language Dropdown
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
-  // Helper to change language from LP
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'pt' ? 'en' : 'pt';
-    i18n.changeLanguage(newLang);
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setIsLangMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#050608] text-white overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#050608] text-white overflow-x-hidden selection:bg-indigo-500 selection:text-white font-sans">
       
       {/* --- NAVBAR --- */}
       <nav className="fixed top-0 w-full z-50 bg-[#050608]/80 backdrop-blur-md border-b border-white/5">
@@ -26,15 +28,38 @@ export const LandingPage = () => {
           <img src={logoFull} alt="Cytyos" className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
           
           <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleLanguage}
-              className="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider transition-colors"
-            >
-              {i18n.language === 'pt' ? 'EN' : 'PT'}
-            </button>
+            
+            {/* LANGUAGE DROPDOWN (FULL LIST) */}
+            <div className="relative">
+                <button 
+                    onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
+                    className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider transition-colors py-2"
+                >
+                    <Globe className="w-3 h-3" />
+                    {i18n.language.substring(0,2)}
+                    <ChevronDown className="w-3 h-3" />
+                </button>
+
+                {isLangMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] animate-in fade-in zoom-in-95 duration-200">
+                        {['en','pt','es','fr','zh'].map(lang => (
+                            <button 
+                                key={lang} 
+                                onClick={() => changeLanguage(lang)} 
+                                className="block w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800 last:border-0 uppercase font-medium"
+                            >
+                                {lang === 'zh' ? '中文' : lang}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="h-4 w-px bg-white/10 mx-1"></div>
+
             <button 
               onClick={() => setPaywallOpen(true)}
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
+              className="text-gray-300 hover:text-white text-xs font-bold transition-colors"
             >
               Login
             </button>
@@ -49,26 +74,37 @@ export const LandingPage = () => {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+      <section className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
         {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
 
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in-up">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-8 animate-fade-in-up">
           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
           Beta Live Now
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-gray-200 to-gray-500 max-w-4xl leading-[1.1]">
-          {t('roadmap.subtitle')}
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white max-w-5xl leading-[1.1]">
+          {/* Static Part */}
+          The Operating System for <br className="hidden md:block" />
+          Real Estate Development. <br />
+          
+          {/* Animated Word Effect */}
+          <span className="group relative inline-block cursor-pointer">
+            <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-500"></span>
+            <span className="relative bg-clip-text text-transparent bg-gradient-to-b from-gray-200 to-gray-500 group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:via-indigo-400 group-hover:to-purple-400 transition-all duration-500">
+              Start Analyzing.
+            </span>
+          </span>
         </h1>
         
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-10 leading-relaxed">
-          O Cytyos transforma dados de zoneamento complexos em decisões de investimento imobiliário em segundos. Pare de desenhar, comece a analisar.
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed">
+          Cytyos transforms complex zoning data into investment decisions in seconds. 
+          Stop drawing manually. Start optimizing instantly.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
           <button 
-            onClick={() => window.location.reload()} // Just reloads to enter app for now (or remove Landing logic if merged)
+            onClick={() => window.location.reload()} 
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10"
           >
             <Play className="w-4 h-4 fill-current" />
@@ -83,9 +119,8 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- ROADMAP SECTION (THE NEW ITEM) --- */}
+      {/* --- ROADMAP SECTION --- */}
       <section className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
-        {/* Subtle Grid Background */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -95,21 +130,21 @@ export const LandingPage = () => {
               {t('roadmap.title')}
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Estamos construindo o sistema operacional do desenvolvimento imobiliário. Garanta sua posição agora para ter acesso vitalício às ferramentas futuras.
+              We are building the future of territorial intelligence. Secure your position now for lifetime access to future tools.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             
-            {/* CARD 1: BETA (HOJE) */}
-            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+            {/* CARD 1: BETA (Today) */}
+            <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <CheckCircle2 className="w-32 h-32 text-green-500" />
+                <CheckCircle2 className="w-24 h-24 text-green-500" />
               </div>
               <div className="inline-block px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-green-500/20">
-                Live Now
+                Available Now
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t('roadmap.col1.title')}</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col1.title')}</h3>
               <div className="h-1 w-12 bg-green-500 rounded-full mb-6"></div>
               
               <ul className="space-y-4 relative z-10">
@@ -122,15 +157,12 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (EARLY BIRD) */}
-            <div className="bg-gradient-to-b from-indigo-900/20 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/60 relative transform md:-translate-y-4 shadow-2xl shadow-indigo-900/20 ring-1 ring-indigo-500/50">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg border border-indigo-400 whitespace-nowrap">
-                Most Popular Strategy
-              </div>
+            {/* CARD 2: V1.0 (March) */}
+            <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10">
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20">
                 Coming March
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t('roadmap.col2.title')}</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col2.title')}</h3>
               <div className="h-1 w-12 bg-indigo-500 rounded-full mb-6"></div>
 
               <ul className="space-y-4 relative z-10">
@@ -141,27 +173,17 @@ export const LandingPage = () => {
                   </li>
                 ))}
               </ul>
-
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <button 
-                  onClick={() => setPaywallOpen(true)}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 group"
-                >
-                  {t('roadmap.cta')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <p className="text-center text-[10px] text-gray-500 mt-3">Limited spots for Founder pricing.</p>
-              </div>
             </div>
 
-            {/* CARD 3: V2.0 (VISION) */}
+            {/* CARD 3: V2.0 (Vision) */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-purple-500/20 relative group hover:border-purple-500/40 transition-all duration-300">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Sparkles className="w-32 h-32 text-purple-500" />
+                <Sparkles className="w-24 h-24 text-purple-500" />
               </div>
               <div className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-purple-500/20">
-                The Vision 2026
+                2026 Vision
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t('roadmap.col3.title')}</h3>
+              <h3 className="text-xl font-bold text-white mb-2">{t('roadmap.col3.title')}</h3>
               <div className="h-1 w-12 bg-purple-500 rounded-full mb-6"></div>
 
               <ul className="space-y-4 relative z-10">
@@ -175,10 +197,29 @@ export const LandingPage = () => {
             </div>
 
           </div>
+
+          {/* --- UNIFIED CTA (The "Bridge") --- */}
+          <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
+            <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Get Founder Access to Everything</h3>
+                    <p className="text-gray-400 text-sm max-w-lg">
+                        One subscription secures your access to Beta, Version 1.0, and the future 2.0 Intelligence Core. Price locks in forever.
+                    </p>
+                </div>
+                <button 
+                  onClick={() => setPaywallOpen(true)}
+                  className="whitespace-nowrap px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-xl font-bold text-sm transition-all transform hover:scale-105 flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                >
+                  {t('roadmap.cta')} <ArrowRight className="w-4 h-4" />
+                </button>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* --- FEATURE HIGHLIGHTS (Mini Section) --- */}
+      {/* --- FEATURE HIGHLIGHTS --- */}
       <section className="py-20 px-6 max-w-7xl mx-auto border-t border-white/5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
             <div className="space-y-4">
