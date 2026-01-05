@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Globe, Building2, TrendingUp, CheckCircle2 } from 'lucide-react';
-// --- MUDANÇA 1: Importando o logo completo (Ícone + Texto) ---
+// Import the full logo (Icon + Text)
 import logoFull from '../assets/logo-full.png';
 
 export const LandingPage = () => {
@@ -14,13 +14,13 @@ export const LandingPage = () => {
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#0f111a]/90 backdrop-blur-md h-20">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-              {/* --- MUDANÇA 2: Logo Full, sem texto duplicado ao lado --- */}
+              {/* Logo Full Image (Icon + Text) */}
               <img 
                 src={logoFull} 
                 alt="Cytyos" 
                 className="h-9 w-auto object-contain" 
               />
-              {/* Mantemos apenas o Badge Beta, alinhado */}
+              {/* Beta Badge */}
               <div className="flex flex-col justify-center h-full">
                 <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 ml-2">Beta</span>
               </div>
@@ -36,7 +36,7 @@ export const LandingPage = () => {
       {/* HERO SECTION */}
       <main className="flex-1 flex flex-col items-center justify-center relative pt-32 pb-16 px-4 md:px-6 text-center w-full overflow-hidden">
         
-        {/* Glow */}
+        {/* Glow Effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-indigo-600/15 rounded-full blur-[80px] md:blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-5xl space-y-6 md:space-y-8 flex flex-col items-center">
