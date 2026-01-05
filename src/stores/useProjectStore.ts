@@ -55,11 +55,10 @@ interface ProjectState {
   setCurrency: (currency: string) => void;
   loadProject: (data: any) => void;
   calculateMetrics: () => void;
-  clearProject: () => void; // <--- NEW ACTION
+  clearProject: () => void; // <--- Clear Action
 }
 
 // --- CONFIG (NEON / CYBERPUNK PALETTE) ---
-// Updated to the Cyan/Indigo theme
 const USAGE_COLORS: Record<BlockUsage, string> = {
   residential: '#00f3ff', // Electric Cyan
   corporate:   '#4f46e5', // Deep Indigo
@@ -168,7 +167,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
-  // --- NEW: CLEAR PROJECT ACTION ---
+  // --- ACTION: CLEAR PROJECT ---
   clearProject: () => {
       set((state) => ({
           blocks: [], // Remove all buildings
