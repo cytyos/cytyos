@@ -25,7 +25,7 @@ export const LandingPage = () => {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // --- NAVIGATION LOGIC ---
+  // --- ACTIONS ---
   const handleEnterApp = () => {
       navigate('/app'); 
   };
@@ -106,7 +106,6 @@ export const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-stretch">
-            
             {/* BOX 1 */}
             <div className="bg-[#0f111a] rounded-3xl p-8 border border-green-500/20 relative group hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_30px_rgba(34,197,94,0.1)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><CheckCircle2 className="w-24 h-24 text-green-500" /></div>
@@ -118,7 +117,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* BOX 2 (Fixed: Added Icon, Removed Badge, Aligned) */}
+            {/* BOX 2 - FIXED */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-0 shadow-2xl shadow-indigo-900/10 group hover:border-indigo-400 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_40px_rgba(99,102,241,0.2)]">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><Rocket className="w-24 h-24 text-indigo-500" /></div>
               <div className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-indigo-500/20 w-fit">{t('roadmap.col2.subtag')}</div>
