@@ -9,7 +9,7 @@ import logoFull from '../assets/logo-full.png';
 
 export const LandingPage = () => {
   const { t, i18n } = useTranslation();
-  const { setPaywallOpen } = useSettingsStore();
+  const { setPaywallOpen, setLandingPageOpen } = useSettingsStore(); // Added setLandingPageOpen
   
   // State for Language Dropdown
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -17,11 +17,6 @@ export const LandingPage = () => {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setIsLangMenuOpen(false);
-  };
-
-  const scrollToRoadmap = () => {
-    const el = document.getElementById('roadmap-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -105,14 +100,14 @@ export const LandingPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
           <button 
-            onClick={() => setPaywallOpen(true)} // Open Paywall to Capture Lead
+            onClick={() => setLandingPageOpen(false)} // ENTER PLATFORM
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10"
           >
             <Play className="w-4 h-4 fill-current" />
             {t('landing.hero.btn_try')}
           </button>
           <button 
-            onClick={scrollToRoadmap} // Scroll to Roadmap
+            onClick={() => setPaywallOpen(true)} // OPEN GATEWAY (Payment)
             className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500"
           >
             {t('landing.hero.btn_plans')}
@@ -121,7 +116,7 @@ export const LandingPage = () => {
       </section>
 
       {/* --- ROADMAP SECTION --- */}
-      <section id="roadmap-section" className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
+      <section className="py-24 bg-[#0a0c10] border-t border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -158,7 +153,7 @@ export const LandingPage = () => {
               </ul>
             </div>
 
-            {/* CARD 2: V1.0 (March) */}
+            {/* CARD 2: V1.0 (March) - FIXED (No Button inside) */}
             <div className="bg-gradient-to-b from-indigo-900/10 to-[#0f111a] rounded-3xl p-8 border border-indigo-500/40 relative transform md:-translate-y-2 shadow-2xl shadow-indigo-900/10 group hover:scale-[1.02] hover:border-indigo-400 hover:shadow-[0_0_40px_rgba(99,102,241,0.2)] transition-all duration-300">
               <div className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg border border-indigo-400 whitespace-nowrap">
                 {t('roadmap.col2.tag')}
