@@ -7,7 +7,14 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
       tabs: { design: "Design", economics: "Economics" },
-      header: { revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Zoning Law" }, // Updated
+      header: { 
+        revenue: "Revenue (GDV)", 
+        margin: "Margin", 
+        export: "Export PDF", 
+        load: "Load", 
+        save: "Save", 
+        zoning: "Context" // Short name for the button
+      },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR (Floor Area Ratio)", occ: "Occupancy Rate" },
       assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %" },
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
@@ -31,7 +38,6 @@ const resources = {
         title: "Start Analysis",
         text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline."
       },
-      // NEW ZONING MODAL KEYS
       zoning: {
         title: "AI Zoning Analysis",
         placeholder: "Paste zoning laws, master plan text, or constraints here...\n\nExample: 'Zone ZM-2, Max FAR is 4.0, Max Occupancy 70%, Max Height 45m.'",
@@ -44,7 +50,14 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
       tabs: { design: "Projeto", economics: "Viabilidade" },
-      header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Zoneamento" }, // Updated
+      header: { 
+        revenue: "VGV Total", 
+        margin: "Margem Líq.", 
+        export: "Exportar PDF", 
+        load: "Abrir", 
+        save: "Salvar", 
+        zoning: "Lei" // Nome curto para o botão
+      },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A. (Aproveitamento)", occ: "T.O. (Ocupação)" },
       assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)" },
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
@@ -68,7 +81,6 @@ const resources = {
         title: "Iniciar Análise",
         text: "Busque um endereço e use a ferramenta <1>Desenhar</1> para definir o contorno do terreno."
       },
-      // NEW ZONING MODAL KEYS
       zoning: {
         title: "Análise de Zoneamento IA",
         placeholder: "Cole o texto da lei de zoneamento ou plano diretor aqui...\n\nExemplo: 'Zona ZM, Coeficiente de Aproveitamento máximo 4.0, Taxa de Ocupação 70%'",
@@ -77,7 +89,10 @@ const resources = {
       }
     }
   },
-  // ... (ES, FR, ZH mantidos iguais, apenas adicione chaves vazias ou em ingles se quiser)
+  // (Mantive ES, FR, ZH iguais ao anterior para economizar espaço, mas a estrutura já suporta)
+  es: { translation: { app: { title: "Cytyos Beta" } } },
+  fr: { translation: { app: { title: "Cytyos Beta" } } },
+  zh: { translation: { app: { title: "Cytyos Beta" } } }
 };
 
 i18n
