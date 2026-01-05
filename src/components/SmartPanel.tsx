@@ -25,12 +25,12 @@ export const SmartPanel = () => {
       setPaywallOpen, 
       urbanContext, 
       setUrbanContext, 
-      measurementSystem, 
-      isZoningModalOpen, // New State
-      setZoningModalOpen // New Action
+      measurementSystem,
+      isZoningModalOpen, 
+      setZoningModalOpen 
   } = useSettingsStore();
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor'); // Removed 'settings' tab
+  const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // UI States
@@ -49,15 +49,13 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT (The "Brain") ---
+  // --- LOGIC: ANALYZE ZONING TEXT (Local AI Parser) ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); // Close modal
-      setIsChatOpen(true);       // Open chat
+      setIsChatOpen(true);       // Open chat to show results
       setIsAiLoading(true);
 
-      // Simulate AI Parsing with Regex (Client-side Intelligence)
-      // Look for patterns like "CA 4", "FAR 4.0", "TO 70%", "Occupancy 0.7"
-      
+      // Simulate AI Parsing with Regex to find FAR (CA) and Occupancy (TO)
       const farRegex = /(?:far|c\.?a\.?|coeficiente)\s*[:=]?\s*(\d+(\.\d+)?)/i;
       const occRegex = /(?:occupancy|t\.?o\.?|taxa)\s*[:=]?\s*(\d+(\.\d+)?)/i;
 
@@ -75,35 +73,33 @@ export const SmartPanel = () => {
 
       if (occMatch && occMatch[1]) {
           let val = parseFloat(occMatch[1]);
-          // If value is small (e.g. 0.7), convert to percentage (70)
-          if (val <= 1) val = val * 100; 
+          // Convert decimals (0.7) to percentage (70) if needed
+          if (val <= 1 && val > 0) val = val * 100; 
           detectedOcc = val;
           foundSomething = true;
       }
 
       setTimeout(() => {
           if (foundSomething) {
-              // UPDATE INPUTS AUTOMATICALLY
+              // Apply changes to the project
               updateLand({ maxFar: detectedFar, maxOccupancy: detectedOcc });
               
-              // Success Message
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
                   content: t('zoning.ai_success', { 
-                      text: urbanContext.substring(0, 15) + '...', 
+                      text: urbanContext.substring(0, 20) + '...', 
                       far: detectedFar, 
                       occ: detectedOcc 
                   }) 
               }]);
           } else {
-              // Fallback Message
               setChatMessages(prev => [...prev, { 
                   role: 'assistant', 
-                  content: "I read the text but couldn't strictly identify numeric FAR or Occupancy values. Please ensure they are formatted like 'FAR 4.0' or 'TO 70%'." 
+                  content: "I analyzed the text but couldn't find clear numbers for FAR (C.A.) or Occupancy (T.O.). Please ensure they are written like 'CA 4.0' or 'TO 70%'." 
               }]);
           }
           setIsAiLoading(false);
-      }, 1500); // Fake processing delay
+      }, 1500);
   };
 
   // --- UNIT CONVERSION FUNCTIONS ---
@@ -291,7 +287,7 @@ export const SmartPanel = () => {
                     )}
                 </div>
 
-                {/* NEW: ZONING BUTTON (Replaced Settings) */}
+                {/* BUTTON: ZONING (Replaced Settings) */}
                 <button onClick={() => setZoningModalOpen(true)} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors" title={t('header.zoning')}>
                     <FileText className="w-4 h-4" />
                 </button>
