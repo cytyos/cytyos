@@ -1,27 +1,32 @@
 import { create } from 'zustand';
 
-interface SettingsStore {
-  // Paywall / UI
+type MeasurementSystem = 'metric' | 'imperial';
+
+interface SettingsState {
   isPaywallOpen: boolean;
   setPaywallOpen: (isOpen: boolean) => void;
   
-  // Idioma
-  language: 'en' | 'pt';
-  setLanguage: (lang: 'en' | 'pt') => void;
+  // NEW: Zoning Modal State
+  isZoningModalOpen: boolean;
+  setZoningModalOpen: (isOpen: boolean) => void;
 
-  // NOVO: Sistema de Medidas
-  measurementSystem: 'metric' | 'imperial';
-  setMeasurementSystem: (system: 'metric' | 'imperial') => void;
+  urbanContext: string;
+  setUrbanContext: (text: string) => void;
+
+  measurementSystem: MeasurementSystem;
+  setMeasurementSystem: (system: MeasurementSystem) => void;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
+export const useSettingsStore = create<SettingsState>((set) => ({
   isPaywallOpen: false,
   setPaywallOpen: (isOpen) => set({ isPaywallOpen: isOpen }),
-  
-  language: 'en',
-  setLanguage: (lang) => set({ language: lang }),
 
-  // Padrão: Métrico
+  isZoningModalOpen: false, // New
+  setZoningModalOpen: (isOpen) => set({ isZoningModalOpen: isOpen }), // New
+
+  urbanContext: '',
+  setUrbanContext: (text) => set({ urbanContext: text }),
+
   measurementSystem: 'metric',
   setMeasurementSystem: (system) => set({ measurementSystem: system }),
 }));
