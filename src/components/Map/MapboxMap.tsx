@@ -20,8 +20,35 @@ export const MapboxMap = () => {
   const drawRef = useRef<MapboxDraw | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
+  // Reference for the Animation Frame ID (to stop it when leaving)
+  const animationFrameRef = useRef<number>();
+
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
+
+  // --- ANIMATION FUNCTION (The "Living" Glow) ---
+  const animateGlow = () => {
+    if (!map.current) return;
+
+    // Create a smooth sine wave based on time
+    // Frequency: Time / 1000 * speed
+    const time = Date.now() / 1000;
+    
+    // 1. Oscillate Opacity between 0.4 and 1.0
+    const opacity = (Math.sin(time * 3) + 1) / 2 * 0.6 + 0.4;
+    
+    // 2. Oscillate Width between 4px and 12px (Pulsing size)
+    const width = (Math.sin(time * 3) + 1) / 2 * 8 + 4;
+
+    // Apply to the glow layer if it exists
+    if (map.current.getLayer('project-glow')) {
+        map.current.setPaintProperty('project-glow', 'line-opacity', opacity);
+        map.current.setPaintProperty('project-glow', 'line-width', width);
+    }
+
+    // Keep looping
+    animationFrameRef.current = requestAnimationFrame(animateGlow);
+  };
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
@@ -30,7 +57,6 @@ export const MapboxMap = () => {
 
     const m = new mapboxgl.Map({
       container: mapContainer.current,
-      // Ensure dark mode for contrast
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER as [number, number],
       zoom: 15.5,
@@ -53,6 +79,8 @@ export const MapboxMap = () => {
 
     m.on('load', () => {
       loadAllLayers(m);
+      // Start the animation loop once layers are loaded
+      animateGlow();
     });
 
     // --- RULER TOOLTIP LOGIC ---
@@ -93,7 +121,6 @@ export const MapboxMap = () => {
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
     });
 
-    // --- ON DRAW CREATE ---
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -105,7 +132,6 @@ export const MapboxMap = () => {
         const area = turf.area(feature);
         updateLand({ area: Math.round(area), geometry: feature.geometry });
         
-        // Create default Podium with Cyan Neon color
         addBlock({
             name: 'Podium Base',
             type: 'podium',
@@ -115,11 +141,18 @@ export const MapboxMap = () => {
             setback: 0,
             baseArea: area,
             height: 12,
-            color: '#00f3ff' // Neon Cyan default
+            color: '#00f3ff' 
         });
 
         useMapStore.getState().setIs3D(true); 
     });
+
+    // CLEANUP: Stop animation when component unmounts
+    return () => {
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+        }
+    };
 
   }, []);
 
@@ -133,7 +166,12 @@ export const MapboxMap = () => {
       if (!map.current) return;
       const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
       map.current.setStyle(styleUrl);
-      map.current.once('style.load', () => loadAllLayers(map.current!));
+      map.current.once('style.load', () => {
+          loadAllLayers(map.current!);
+          // Restart animation if style changes
+          if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+          animateGlow();
+      });
   }, [mapStyle]);
 
   useEffect(() => {
@@ -161,10 +199,10 @@ export const MapboxMap = () => {
   }, [blocks]);
 
 
-  // --- VISUAL LAYERS SETUP ---
+  // --- LAYERS ---
   const loadAllLayers = (m: mapboxgl.Map) => {
       safeSetupLayers(m);
-      safeAddCityLayer(m); // Adds the context buildings
+      safeAddCityLayer(m);
       redrawBlocks(m, useProjectStore.getState().blocks);
   };
 
@@ -173,7 +211,7 @@ export const MapboxMap = () => {
       
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       
-      // 1. PROJECT BODY (Main volume color)
+      // 1. PROJECT BODY (Matte Neon)
       m.addLayer({
           id: 'project-body',
           type: 'fill-extrusion',
@@ -182,23 +220,21 @@ export const MapboxMap = () => {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              // High opacity for the main body so it stands out
               'fill-extrusion-opacity': 0.9,
               'fill-extrusion-vertical-gradient': true 
           }
       });
 
-      // 2. PROJECT GLOW (The Neon Halo at the base)
-      // VISUAL TWEAK: Increased width and blur heavily to simulate a light glow on the ground.
+      // 2. PROJECT GLOW (Animated via animateGlow function)
       m.addLayer({
         id: 'project-glow',
         type: 'line',
         source: 'project-source',
         paint: {
-            'line-color': ['get', 'color'], // Glow matches the block color
-            'line-width': 8,  // Much thicker line
-            'line-blur': 6,   // Heavy blur creates the "halo" effect
-            'line-opacity': 0.8
+            'line-color': ['get', 'color'], // Matches block color
+            'line-width': 10,  // Base width (will animate)
+            'line-blur': 8,    // High blur for "Light" effect
+            'line-opacity': 0.8 // Base opacity (will animate)
         }
       });
   };
@@ -222,7 +258,6 @@ export const MapboxMap = () => {
               type: 'Feature',
               geometry: { type: 'Polygon', coordinates: block.coordinates },
               properties: { 
-                  // Ensure a default neon color if none exists
                   color: block.color || '#00f3ff', 
                   height: h, 
                   base: b 
@@ -233,7 +268,7 @@ export const MapboxMap = () => {
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
-  // 3. CONTEXT CITY BUILDINGS
+  // 3. CONTEXT CITY (Matte Dark, 30% Opacity)
   const safeAddCityLayer = (m: mapboxgl.Map) => {
     if (m.getLayer('3d-buildings')) return;
     try {
@@ -247,14 +282,10 @@ export const MapboxMap = () => {
             'type': 'fill-extrusion',
             'minzoom': 14,
             'paint': { 
-                // VISUAL TWEAK: Darker matte gray for contrast
-                'fill-extrusion-color': '#222222', 
+                'fill-extrusion-color': '#111111', // Almost Black
                 'fill-extrusion-height': ['get', 'height'], 
                 'fill-extrusion-base': ['get', 'min_height'], 
-                
-                // VISUAL TWEAK: Increased opacity from 0.05 to 0.3 (30%)
-                // They are now visible dark shapes, framing the project.
-                'fill-extrusion-opacity': 0.3
+                'fill-extrusion-opacity': 0.3 // Semi-transparent matte
             }
         }, labelLayerId);
     } catch (e) {}
@@ -264,7 +295,6 @@ export const MapboxMap = () => {
     <>
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
         
-        {/* RULER TOOLTIP */}
         <div 
             ref={tooltipRef}
             className="absolute pointer-events-none bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono z-50 hidden shadow-xl backdrop-blur-sm"
