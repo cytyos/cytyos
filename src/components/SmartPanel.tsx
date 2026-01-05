@@ -4,7 +4,8 @@ import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { analyzeProject } from '../services/aiService';
-import logoImage from '../assets/logo.png';
+// --- MUDANÇA AQUI: Importando o logo correto ---
+import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
@@ -164,7 +165,8 @@ export const SmartPanel = () => {
         <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-700 rounded-full opacity-50"></div>
 
         <div className="flex justify-between items-center mb-3 mt-2 md:mt-0">
-             <img src={logoImage} alt="Cytyos" className="h-6 w-auto object-contain transition-opacity hover:opacity-80" />
+             {/* --- MUDANÇA AQUI: Usando logoFull e h-8 --- */}
+             <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-1 items-center" onClick={(e) => e.stopPropagation()}>
                 <div className="relative">
@@ -247,8 +249,6 @@ export const SmartPanel = () => {
           {/* Editor */}
           {activeTab === 'editor' && (
             <>
-                {/* Search removida daqui */}
-
                 <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
                     <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                         <div className="flex justify-between items-center">
