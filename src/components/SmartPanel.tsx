@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation, Trans } from 'react-i18next'; // Import Trans
+import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -348,4 +348,47 @@ export const SmartPanel = () => {
                 </div>
                 <div className="p-4 bg-black/20 rounded-xl space-y-2">
                     <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.nsa')}</span><span className="text-white">{fmtArea(metrics.nsa)}</span></div>
-                    <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.revenue')}
+                    <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.revenue')}</span><span className="text-white">{money(metrics.revenue)}</span></div>
+                    <div className="flex justify-between text-[10px] text-red-400/70"><span>{t('results.totalCost')}</span><span>{money(metrics.totalCost)}</span></div>
+                    <div className="h-px bg-gray-800 my-2"></div>
+                    <div className="flex justify-between text-xs font-bold text-white"><span>{t('results.netProfit')}</span><span className="text-green-400">{money(metrics.grossProfit)}</span></div>
+                </div>
+            </div>
+          )}
+      </div>
+
+      {/* CHATBOT FOOTER */}
+      <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-72' : 'h-16'}`}>
+        {!isChatOpen && (
+             <div className="p-3 flex gap-2 h-full items-center">
+                <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
+                    {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Sparkles className="w-4 h-4" /> {t('ai.btn')}</>}
+                </button>
+                <button onClick={() => setPaywallOpen(true)} className="px-3 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 flex items-center justify-center"><Download className="w-4 h-4" /></button>
+            </div>
+        )}
+
+        {isChatOpen && (
+            <div className="flex flex-col h-full">
+                <div className="px-3 py-2 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center shrink-0">
+                    <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
+                    <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
+                    {chatMessages.map((m, i) => (
+                        <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[90%] p-2.5 rounded-2xl text-[11px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none'}`}>{m.content}</div>
+                        </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                </div>
+                <div className="p-2 border-t border-gray-800 bg-gray-900 flex gap-2 shrink-0">
+                    <input className="flex-1 bg-gray-800 text-white text-[11px] rounded-lg px-3 py-2 border border-gray-700 focus:border-blue-500 outline-none placeholder-gray-500" placeholder={t('ai.placeholder')} value={userQuery} onChange={(e) => setUserQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} />
+                    <button onClick={handleSendMessage} disabled={isAiLoading || !userQuery.trim()} className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 transition-colors"><Send className="w-3.5 h-3.5" /></button>
+                </div>
+            </div>
+        )}
+      </div>
+    </div>
+  );
+};
