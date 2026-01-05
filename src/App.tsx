@@ -2,18 +2,29 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
 import { Platform } from './pages/Platform';
+import { Footer } from './components/Footer';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota Raiz: Mostra a Landing Page (Capa) */}
+        {/* Root Route: Shows Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Rota do App: Mostra a Plataforma (Mapa + Ferramentas) */}
-        <Route path="/app" element={<Platform />} />
+        {/* App Route: Shows Platform with Footer layout */}
+        <Route path="/app" element={
+          <div className="flex flex-col h-screen w-full bg-gray-900 text-white overflow-hidden">
+             {/* Main Content Area (Sidebar + Map) */}
+             <div className="flex-1 relative overflow-hidden">
+                <Platform />
+             </div>
+             
+             {/* Fixed Footer */}
+             <Footer />
+          </div>
+        } />
         
-        {/* Qualquer outra rota desconhecida redireciona para a Capa */}
+        {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
