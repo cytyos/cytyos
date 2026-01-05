@@ -3,31 +3,34 @@ import { useTranslation } from 'react-i18next';
 import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useMapStore } from '../stores/mapStore'; // Added MapStore
 import { analyzeProject } from '../services/aiService';
 import logoImage from '../assets/logo.png';
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, ChevronUp,
-  Trash2, Coins, Settings, FileText 
+  Trash2, Coins, Settings, FileText, Search // Added Search Icon
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
+interface SearchResult { id: string; place_name: string; center: [number, number]; }
 
-// Tipos para os estados da gaveta mobile
+// Types for mobile drawer state
 type MobileState = 'min' | 'mid' | 'max';
 
 export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
-  // --- AQUI: Puxamos a configuração de medidas da Store ---
+  // Stores
   const { setPaywallOpen, urbanContext, setUrbanContext, measurementSystem } = useSettingsStore();
-  
+  const { setFlyToCoords } = useMapStore(); // To control the map flyTo
+
   const [activeTab, setActiveTab] = useState<'editor' | 'financial' | 'settings'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // States de UI
+  // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
@@ -35,7 +38,13 @@ export const SmartPanel = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
-  // State Mobile
+  // Search States (New)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -43,16 +52,56 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- FUNÇÕES DE CONVERSÃO (M/FT) ---
+  // --- SEARCH LOGIC (Mapbox Geocoding) ---
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length < 3) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const token = import.meta.env.VITE_MAPBOX_TOKEN;
+        // Search specifically for addresses and POIs
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${token}&types=address,poi&limit=5`
+        );
+        const data = await response.json();
+        
+        if (data.features) {
+          setSearchResults(data.features.map((f: any) => ({
+            id: f.id,
+            place_name: f.place_name,
+            center: f.center
+          })));
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleSelectLocation = (result: SearchResult) => {
+    setFlyToCoords(result.center); // Tell the map to fly there
+    setSearchQuery(result.place_name); // Fill input with full name
+    setShowResults(false); // Hide dropdown
+  };
+
+  // --- UNIT CONVERSION FUNCTIONS (M/FT) ---
   const isImperial = measurementSystem === 'imperial';
 
-  // Converte Área (m² -> sq ft)
   const fmtArea = (val: number) => {
     if (isImperial) return (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²';
     return val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   };
 
-  // Converte Distância (m -> ft)
   const fmtDist = (val: number) => {
     if (isImperial) return (val * 3.28084).toFixed(1) + ' ft';
     return val.toFixed(1) + ' m';
@@ -227,7 +276,7 @@ export const SmartPanel = () => {
         )}
       </div>
 
-      {/* CONTEÚDO SCROLLÁVEL */}
+      {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a]">
           
           {/* Settings */}
@@ -249,6 +298,44 @@ export const SmartPanel = () => {
           {/* Editor */}
           {activeTab === 'editor' && (
             <>
+                {/* --- ADDRESS SEARCH BAR (NEW) --- */}
+                <div className="px-4 pt-4 relative z-50">
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-3.5 w-3.5 text-gray-500" />
+                        </div>
+                        <input
+                            type="text"
+                            className="block w-full pl-9 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-900 focus:border-blue-500 text-xs transition duration-150 ease-in-out"
+                            placeholder="Search location (Miami, FL)..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => { if(searchResults.length > 0) setShowResults(true); }}
+                        />
+                        {isSearching && (
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <span className="h-3 w-3 rounded-full border-2 border-t-transparent border-blue-500 animate-spin"></span>
+                            </div>
+                        )}
+                        
+                        {/* SEARCH RESULTS DROPDOWN */}
+                        {showResults && searchResults.length > 0 && (
+                            <ul className="absolute w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-auto z-50">
+                                {searchResults.map((result) => (
+                                    <li 
+                                        key={result.id}
+                                        onClick={() => handleSelectLocation(result)}
+                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-xs text-gray-200 border-b border-gray-700/50 last:border-0"
+                                    >
+                                        <div className="font-medium text-white truncate">{result.place_name.split(',')[0]}</div>
+                                        <div className="text-[10px] text-gray-500 truncate">{result.place_name}</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+
                 <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
                     <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                         <div className="flex justify-between items-center">
@@ -287,7 +374,6 @@ export const SmartPanel = () => {
                                 <div>
                                     <div className="flex justify-between items-center mb-1">
                                         <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                        {/* AQUI: Altura em M ou FT */}
                                         <span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span>
                                     </div>
                                     <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
@@ -296,7 +382,6 @@ export const SmartPanel = () => {
                                     <div className="p-2 bg-black/20 rounded border border-gray-700/50">
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                            {/* Setback também em M ou FT */}
                                             <span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span>
                                         </div>
                                         <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
@@ -316,7 +401,6 @@ export const SmartPanel = () => {
                     <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
                         <div className="grid grid-cols-2 gap-3">
-                            {/* Inputs manuais continuam em valor bruto (o usuário digita) */}
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
@@ -325,7 +409,6 @@ export const SmartPanel = () => {
                     </div>
                 </div>
                 <div className="p-4 bg-black/20 rounded-xl space-y-2">
-                    {/* Resultados Convertidos (M/FT) */}
                     <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.nsa')}</span><span className="text-white">{fmtArea(metrics.nsa)}</span></div>
                     <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.revenue')}</span><span className="text-white">{money(metrics.revenue)}</span></div>
                     <div className="flex justify-between text-[10px] text-red-400/70"><span>{t('results.totalCost')}</span><span>{money(metrics.totalCost)}</span></div>
