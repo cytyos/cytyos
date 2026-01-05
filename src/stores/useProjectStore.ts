@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// Types
+// --- TYPES ---
 export type BlockType = 'podium' | 'tower';
 export type BlockUsage = 'residential' | 'corporate' | 'retail' | 'hotel' | 'parking' | 'amenities';
 
@@ -55,14 +55,16 @@ interface ProjectState {
   setCurrency: (currency: string) => void;
   loadProject: (data: any) => void;
   calculateMetrics: () => void;
+  clearProject: () => void; // <--- NEW ACTION
 }
 
-// --- NEW NEON PALETTE (Cyan -> Indigo Theme) ---
+// --- CONFIG (NEON / CYBERPUNK PALETTE) ---
+// Updated to the Cyan/Indigo theme
 const USAGE_COLORS: Record<BlockUsage, string> = {
-  residential: '#00f3ff', // Electric Cyan (Main)
+  residential: '#00f3ff', // Electric Cyan
   corporate:   '#4f46e5', // Deep Indigo
-  retail:      '#a855f7', // Vivid Purple
-  hotel:       '#d946ef', // Neon Fuchsia
+  retail:      '#d946ef', // Neon Fuchsia
+  hotel:       '#a855f7', // Vivid Purple
   parking:     '#1e293b', // Dark Slate (Matte)
   amenities:   '#2dd4bf'  // Teal
 };
@@ -103,7 +105,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   addBlock: (blockData) => {
     const safeId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    // Use the new Neon colors
+    
+    // Automatically assign neon color
     const assignedColor = USAGE_COLORS[blockData.usage] || '#00f3ff';
 
     const newBlock: Block = {
@@ -120,10 +123,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set((state) => ({
       blocks: state.blocks.map((b) => {
         if (b.id !== id) return b;
+
         const updatedBlock = { ...b, ...updates };
+
+        // If usage changed, update color automatically
         if (updates.usage) {
            updatedBlock.color = USAGE_COLORS[updates.usage] || b.color;
         }
+
         return updatedBlock;
       }),
     }));
@@ -159,6 +166,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       set({ blocks: data.blocks, land: data.land, currency: savedCurrency });
       get().calculateMetrics();
     }
+  },
+
+  // --- NEW: CLEAR PROJECT ACTION ---
+  clearProject: () => {
+      set((state) => ({
+          blocks: [], // Remove all buildings
+          land: { 
+              ...state.land, 
+              geometry: null, // Clear the land drawing
+              area: 0 
+          },
+          metrics: INITIAL_METRICS // Reset numbers
+      }));
   },
 
   calculateMetrics: () => {
