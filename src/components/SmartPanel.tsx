@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { analyzeProject } from '../services/aiService';
-// --- MUDANÇA AQUI: Importando o logo correto ---
+// ---CHANGED - USING THE CORRECT LOGO--
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
