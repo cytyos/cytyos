@@ -3,13 +3,16 @@ import { create } from 'zustand';
 type MeasurementSystem = 'metric' | 'imperial';
 
 interface SettingsState {
+  // Navigation State
+  isLandingPageOpen: boolean;
+  setLandingPageOpen: (isOpen: boolean) => void;
+
   isPaywallOpen: boolean;
   setPaywallOpen: (isOpen: boolean) => void;
   
   isZoningModalOpen: boolean;
   setZoningModalOpen: (isOpen: boolean) => void;
 
-  // NEW: Roadmap Modal State
   isRoadmapOpen: boolean;
   setRoadmapOpen: (isOpen: boolean) => void;
 
@@ -21,13 +24,15 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
+  isLandingPageOpen: true, // App starts at Landing Page
+  setLandingPageOpen: (isOpen) => set({ isLandingPageOpen: isOpen }),
+
   isPaywallOpen: false,
   setPaywallOpen: (isOpen) => set({ isPaywallOpen: isOpen }),
 
   isZoningModalOpen: false,
   setZoningModalOpen: (isOpen) => set({ isZoningModalOpen: isOpen }),
 
-  // NEW
   isRoadmapOpen: false,
   setRoadmapOpen: (isOpen) => set({ isRoadmapOpen: isOpen }),
 
