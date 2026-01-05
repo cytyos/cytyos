@@ -3,7 +3,6 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 const resources = {
-  // --- ENGLISH ---
   en: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -20,8 +19,6 @@ const resources = {
       map: { search_placeholder: "Search location (City, Address)...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline." },
       zoning: { title: "AI Zoning Analysis", placeholder: "Paste zoning laws here... Example: 'Max FAR 4.0, Occupancy 70%'", analyze_btn: "Analyze & Apply", ai_success: "Updated: FAR {{far}}, Occ {{occ}}%." },
-      
-      // ROADMAP & LANDING
       roadmap: {
         title: "The Vision & Roadmap", cta: "Secure Early Bird Access",
         col1: { tag: "Live Now", title: "Get Today (Beta)", f1: "Instant 3D Zoning Visualization", f2: "Manual Plot Control", f3: "Basic ROI & GFA Calculator", f4: "Unlimited Projects" },
@@ -37,8 +34,6 @@ const resources = {
       }
     }
   },
-
-  // --- PORTUGUESE ---
   pt: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -70,8 +65,6 @@ const resources = {
       }
     }
   },
-
-  // --- SPANISH (FULL) ---
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -103,8 +96,6 @@ const resources = {
       }
     }
   },
-
-  // --- FRENCH (FULL) ---
   fr: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -136,8 +127,6 @@ const resources = {
       }
     }
   },
-
-  // --- CHINESE (FULL) ---
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
