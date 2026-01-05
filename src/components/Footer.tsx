@@ -3,28 +3,20 @@ import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="w-full bg-slate-950 border-t border-slate-800 py-4 px-6 z-50 text-center">
-      {/* Copyright and Links */}
-      <p className="text-slate-500 text-xs font-light tracking-wide flex justify-center items-center flex-wrap gap-2 mb-2">
-        <span>&copy; 2025 Cytyos. All rights reserved.</span>
-        <span className="hidden sm:inline mx-1 text-slate-700">|</span>
+    <footer className="w-full bg-slate-950 border-t border-slate-800 py-2 px-4 z-50">
+      <p className="text-[10px] text-slate-500 font-light tracking-wide text-center flex flex-wrap justify-center items-center gap-x-3 gap-y-1">
+        <span>&copy; 2025 Cytyos</span>
         
-        <Link to="/privacy" className="hover:text-cyan-400 transition-colors">
-          Privacy Policy
-        </Link>
+        <span className="text-slate-800">|</span>
         
-        <span className="text-slate-700">|</span>
+        <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link>
+        <Link to="/terms" className="hover:text-cyan-400 transition-colors">Terms</Link>
         
-        <Link to="/terms" className="hover:text-cyan-400 transition-colors">
-          Terms of Use
-        </Link>
-      </p>
-
-      {/* AI Disclaimer */}
-      <p className="text-[10px] text-slate-600 max-w-3xl mx-auto leading-relaxed font-medium">
-        DISCLAIMER: Cytyos is an AI-powered research and analysis support tool. 
-        Generated data, zoning interpretations, and financial estimates may contain errors and should be treated as preliminary. 
-        Always verify information with official local sources and qualified professionals before making any investment or construction decisions.
+        <span className="text-slate-800 hidden sm:inline">|</span>
+        
+        <span className="text-slate-600 opacity-80">
+           DISCLAIMER: AI decision support tool. Results are estimates and must be verified by professionals.
+        </span>
       </p>
     </footer>
   );
