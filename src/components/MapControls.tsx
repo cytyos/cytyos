@@ -1,51 +1,98 @@
-import React, { useState } from 'react';
-import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 
-// Get Mapbox Token from Env
+// TOKEN DO MAPBOX (Tenta ler do .env ou usa string vazia)
+// IMPORTANTE: Se o .env não estiver carregado, você pode colar seu token direto entre as aspas abaixo para testar.
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
+interface SearchResult {
+  id: string;
+  place_name: string;
+  center: [number, number];
+}
+
 export const MapControls = () => {
-  // Global State (Stores)
+  // Global State
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
   const { mapStyle, setMapStyle, drawMode, setDrawMode, setFlyToCoords, is3D, setIs3D } = useMapStore();
   
-  // Local Search State
+  // Search State
   const [searchValue, setSearchValue] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Real Geocoding Function
-  const handleSearch = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && searchValue.length > 3) {
+  // --- AUTOCOMPLETE LOGIC ---
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      // Só busca se tiver 3 ou mais letras
+      if (searchValue.length < 3) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
       setIsSearching(true);
       try {
+        // Busca endereços e pontos de interesse
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`
         );
         const data = await response.json();
         
-        if (data.features && data.features.length > 0) {
-          const [lng, lat] = data.features[0].center;
-          setFlyToCoords([lng, lat]); // Fly map to location
-          // Optional: Clear search after flying? 
-          // setSearchValue(''); 
+        if (data.features) {
+          setSearchResults(data.features.map((f: any) => ({
+            id: f.id,
+            place_name: f.place_name,
+            center: f.center
+          })));
+          setShowResults(true);
         }
       } catch (error) {
-        console.error("Search Error:", error);
+        console.error("Erro na busca:", error);
       } finally {
         setIsSearching(false);
       }
-    }
+    }, 500); // Espera 500ms parar de digitar para buscar
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchValue]);
+
+  // Selecionar um local da lista
+  const handleSelectLocation = (result: SearchResult) => {
+    setFlyToCoords(result.center); // Voa para o local
+    setSearchValue(result.place_name); // Preenche o input
+    setShowResults(false); // Esconde a lista
   };
 
+  // Limpar busca
+  const clearSearch = () => {
+    setSearchValue('');
+    setSearchResults([]);
+    setShowResults(false);
+  };
+
+  // Fecha a lista se clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="flex flex-col gap-3 w-[90vw] max-w-md mx-auto pointer-events-auto">
+    <div className="flex flex-col gap-3 w-[90vw] max-w-md mx-auto pointer-events-auto relative">
       
       {/* --- 1. SEARCH BAR + UNIT TOGGLE --- */}
-      <div className="flex gap-2 w-full">
+      <div className="flex gap-2 w-full relative z-50" ref={searchContainerRef}>
         
-        {/* Search Input */}
+        {/* Search Input Container */}
         <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 {isSearching ? (
@@ -54,21 +101,60 @@ export const MapControls = () => {
                   <Search className="h-4 w-4 text-gray-400 group-focus-within:text-indigo-400 transition-colors" />
                 )}
             </div>
+            
             <input
                 type="text"
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={handleSearch}
-                className="block w-full pl-10 pr-3 py-2.5 bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm shadow-xl"
+                onChange={(e) => {
+                    setSearchValue(e.target.value);
+                    if(e.target.value.length === 0) setShowResults(false);
+                }}
+                onFocus={() => { if(searchResults.length > 0) setShowResults(true); }}
+                className="block w-full pl-10 pr-8 py-2.5 bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-xs md:text-sm shadow-xl"
                 placeholder="Search location (City, Address)..."
             />
+
+            {/* Clear Button */}
+            {searchValue && (
+                <button 
+                    onClick={clearSearch}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white"
+                >
+                    <X className="h-3 w-3" />
+                </button>
+            )}
+
+            {/* --- DROPDOWN LIST (AUTOCOMPLETE) --- */}
+            {showResults && searchResults.length > 0 && (
+                <div className="absolute bottom-full mb-2 w-full bg-[#0f111a] border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar z-50">
+                    <ul>
+                        {searchResults.map((result) => (
+                            <li 
+                                key={result.id}
+                                onClick={() => handleSelectLocation(result)}
+                                className="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 transition-colors"
+                            >
+                                <div className="text-xs font-bold text-white truncate">
+                                    {result.place_name.split(',')[0]}
+                                </div>
+                                <div className="text-[10px] text-gray-400 truncate">
+                                    {result.place_name}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="px-2 py-1 bg-black/20 text-[9px] text-right text-gray-600">
+                        Search via Mapbox
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* Unit Toggle (M / FT) */}
-        <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl p-1 flex items-center shadow-xl">
+        <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl p-1 flex items-center shadow-xl h-full">
             <button
                 onClick={() => setMeasurementSystem('metric')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                className={`px-3 py-1.5 h-full rounded-lg text-[10px] font-bold transition-all flex items-center ${
                     measurementSystem === 'metric' 
                     ? 'bg-indigo-600 text-white shadow-sm' 
                     : 'text-gray-400 hover:text-white'
@@ -79,7 +165,7 @@ export const MapControls = () => {
             <div className="w-px h-3 bg-white/10 mx-1"></div>
             <button
                 onClick={() => setMeasurementSystem('imperial')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                className={`px-3 py-1.5 h-full rounded-lg text-[10px] font-bold transition-all flex items-center ${
                     measurementSystem === 'imperial' 
                     ? 'bg-indigo-600 text-white shadow-sm' 
                     : 'text-gray-400 hover:text-white'
@@ -91,7 +177,7 @@ export const MapControls = () => {
       </div>
 
       {/* --- 2. BOTTOM TOOLBAR --- */}
-      <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl">
+      <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl relative z-40">
         
         {/* Map Styles */}
         <ControlButton 
