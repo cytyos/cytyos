@@ -237,12 +237,12 @@ export const MapControls = () => {
             )}
         </button>
 
-        {/* NEW: DELETE BUTTON WITH CUSTOM POPOVER */}
+        {/* NEW: DELETE BUTTON WITH LEFT-SIDE POPOVER */}
         {hasDrawing && (
             <div className="relative">
-                 {/* Confirmation Popover */}
+                 {/* Confirmation Popover (Moved to the LEFT) */}
                  {showClearConfirm && (
-                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-bottom-2">
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-right-2">
                         <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">Delete design?</span>
                         <div className="flex gap-1">
                             <button 
@@ -260,8 +260,8 @@ export const MapControls = () => {
                                 <X className="w-3 h-3" />
                             </button>
                         </div>
-                        {/* Little arrow down */}
-                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#0f111a] border-b border-r border-red-500/50 rotate-45"></div>
+                        {/* Little arrow pointing right (towards the button) */}
+                        <div className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 bg-[#0f111a] border-t border-r border-red-500/50 rotate-45"></div>
                     </div>
                  )}
 
