@@ -1,18 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
 
-import { useSettingsStore } from '../../stores/settingsStore';
-import { useProjectStore } from '../../stores/useProjectStore';
-import { useMapStore } from '../../stores/mapStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useProjectStore } from '../stores/useProjectStore';
+import { useMapStore } from '../stores/mapStore';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617]; 
 
-export const CityMap = () => {
+export const Map = () => {
+  const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
@@ -21,7 +23,7 @@ export const CityMap = () => {
   const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
 
   const { blocks, updateLand, addBlock } = useProjectStore();
-  const { mapStyle, drawMode, flyToCoords, is3D } = useMapStore();
+  const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -119,7 +121,7 @@ export const CityMap = () => {
         if (!feature) return;
 
         draw.deleteAll();
-        useMapStore.getState().setDrawMode('simple_select'); // Correção do acesso ao store
+        setDrawMode('simple_select');
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
 
         const area = turf.area(feature);
@@ -142,7 +144,6 @@ export const CityMap = () => {
 
   }, []);
 
-  // Reactions
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
