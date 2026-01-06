@@ -1,49 +1,44 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LandingPage } from './pages/LandingPage';
-import { MapboxMap } from './components/map/MapboxMap'; // <-- Importação do MapboxMap com M Maiúsculo
-import { MapControls } from './components/MapControls';
+import { MapboxMap } from './components/map/MapboxMap'; // IMPORTAÇÃO CORRIGIDA PARA MapboxMap
 import { SmartPanel } from './components/SmartPanel';
+import { MapControls } from './components/MapControls';
 import { PaywallModal } from './components/PaywallModal';
+import { LandingPage } from './pages/LandingPage'; // IMPORTAÇÃO CORRIGIDA PARA pages
 import { useSettingsStore } from './stores/settingsStore';
 
 function App() {
+  const isPaywallOpen = useSettingsStore((state) => state.isPaywallOpen);
+  const isLandingPageOpen = useSettingsStore((state) => state.isLandingPageOpen);
+
+  // If Landing Page is open, show ONLY Landing Page + Paywall (if triggered)
+  if (isLandingPageOpen) {
+    return (
+      <>
+        <LandingPage />
+        {isPaywallOpen && <PaywallModal />}
+      </>
+    );
+  }
+
+  // Otherwise, show the Main App
   return (
-    <BrowserRouter>
-      {/* Global Paywall Listener */}
-      <PaywallGlobal />
+    <div className="h-screen w-screen overflow-hidden bg-black relative">
+      <MapboxMap />
+      
+      {/* UI Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4">
+        {/* Top Controls */}
+        <div className="w-full flex justify-center pt-2">
+           <MapControls />
+        </div>
 
-      <Routes>
-        {/* Rota 1: Landing Page */}
-        <Route path="/" element={<LandingPage />} />
-        
-        {/* Rota 2: App Principal */}
-        <Route path="/app" element={
-          <div className="h-screen w-screen overflow-hidden bg-black relative">
-            {/* Map Component */}
-            <MapboxMap />
-            
-            {/* UI Overlay */}
-            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4">
-              <div className="w-full flex justify-center pt-2">
-                 <MapControls />
-              </div>
-              <SmartPanel />
-            </div>
-          </div>
-        } />
+        {/* The Smart Panel handles its own positioning */}
+        <SmartPanel />
+      </div>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      {isPaywallOpen && <PaywallModal />}
+    </div>
   );
 }
-
-// Helper for Global Paywall Logic
-const PaywallGlobal = () => {
-  const isPaywallOpen = useSettingsStore((state) => state.isPaywallOpen);
-  return isPaywallOpen ? <PaywallModal /> : null;
-};
 
 export default App;
