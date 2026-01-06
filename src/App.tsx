@@ -1,7 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
-import { CityMap } from './components/map/CityMap'; // <--- IMPORTANDO O NOVO ARQUIVO
+
+// --- AQUI ESTÁ A CORREÇÃO CRÍTICA ---
+// Estamos importando o CityMap que você criou, em vez do MapboxMap
+import { CityMap } from './components/map/CityMap'; 
+
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PaywallModal } from './components/PaywallModal';
@@ -10,20 +14,20 @@ import { useSettingsStore } from './stores/settingsStore';
 function App() {
   return (
     <BrowserRouter>
-      {/* Global Paywall Listener */}
+      {/* Ouve se o Paywall deve abrir globalmente */}
       <PaywallGlobal />
 
       <Routes>
-        {/* Route 1: Landing Page */}
+        {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Route 2: App Principal */}
+        {/* Rota 2: Plataforma Principal */}
         <Route path="/app" element={
           <div className="h-screen w-screen overflow-hidden bg-black relative">
-            {/* NOVO MAPA AQUI */}
+            {/* Renderiza o CityMap que você confirmou que existe */}
             <CityMap />
             
-            {/* UI Overlay */}
+            {/* Interface flutuante sobre o mapa */}
             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-4">
               <div className="w-full flex justify-center pt-2">
                  <MapControls />
@@ -33,13 +37,14 @@ function App() {
           </div>
         } />
 
-        {/* Fallback */}
+        {/* Rota de Fallback (se digitar algo errado, volta pra home) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
+// Componente auxiliar para o Paywall
 const PaywallGlobal = () => {
   const isPaywallOpen = useSettingsStore((state) => state.isPaywallOpen);
   return isPaywallOpen ? <PaywallModal /> : null;
