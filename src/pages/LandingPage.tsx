@@ -218,4 +218,73 @@ export const LandingPage = () => {
 
           {/* --- UNIFIED CTA --- */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
-            <div className="bg-[#0f111a] rounded-xl p-
+            <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Get Founder Access to Everything</h3>
+                    <p className="text-gray-400 text-sm max-w-lg">
+                        One subscription secures your access to Beta, Version 1.0, and the future 2.0 Intelligence Core. Price locks in forever.
+                    </p>
+                </div>
+                <button 
+                  onClick={handleOpenPaywall}
+                  className="whitespace-nowrap px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-xl font-bold text-sm transition-all transform hover:scale-105 flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
+                >
+                  {t('roadmap.cta')} <ArrowRight className="w-4 h-4" />
+                </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* --- FEATURE HIGHLIGHTS --- */}
+      <section className="py-20 px-6 max-w-7xl mx-auto border-t border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+            <div className="space-y-4">
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
+                    <MapIcon className="w-6 h-6 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.global.title')}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                    {t('landing.features.global.desc')}
+                </p>
+            </div>
+            <div className="space-y-4">
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
+                    <Layers className="w-6 h-6 text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.zoning.title')}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                    {t('landing.features.zoning.desc')}
+                </p>
+            </div>
+            <div className="space-y-4">
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 mx-auto md:mx-0">
+                    <ShieldCheck className="w-6 h-6 text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">{t('landing.features.secure.title')}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                    {t('landing.features.secure.desc')}
+                </p>
+            </div>
+        </div>
+      </section>
+
+      {/* --- FOOTER --- */}
+      <footer className="border-t border-white/5 bg-[#020305] py-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+                <img src={logoFull} alt="Cytyos" className="h-6 w-auto opacity-50" />
+                <span className="text-xs text-gray-600">{t('landing.footer_rights')}</span>
+            </div>
+            <div className="text-center md:text-right">
+                <p className="text-[10px] text-gray-600 max-w-md">
+                    {t('footer.disclaimer')}
+                </p>
+            </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+};
