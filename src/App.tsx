@@ -1,23 +1,26 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
-import { MapboxMap } from './components/map/MapboxMap'; // <-- Aponta para pasta "map" (minúscula)
+import { MapboxMap } from './components/map/MapboxMap'; 
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
-import { PaywallModal } from './components/PaywallModal';
+
+// CORREÇÃO: Importando o PricingModal que você tem no projeto
+import { PricingModal } from './components/PricingModal'; 
+
 import { useSettingsStore } from './stores/settingsStore';
 
 function App() {
   return (
     <BrowserRouter>
-      {/* Paywall Global */}
+      {/* Componente Global de Paywall */}
       <PaywallGlobal />
 
       <Routes>
-        {/* Home */}
+        {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* App */}
+        {/* Rota 2: App Principal */}
         <Route path="/app" element={
           <div className="h-screen w-screen overflow-hidden bg-black relative">
             <MapboxMap />
@@ -37,9 +40,17 @@ function App() {
   );
 }
 
+// Helper atualizado para usar o PricingModal
 const PaywallGlobal = () => {
-  const isPaywallOpen = useSettingsStore((state) => state.isPaywallOpen);
-  return isPaywallOpen ? <PaywallModal /> : null;
+  const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
+  
+  // Passamos as props isOpen e onClose para o PricingModal
+  return (
+    <PricingModal 
+      isOpen={isPaywallOpen} 
+      onClose={() => setPaywallOpen(false)} 
+    />
+  );
 };
 
 export default App;
