@@ -3,14 +3,14 @@ import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useAIStore } from '../stores/aiStore'; // <--- IMPORT NOVO
+import { useAIStore } from '../stores/aiStore'; // <--- NEW IMPORT
 import { analyzeProject } from '../services/aiService';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, FileSearch, Rocket, Map as MapIcon, Check 
+  Trash2, Coins, FileText, MapPin, FileSearch, Rocket, Check 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -33,8 +33,8 @@ export const SmartPanel = () => {
       setRoadmapOpen 
   } = useSettingsStore();
 
-  // AI Store (Global Bubble)
-  const { setThinking, setMessage } = useAIStore(); // <--- CONEXÃO COM A IA
+  // AI Store
+  const { setThinking, setMessage } = useAIStore(); // <--- AI HOOK
 
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,15 +47,13 @@ export const SmartPanel = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
   
-  // Mobile State
   const [mobileState, setMobileState] = useState<MobileState>('min');
-
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT (Local AI Parser) ---
+  // --- LOGIC: ANALYZE ZONING TEXT (Local) ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
@@ -115,26 +113,24 @@ export const SmartPanel = () => {
   
   // --- AI ANALYSIS (Connected to Global Bubble) ---
   const handleStartAnalysis = async () => {
-    // Ativa a "Bolha" Global
+    // 1. Activate Visual AI Layer
     setThinking(true);
     
-    // Opcional: Abre o painel interno também para histórico
+    // 2. Local UI State
     if(window.innerWidth < 768) setMobileState('max'); 
     setIsAiLoading(true);
 
     try {
-        // Chama a análise
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
         
-        // 1. Mostra na Bolha Flutuante (UX Principal)
+        // 3. Set Global AI Message (Bubble)
         setMessage(report);
 
-        // 2. Salva no histórico do painel (Backup)
+        // 4. Set Local Chat Message (History)
         setChatMessages([{ role: 'assistant', content: report || "No analysis generated." }]);
-        setIsChatOpen(true); // Abre o chat interno também, se quiser
     } catch (e) { 
         setMessage("⚠️ Connection Error."); 
-        setChatMessages([{ role: 'assistant', content: "⚠️ Connection Error." }]);
+        setChatMessages([{ role: 'assistant', content: "⚠️ Connection Error." }]); 
     } finally { 
         setIsAiLoading(false); 
     }
@@ -213,7 +209,6 @@ export const SmartPanel = () => {
                     </button>
                 </div>
 
-                {/* Modal Body (Mantido idêntico ao backup, resumido aqui para caber na resposta) */}
                 <div className="p-6 overflow-y-auto custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Box 1 */}
@@ -283,7 +278,7 @@ export const SmartPanel = () => {
         </div>
     )}
 
-    {/* --- MAIN PANEL --- */}
+    {/* --- MAIN PANEL (CORRIGIDO: pointer-events-auto) --- */}
     <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) pointer-events-auto ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
@@ -296,9 +291,16 @@ export const SmartPanel = () => {
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                 
-                {/* REMOVIDO BOTÃO DE MAPA CONFORME SOLICITADO */}
+                {/* RoadMap Button */}
+                <button 
+                    onClick={() => setRoadmapOpen(true)}
+                    className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center transition-colors border border-gray-700"
+                    title={t('header.roadmap')}
+                >
+                    <Rocket className="w-4 h-4" />
+                </button>
 
-                {/* --- CURRENCY SELECTOR (Restored) --- */}
+                {/* Currency Selector */}
                 <div className="relative">
                     <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
                         <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
@@ -313,7 +315,7 @@ export const SmartPanel = () => {
                     )}
                 </div>
 
-                {/* --- LANGUAGE SELECTOR --- */}
+                {/* Language Selector */}
                 <div className="relative">
                     <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
                         <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
@@ -450,7 +452,7 @@ export const SmartPanel = () => {
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
                 
-                {/* --- CONTEXT/ZONING BUTTON (WITH ATTENTION PULSE) --- */}
+                {/* --- CONTEXT/ZONING BUTTON --- */}
                 <button 
                     onClick={() => setZoningModalOpen(true)}
                     className={`h-full px-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-0.5 transition-all group ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 animate-pulse' : 'bg-gray-800 hover:bg-gray-700'}`}
@@ -460,6 +462,7 @@ export const SmartPanel = () => {
                     <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
+                {/* --- AI CONSULTANT BUTTON (Linked to Bubble) --- */}
                 <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
                 </button>
