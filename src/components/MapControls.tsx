@@ -97,6 +97,7 @@ export const MapControls = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ADICIONADO "pointer-events-auto" AQUI
   return (
     <div className="flex flex-col gap-3 w-[90vw] max-w-md mx-auto pointer-events-auto relative">
       
