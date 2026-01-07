@@ -4,7 +4,7 @@ import { SmartPanel } from '../components/SmartPanel';
 import { MapControls } from '../components/MapControls';
 import { PricingModal } from '../components/PricingModal';
 import { AIAssistant } from '../components/AIAssistant'; 
-import { Footer } from '../components/Footer'; // <--- GARANTA QUE ISTO ESTÁ AQUI
+import { Footer } from '../components/Footer'; // <--- VERIFIQUE SE ESTE ARQUIVO EXISTE
 import { useSettingsStore } from '../stores/settingsStore';
 
 export const Platform = () => {
@@ -43,23 +43,25 @@ export const Platform = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       
-      {/* 1. Modais e Overlays Globais */}
+      {/* Modais (Z-Index Máximo) */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
+      
+      {/* Camada de IA */}
       <AIAssistant />
 
-      {/* 2. Mapa */}
+      {/* Mapa (Fundo) */}
       <MapboxMap />
 
-      {/* 3. Interface Flutuante */}
+      {/* Painel Lateral */}
       <SmartPanel />
       
-      {/* 4. Controles do Mapa */}
-      {/* Ajustado para bottom-12 para ficar logo ACIMA do rodapé */}
+      {/* Controles do Mapa */}
+      {/* 'bottom-12' (48px) garante que fique ACIMA do Footer (32px) */}
       <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
 
-      {/* 5. Rodapé Global (Substitui o selo antigo) */}
+      {/* Rodapé Global */}
       <Footer />
       
     </div>
