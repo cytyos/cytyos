@@ -8,6 +8,7 @@ interface ProjectContext {
   currency?: string;
 }
 
+// --- FULL PROJECT ANALYSIS (Used by SmartPanel) ---
 export const analyzeProject = async (
   history: { role: 'user' | 'assistant'; content: string }[],
   context: ProjectContext,
@@ -16,7 +17,7 @@ export const analyzeProject = async (
   
   const { urbanContext } = useSettingsStore.getState();
 
-  // 1. Descobrir Coordenadas
+  // 1. Get Coordinates
   let locationContext = "Coordinates: Unknown";
   if (context.land.geometry?.coordinates) {
       const coord = context.land.geometry.coordinates[0][0]; 
@@ -25,7 +26,7 @@ export const analyzeProject = async (
 
   const curr = context.currency || 'USD';
 
-  // 2. Dados do Projeto
+  // 2. Data Summary
   const dataSummary = `
     === PROJECT BLUEPRINT (${language}) ===
     LOCATION: ${locationContext}
@@ -40,7 +41,7 @@ export const analyzeProject = async (
     ${context.blocks.map((b, i) => `  ${i+1}. [${b.usage}] ${b.name}: ${b.height}m.`).join('\n')}
   `;
 
-  // 3. Prompt Refinado
+  // 3. System Prompt
   const systemPrompt = `
     You are Cytyos AI, an expert Urban Planner and Real Estate Developer.
     
@@ -49,12 +50,12 @@ export const analyzeProject = async (
 
     CRITICAL RULES FOR OUTPUT:
     1. NO MARKDOWN: Do NOT use asterisks (**), hashtags (#), or bullet points (-). Write in clean, plain text paragraphs.
-    2. BE CONCISE: Do not write long essays. Keep it punchy so the text is not cut off.
+    2. BE CONCISE: Do not write long essays. Keep it punchy.
     3. LANGUAGE: Answer strictly in ${language === 'pt' ? 'Portuguese (Brazil)' : language}.
 
     ANALYSIS STEPS:
-    1. MICRO-LOCATION: Use the coordinates to identify the specific neighborhood, street, or nearby landmarks (parks, beach, subway). Comment on how the project interacts with this *immediate* surrounding (e.g., "Given the proximity to [Place X], the retail ground floor is excellent").
-    2. URBAN CONTEXT: If the user provided laws above, check if the project respects them. If not, give general advice on density and use.
+    1. MICRO-LOCATION: Use the coordinates to identify the specific neighborhood. Comment on the surroundings.
+    2. URBAN CONTEXT: Check if the project respects the local laws provided above.
     3. FINANCIALS: Is the ${num(context.metrics.margin)}% margin good for this specific location?
     
     Data:
@@ -69,9 +70,7 @@ export const analyzeProject = async (
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json" 
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
           model: "gpt-4-turbo-preview", 
           messages: messages, 
@@ -81,17 +80,16 @@ export const analyzeProject = async (
     });
 
     const data = await response.json();
-    
     if (data.error) return `⚠️ OpenAI Error: ${data.error.message}`;
     return data.choices?.[0]?.message?.content || "No insight generated.";
 
   } catch (error) {
     console.error(error);
-    return "⚠️ Connection error. Please checking your API setup.";
+    return "⚠️ Connection error. Please check your API setup.";
   }
 };
 
-// --- NOVA FUNÇÃO QUE O MAPA ESTÁ CHAMANDO ---
+// --- QUICK LOCATION SCOUT (Used by Map Click) ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
@@ -109,10 +107,9 @@ export const scoutLocation = async (
     
     OUTPUT RULES:
     1. Identify the neighborhood/city based on coordinates.
-    2. Estimate the density (High/Medium/Low) based on real-world knowledge of that spot.
-    3. Suggest a probable FAR (Floor Area Ratio / CA) and Occupancy Rate (TO) based on typical zoning for that specific area.
-    4. Keep it conversational but professional.
-    5. LANGUAGE: Answer strictly in ${language === 'pt' ? 'Portuguese (Brazil)' : language}.
+    2. Estimate the density (High/Medium/Low).
+    3. Suggest a probable FAR (CA) and Occupancy Rate (TO) based on typical zoning for that area.
+    4. LANGUAGE: Answer strictly in ${language === 'pt' ? 'Portuguese (Brazil)' : language}.
 
     EXAMPLE OUTPUT FORMAT:
     "Região central de [Cidade], densidade alta. Pelas minhas pesquisas, o CA é de aproximadamente [X] e a TO de [Y]%. Sugiro verificar as leis de zoneamento e clicar em 'Context' para análise detalhada."
@@ -135,13 +132,12 @@ export const scoutLocation = async (
     });
 
     const data = await response.json();
-    
-    if (data.error) return `⚠️ Erro na IA: ${data.error.message}`;
-    return data.choices?.[0]?.message?.content || "Não foi possível analisar a região.";
+    if (data.error) return `⚠️ Error: ${data.error.message}`;
+    return data.choices?.[0]?.message?.content || "Analysis unavailable.";
 
   } catch (error) {
     console.error(error);
-    return "⚠️ Erro de conexão com a IA.";
+    return "⚠️ Connection error.";
   }
 };
 
