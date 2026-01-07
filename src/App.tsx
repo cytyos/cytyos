@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// --- IMPORTAÇÕES ---
+// --- IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
-// import { AdminPage } from './pages/AdminPage'; // Deixe comentado se o arquivo não existir ainda
+// import { AdminPage } from './pages/AdminPage'; // Commented out to prevent errors if file doesn't exist yet
 
 import { MapboxMap } from './components/map/MapboxMap'; 
 import { MapControls } from './components/MapControls';
@@ -13,13 +13,13 @@ import { PricingModal } from './components/PricingModal';
 import { AIAssistant } from './components/AIAssistant'; 
 import { Footer } from './components/Footer'; 
 import { useSettingsStore } from './stores/settingsStore';
-import { AuthProvider, useAuth } from './contexts/AuthContext'; // Usa o arquivo que você já tem!
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './i18n';
 
-// --- Placeholder para evitar erros se a AdminPage não existir ---
-const AdminPage = () => <div className="p-10 text-white">Painel Admin (Em construção)</div>;
+// --- Placeholder for Admin Page (Prevents import errors) ---
+const AdminPage = () => <div className="p-10 text-white">Admin Dashboard (Under Construction)</div>;
 
-// --- Helper para o Paywall ---
+// --- Paywall Helper ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   return (
@@ -30,12 +30,12 @@ const PaywallGlobal = () => {
   );
 };
 
-// --- COMPONENTE DE PROTEÇÃO DE ROTA ---
-// É aqui que a mágica acontece: ele espera o carregamento antes de chutar o usuário
+// --- PROTECTED ROUTE COMPONENT ---
+// This is the key logic: it waits for loading to finish before redirecting
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   
-  // 1. Enquanto carrega (verifica o Google), mostra tela preta ou loading
+  // 1. While loading (checking Google auth), show a spinner instead of a white screen
   if (loading) {
       return (
         <div className="h-screen w-screen bg-[#0f111a] flex items-center justify-center">
@@ -44,49 +44,52 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       );
   }
   
-  // 2. Se terminou de carregar e NÃO tem sessão, manda pro Login
+  // 2. If finished loading and NO session exists, redirect to Login
   if (!session) {
       return <Navigate to="/login" replace />;
   }
   
-  // 3. Se tem sessão, libera o acesso
+  // 3. If session exists, render the protected content
   return <>{children}</>;
 };
 
 function App() {
   return (
-    <AuthProvider> {/* O AuthProvider envolve tudo para gerenciar o estado global */}
+    <AuthProvider> {/* AuthProvider wraps everything to manage global state */}
         <BrowserRouter>
-        {/* Componentes Globais que aparecem em cima de tudo */}
+        {/* Global Components */}
         <PaywallGlobal />
         <AIAssistant />
 
         <Routes>
-            {/* Rota 1: Landing Page (Pública) */}
+            {/* Route 1: Landing Page (Public) */}
             <Route path="/" element={<LandingPage />} />
             
-            {/* Rota 2: Login (Pública) */}
+            {/* Route 2: Login (Public) */}
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Rota 3: Admin (Protegida) */}
+            {/* Route 3: Admin (Protected) */}
             <Route path="/admin" element={
                 <ProtectedRoute>
                     <AdminPage />
                 </ProtectedRoute>
             } />
             
-            {/* Rota 4: App Principal (Protegida) - Onde o mapa fica */}
+            {/* Route 4: Main App (Protected) - Map Interface */}
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-screen w-screen overflow-hidden bg-gray-900 relative">
                         
-                        {/* 1. Mapa (Fundo) */}
+                        {/* 1. Map (Background) */}
                         <MapboxMap />
                         
-                        {/* 2. Interface sobre o mapa */}
+                        {/* 2. UI Container (Overlay) */}
                         <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                            <div className="w-full p-4"></div> {/* Espaço Topo */}
+                            
+                            {/* Top Spacer */}
+                            <div className="w-full p-4"></div>
 
+                            {/* Center/Bottom: Controls */}
                             <div className="w-full flex justify-center pb-16 z-50">
                                 <div className="pointer-events-auto">
                                     <MapControls />
@@ -94,14 +97,16 @@ function App() {
                             </div>
                         </div>
 
-                        {/* 3. Painel Lateral e Rodapé */}
+                        {/* 3. Side Panel */}
                         <SmartPanel />
+
+                        {/* 4. Global Footer */}
                         <Footer />
                     </div>
                 </ProtectedRoute>
             } />
 
-            {/* Qualquer rota desconhecida redireciona para a Home */}
+            {/* Catch-all: Redirect unknown routes to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </BrowserRouter>
