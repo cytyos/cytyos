@@ -42,7 +42,6 @@ export const MapControls = () => {
       }
   };
 
-  // ... (Autocomplete logic remains same)
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchValue.length < 3) { setSearchResults([]); setShowResults(false); return; }
@@ -59,9 +58,16 @@ export const MapControls = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchValue]);
 
-  const handleSelectLocation = (result: SearchResult) => { setFlyToCoords(result.center); setSearchValue(result.place_name); setShowResults(false); };
+  // CORREÇÃO FUNCIONAL: Chamada de seleção
+  const handleSelectLocation = (result: SearchResult) => {
+    setFlyToCoords(result.center); // Move o mapa
+    setSearchValue(result.place_name); // Atualiza texto
+    setShowResults(false); // Fecha lista
+  };
+
   const clearSearch = () => { setSearchValue(''); setSearchResults([]); setShowResults(false); };
 
+  // Fecha ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) { setShowResults(false); }
@@ -79,9 +85,26 @@ export const MapControls = () => {
             </div>
             <input type="text" value={searchValue} onChange={(e) => { setSearchValue(e.target.value); if(e.target.value.length === 0) setShowResults(false); }} onFocus={() => { if(searchResults.length > 0) setShowResults(true); }} className="block w-full pl-10 pr-8 py-2.5 bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-xs md:text-sm shadow-xl" placeholder={t('map.search_placeholder')} />
             {searchValue && <button onClick={clearSearch} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white"><X className="h-3 w-3" /></button>}
+            
+            {/* --- LISTA DE RESULTADOS (CORRIGIDA) --- */}
             {showResults && searchResults.length > 0 && (
-                <div className="absolute bottom-full mb-2 w-full bg-[#0f111a] border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar z-50">
-                    <ul>{searchResults.map((result) => (<li key={result.id} onClick={() => handleSelectLocation(result)} className="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 transition-colors"><div className="text-xs font-bold text-white truncate">{result.place_name.split(',')[0]}</div><div className="text-[10px] text-gray-400 truncate">{result.place_name}</div></li>))}</ul>
+                <div className="absolute bottom-[115%] mb-1 w-full bg-[#0f111a] border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar z-[100]">
+                    <ul>
+                        {searchResults.map((result) => (
+                            <li 
+                                key={result.id} 
+                                // USA onMouseDown PARA EVITAR O BUG DO BLUR
+                                onMouseDown={(e) => {
+                                    e.preventDefault(); // Impede que o input perca o foco antes da hora
+                                    handleSelectLocation(result);
+                                }}
+                                className="px-4 py-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-0 transition-colors group"
+                            >
+                                <div className="text-xs font-bold text-white truncate group-hover:text-indigo-400 transition-colors">{result.place_name.split(',')[0]}</div>
+                                <div className="text-[10px] text-gray-400 truncate">{result.place_name}</div>
+                            </li>
+                        ))}
+                    </ul>
                     <div className="px-2 py-1 bg-black/20 text-[9px] text-right text-gray-600">{t('map.search_provider')}</div>
                 </div>
             )}
