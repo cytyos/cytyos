@@ -1,7 +1,7 @@
 import { Metrics, Land, Block } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
-// In Bolt environment, this is usually undefined, triggering fallback
+// In Bolt/Vite, we access env variables via import.meta.env
 const DIRECT_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 interface ProjectContext {
@@ -12,34 +12,35 @@ interface ProjectContext {
 }
 
 // --- HELPER: SAFE FETCH ---
-const fetchAI = async (messages: any[], max_tokens: number = 500) => {
+const fetchAI = async (messages: any[], max_tokens: number = 800) => {
+  if (!DIRECT_API_KEY || DIRECT_API_KEY.includes('your-key')) {
+    throw new Error("Missing OpenAI API Key");
+  }
+
   try {
-    // 1. Try Direct Key (if in .env)
-    if (DIRECT_API_KEY) {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${DIRECT_API_KEY}`
-        },
-        body: JSON.stringify({ model: "gpt-4-turbo-preview", messages, temperature: 0.7, max_tokens })
-      });
-      if (!response.ok) throw new Error("Direct API Error");
-      return await response.json();
-    } 
-    
-    // 2. Try Backend Route (Production)
-    else {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4-turbo-preview", messages, temperature: 0.7, max_tokens })
-      });
-      if (!response.ok) throw new Error("Backend API unavailable (Preview Mode)");
-      return await response.json();
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${DIRECT_API_KEY}`
+      },
+      body: JSON.stringify({ 
+        model: "gpt-4-turbo-preview", 
+        messages, 
+        temperature: 0.7, 
+        max_tokens 
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "OpenAI API Error");
     }
+
+    return await response.json();
   } catch (error) {
-    throw error; // Propagate to handle in specific functions
+    console.error("AI Fetch Error:", error);
+    throw error;
   }
 };
 
@@ -53,42 +54,63 @@ export const analyzeProject = async (
   const { urbanContext } = useSettingsStore.getState();
   const curr = context.currency || 'USD';
 
-  // SIMULATION MOCK (Fallback)
-  const mockResponse = language === 'pt'
-    ? `Análise Preliminar (Modo Simulação):\n\nBaseado nos parâmetros atuais (Área: ${context.land.area}m², VGV: ${curr} ${context.metrics.revenue}), o projeto apresenta viabilidade financeira positiva. Recomendo verificar o C.A. máximo na prefeitura.`
-    : `Preliminary Analysis (Simulation Mode):\n\nBased on current parameters (Area: ${context.land.area}m², GDV: ${curr} ${context.metrics.revenue}), the project shows positive financial feasibility. Please verify max FAR with local zoning authority.`;
+  // Prepare technical data for the AI
+  const projectData = `
+    TECHNICAL DATA:
+    - Land Area: ${context.land.area} m²
+    - Max FAR (Coefficient): ${context.land.maxFar}
+    - Max Occupancy: ${context.land.maxOccupancy}%
+    - Total Built Area: ${context.metrics.totalBuiltArea} m²
+    - Efficiency (NSA): ${context.metrics.nsa} m²
+    - Estimated Revenue (GDV): ${curr} ${context.metrics.revenue}
+    - Total Construction Cost: ${curr} ${context.metrics.totalCost}
+    - Net Profit: ${curr} ${context.metrics.grossProfit}
+    - Margin: ${context.metrics.margin}%
+    - Zoning/Legal Context: ${urbanContext || "Not provided"}
+    - Blocks: ${context.blocks.map(b => `${b.name} (${b.usage}, ${b.height}m)`).join(', ')}
+  `;
 
   try {
-    const messages = [{ role: "system", content: "You are an expert Urban Planner." }, ...history];
-    const data = await fetchAI(messages, 800);
-    return data.choices?.[0]?.message?.content || mockResponse;
-  } catch (error) {
-    console.warn("⚠️ AI Service: Using fallback simulation.");
-    return mockResponse;
+    const systemPrompt = `You are an expert Real Estate Developer and Urban Planner. 
+    Analyze the following project data and provide strategic insights in ${language}. 
+    Be technical, objective, and focus on financial feasibility and zoning compliance.
+    Current Language: ${language === 'pt' ? 'Portuguese' : 'English'}.`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "system", content: projectData },
+      ...history
+    ];
+
+    const data = await fetchAI(messages);
+    return data.choices?.[0]?.message?.content;
+
+  } catch (error: any) {
+    return language === 'pt' 
+      ? `⚠️ Erro de Conexão com IA: ${error.message}. Verifique se sua chave da OpenAI no arquivo .env é válida.`
+      : `⚠️ AI Connection Error: ${error.message}. Please check if your OpenAI API Key in the .env file is valid.`;
   }
 };
 
-// --- LOCATION SCOUT ---
+// --- LOCATION SCOUT (Triggers when polygon is drawn) ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
   language: string = 'en'
 ): Promise<string> => {
   
-  const isPt = language === 'pt';
-  
-  // SIMULATION MOCK (Fallback)
-  const mockResponse = isPt
-    ? `Zona Urbana Central detectada (${area}m²). Densidade média-alta. Estimativa: C.A. 4.0, T.O. 70%. *(Dados simulados. Configure sua API Key para dados reais)*`
-    : `Central Urban Zone detected (${area}m²). Medium-high density. Est: FAR 4.0, Occ 70%. *(Simulated data. Configure API Key for real insights)*`;
-
   try {
-    const systemPrompt = `You are an Urban Planner. Analyze likely zoning for Lat ${coordinates[1]}, Long ${coordinates[0]}. Output in ${language}.`;
+    const systemPrompt = `You are a professional Urban Planner. 
+    Provide a brief zoning estimate for a site with ${area}m² at coordinates ${coordinates[1]}, ${coordinates[0]}. 
+    Focus on potential FAR, Occupancy, and land use. 
+    Language: ${language}. Keep it under 100 words.`;
+
     const messages = [{ role: "system", content: systemPrompt }];
-    const data = await fetchAI(messages, 200);
-    return data.choices?.[0]?.message?.content || mockResponse;
-  } catch (error) {
-    // Return mock silently to avoid console spam
-    return mockResponse;
+    const data = await fetchAI(messages, 300);
+    return data.choices?.[0]?.message?.content;
+  } catch (error: any) {
+    return language === 'pt'
+      ? `Área detectada: ${area}m². (Erro ao conectar com ChatGPT: ${error.message})`
+      : `Area detected: ${area}m². (ChatGPT Connection Error: ${error.message})`;
   }
 };
