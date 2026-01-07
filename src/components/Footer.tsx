@@ -1,23 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-export const Footer: React.FC = () => {
+export const Footer = () => {
+  const { t } = useTranslation();
+
   return (
-    // Alterado: py-1 (altura mínima) e z-40 (para ficar ABAIXO do Painel que é z-50)
-    <footer className="w-full bg-[#0f111a] border-t border-gray-800/50 py-1.5 px-4 z-40 relative">
-      <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-0.5 text-[10px] text-gray-500 font-medium tracking-wide">
-        <span>&copy; 2025 Cytyos</span>
-        <span className="text-gray-700 hidden sm:inline">|</span>
-        
-        <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link>
-        <Link to="/terms" className="hover:text-cyan-400 transition-colors">Terms</Link>
-        
-        <span className="text-gray-700 hidden sm:inline">|</span>
-        
-        <span className="opacity-70 text-center max-w-lg truncate sm:overflow-visible">
-           DISCLAIMER: AI results are estimates. Verify with professionals.
-        </span>
+    <div className="absolute bottom-0 left-0 w-full h-8 bg-[#0f111a]/95 backdrop-blur-md border-t border-white/10 flex justify-between items-center px-4 z-40 pointer-events-auto">
+      
+      {/* Esquerda: Copyright (Escondido em mobile para economizar espaço) */}
+      <div className="text-[10px] text-gray-500 font-mono hidden md:block">
+        {t('landing.footer_rights')}
       </div>
-    </footer>
+
+      {/* Centro: Disclaimer (Importante para IA) */}
+      <div className="text-[9px] md:text-[10px] text-gray-400 text-center mx-auto w-full md:w-auto truncate md:overflow-visible px-2">
+        {t('footer.disclaimer')}
+      </div>
+
+      {/* Direita: Versão */}
+      <div className="text-[9px] text-indigo-400/60 font-mono whitespace-nowrap">
+        Beta v0.9
+      </div>
+    </div>
   );
 };
