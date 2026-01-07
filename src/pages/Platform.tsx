@@ -4,7 +4,7 @@ import { SmartPanel } from '../components/SmartPanel';
 import { MapControls } from '../components/MapControls';
 import { PricingModal } from '../components/PricingModal';
 import { AIAssistant } from '../components/AIAssistant'; 
-import { Footer } from '../components/Footer'; // <--- VERIFIQUE SE ESTE ARQUIVO EXISTE
+import { Footer } from '../components/Footer'; // <--- IMPORTANTE
 import { useSettingsStore } from '../stores/settingsStore';
 
 export const Platform = () => {
@@ -26,7 +26,6 @@ export const Platform = () => {
             if (timePassed < oneHour) return; 
         }
 
-        console.log("⏳ Timer started: Locking in 60 seconds...");
         const timer = setTimeout(() => {
             setPaywallOpen(true); 
         }, 60000); 
@@ -43,25 +42,23 @@ export const Platform = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       
-      {/* Modais (Z-Index Máximo) */}
+      {/* 1. Modais e Overlays */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
-      
-      {/* Camada de IA */}
       <AIAssistant />
 
-      {/* Mapa (Fundo) */}
+      {/* 2. Mapa (Fundo) */}
       <MapboxMap />
 
-      {/* Painel Lateral */}
+      {/* 3. Interface Flutuante */}
       <SmartPanel />
       
-      {/* Controles do Mapa */}
-      {/* 'bottom-12' (48px) garante que fique ACIMA do Footer (32px) */}
+      {/* 4. Controles do Mapa */}
+      {/* Posicionado bottom-12 (48px) para ficar ACIMA do footer de 32px */}
       <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
 
-      {/* Rodapé Global */}
+      {/* 5. Rodapé Global (Substituindo o antigo span flutuante) */}
       <Footer />
       
     </div>
