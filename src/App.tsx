@@ -9,14 +9,12 @@ import { MapboxMap } from './components/map/MapboxMap';
 import { SmartPanel } from './components/SmartPanel';
 import { MapControls } from './components/MapControls';
 import { PricingModal } from './components/PricingModal';
-// REMOVIDO: import { AIAssistant } from './components/AIAssistant'; (Causava duplicidade)
 import { Footer } from './components/Footer'; 
 
 // Stores e Configs
 import { useSettingsStore } from './stores/settingsStore';
 import './i18n';
 
-// --- COMPONENTE DE LAYOUT INTERNO ---
 const AppLayout = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
 
@@ -55,17 +53,15 @@ const AppLayout = () => {
       {/* 1. Modais (Z-Index Máximo) */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
       
-      {/* (Removido AIAssistant para evitar duplicidade visual) */}
-
       {/* 2. Mapa (Fundo) */}
       <MapboxMap />
 
       {/* 3. Interface Flutuante */}
       <SmartPanel />
       
-      {/* 4. Controles do Mapa */}
-      {/* 'bottom-12' (48px) garante que fique ACIMA do rodapé (32px) */}
-      <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
+      {/* 4. Controles do Mapa (MOVIDO PARA O TOPO) */}
+      {/* Mudamos de 'bottom-12' para 'top-6' para a busca abrir para baixo corretamente */}
+      <div className="absolute top-6 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
 
@@ -76,18 +72,12 @@ const AppLayout = () => {
   );
 };
 
-// --- COMPONENTE PRINCIPAL (ROTEADOR) ---
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
-        
-        {/* Rota 2: App Principal */}
         <Route path="/app" element={<AppLayout />} />
-
-        {/* Rota Coringa */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
