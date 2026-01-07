@@ -10,16 +10,16 @@ const resources = {
       tabs: { design: "Design", economics: "Economics" },
       header: { revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap" },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
-      
-      // ADDED "onerousGrant" (Impact Fees)
       assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %", onerousGrant: "Impact Fees / Add-ons" },
-      
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
       blocks: { active: "Active Volumes", height: "Height", setback: "Setback" },
       ai: { btn: "AI Consultant", thinking: "Analyzing...", close: "Close", insight: "AI Strategic Insight", placeholder: "Ask about efficiency..." },
       usage: { residential: "Residential", corporate: "Corporate Office", retail: "Retail / Mall", hotel: "Hotel", parking: "Parking Garage", amenities: "Amenities" },
       currency: { main: "Major", latam: "Latam (Pesos)", global: "Global" },
+      
+      // FOOTER EN
       footer: { disclaimer: "Cytyos is a decision support tool. AI results may vary. Always consult a technical professional." },
+      
       map: { search_placeholder: "Search location...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline." },
       zoning: { title: "AI Zoning Analysis", placeholder: "Paste zoning laws here... Example: 'Max FAR 4.0, Occupancy 70%'", analyze_btn: "Analyze & Apply", ai_success: "Updated: FAR {{far}}, Occ {{occ}}%." },
@@ -47,16 +47,16 @@ const resources = {
       tabs: { design: "Projeto", economics: "Viabilidade" },
       header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap" },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
-      
-      // ADICIONADO "onerousGrant" (Outorga)
       assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)", onerousGrant: "Outorga / Taxas Extras" },
-      
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
       blocks: { active: "Volumetria", height: "Altura", setback: "Recuo" },
       ai: { btn: "Consultor IA", thinking: "Analisando...", close: "Fechar", insight: "Análise Estratégica", placeholder: "Pergunte sobre margem..." },
       usage: { residential: "Residencial", corporate: "Corporativo", retail: "Varejo / Lojas", hotel: "Hotel", parking: "Edifício Garagem", amenities: "Áreas Comuns" },
       currency: { main: "Principais", latam: "Latam (Pesos)", global: "Global" },
+      
+      // FOOTER PT
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
+      
       map: { search_placeholder: "Buscar local...", search_provider: "Busca via Mapbox", sat: "Sat", streets: "Mapa", draw: "Desenhar", clear: "Limpar", delete_confirm_title: "Apagar desenho?", confirm: "Confirmar", cancel: "Cancelar" },
       onboarding: { title: "Iniciar Análise", text: "Busque um endereço e use a ferramenta <1>Desenhar</1> para definir o contorno do terreno." },
       zoning: { title: "Análise de Lei IA", placeholder: "Cole o texto da lei aqui... Exemplo: 'C.A. Máximo 4.0, Taxa de Ocupação 70%'", analyze_btn: "Analisar e Aplicar", ai_success: "Atualizado: C.A. {{far}}, T.O. {{occ}}%." },
@@ -77,10 +77,14 @@ const resources = {
     }
   },
 
-  // --- SPANISH (Simplified) ---
+  // --- SPANISH ---
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
+      
+      // NEW FOOTER ES
+      footer: { disclaimer: "Cytyos es una herramienta de apoyo a la decisión. Los resultados de la IA pueden variar. Consulte siempre a un profesional técnico." },
+
       landing: {
         login: "Ingresar",
         hero: { badge: "Beta Disponible", title_prefix: "El Sistema Operativo del", title_main: "Desarrollo Inmobiliario.", title_anim: "Empieza a Analizar.", subtitle: "Transforma datos de zonificación en decisiones de inversión en segundos.", btn_try: "Probar Gratis", btn_plans: "Ver Plan Early Bird" },
@@ -97,10 +101,14 @@ const resources = {
     }
   },
 
-  // --- FRENCH (Simplified) ---
+  // --- FRENCH ---
   fr: {
     translation: {
       app: { title: "Cytyos Beta" },
+
+      // NEW FOOTER FR
+      footer: { disclaimer: "Cytyos est un outil d'aide à la décision. Les résultats de l'IA peuvent varier. Consultez toujours un professionnel technique." },
+
       landing: {
         login: "Connexion",
         hero: { badge: "Beta En Ligne", title_prefix: "Le Système d'Opération du", title_main: "Développement Immobilier.", title_anim: "Commencez l'Analyse.", subtitle: "Transformez les données de zonage en décisions d'investissement.", btn_try: "Essai Gratuit", btn_plans: "Voir Plan Early Bird" },
@@ -117,10 +125,14 @@ const resources = {
     }
   },
 
-  // --- CHINESE (Simplified) ---
+  // --- CHINESE ---
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
+      
+      // NEW FOOTER ZH
+      footer: { disclaimer: "Cytyos 是一个决策支持工具。AI 结果可能会有所不同。请务必咨询专业技术人员。" },
+
       landing: {
         login: "登录",
         hero: { badge: "Beta 现已上线", title_prefix: "房地产开发的", title_main: "操作系统。", title_anim: "开始分析。", subtitle: "瞬间将复杂的区划数据转化为投资决策。", btn_try: "免费试用", btn_plans: "查看早鸟计划" },
