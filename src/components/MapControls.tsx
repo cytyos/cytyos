@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next'; // Import Hook
+import { useTranslation } from 'react-i18next'; 
 import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2, Check } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
@@ -14,7 +14,7 @@ interface SearchResult {
 }
 
 export const MapControls = () => {
-  const { t } = useTranslation(); // Initialize Hook
+  const { t } = useTranslation(); 
   
   // Global Stores
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
@@ -39,6 +39,17 @@ export const MapControls = () => {
       clearProject();
       setDrawMode('simple_select');
       setShowClearConfirm(false);
+  };
+
+  // --- LOGIC: HANDLE DRAW CLICK ---
+  const handleDrawToggle = () => {
+      if (drawMode === 'draw_polygon') {
+          setDrawMode('simple_select');
+      } else {
+          setDrawMode('draw_polygon');
+          // UX FIX: Switch to 2D when drawing to avoid perspective confusion
+          if (is3D) setIs3D(false); 
+      }
   };
 
   // --- AUTOCOMPLETE LOGIC ---
@@ -97,7 +108,7 @@ export const MapControls = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ADICIONADO "pointer-events-auto" AQUI
+  // --- CORREÇÃO AQUI: pointer-events-auto ---
   return (
     <div className="flex flex-col gap-3 w-[90vw] max-w-md mx-auto pointer-events-auto relative">
       
@@ -123,7 +134,7 @@ export const MapControls = () => {
                 }}
                 onFocus={() => { if(searchResults.length > 0) setShowResults(true); }}
                 className="block w-full pl-10 pr-8 py-2.5 bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-xs md:text-sm shadow-xl"
-                placeholder={t('map.search_placeholder')} // <-- TRANSLATED
+                placeholder={t('map.search_placeholder')} 
             />
 
             {/* Clear Button */}
@@ -156,7 +167,7 @@ export const MapControls = () => {
                         ))}
                     </ul>
                     <div className="px-2 py-1 bg-black/20 text-[9px] text-right text-gray-600">
-                        {t('map.search_provider')} {/* <-- TRANSLATED */}
+                        {t('map.search_provider')} 
                     </div>
                 </div>
             )}
@@ -195,13 +206,13 @@ export const MapControls = () => {
             active={mapStyle === 'satellite'} 
             onClick={() => setMapStyle('satellite')} 
             icon={<MapIcon className="w-4 h-4" />} 
-            label={t('map.sat')} // <-- TRANSLATED
+            label={t('map.sat')} 
         />
         <ControlButton 
             active={mapStyle === 'streets'} 
             onClick={() => setMapStyle('streets')} 
             icon={<Layers className="w-4 h-4" />} 
-            label={t('map.streets')} // <-- TRANSLATED
+            label={t('map.streets')} 
         />
 
         <div className="w-px h-6 bg-white/10 mx-1"></div>
@@ -214,7 +225,7 @@ export const MapControls = () => {
         />
 
         <button
-            onClick={() => setDrawMode(drawMode === 'draw_polygon' ? 'simple_select' : 'draw_polygon')}
+            onClick={handleDrawToggle} 
             className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 group relative ${
                 drawMode === 'draw_polygon'
                 ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] scale-105' 
@@ -222,7 +233,7 @@ export const MapControls = () => {
             }`}
         >
             <PenTool className="w-4 h-4 mb-0.5" />
-            <span className="text-[9px] font-bold">{t('map.draw')}</span> {/* <-- TRANSLATED */}
+            <span className="text-[9px] font-bold">{t('map.draw')}</span>
             {drawMode === 'draw_polygon' && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -237,20 +248,20 @@ export const MapControls = () => {
                  {showClearConfirm && (
                     <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-right-2">
                         <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">
-                            {t('map.delete_confirm_title')} {/* <-- TRANSLATED */}
+                            {t('map.delete_confirm_title')} 
                         </span>
                         <div className="flex gap-1">
                             <button 
                                 onClick={handleConfirmClear}
                                 className="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-1 rounded-lg transition-colors"
-                                title={t('map.confirm')} // <-- TRANSLATED
+                                title={t('map.confirm')}
                             >
                                 <Check className="w-3 h-3" />
                             </button>
                             <button 
                                 onClick={() => setShowClearConfirm(false)}
                                 className="bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white p-1 rounded-lg transition-colors"
-                                title={t('map.cancel')} // <-- TRANSLATED
+                                title={t('map.cancel')} 
                             >
                                 <X className="w-3 h-3" />
                             </button>
@@ -266,10 +277,10 @@ export const MapControls = () => {
                         ? 'bg-red-500/10 text-red-400' 
                         : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'
                     }`}
-                    title={t('map.clear')} // <-- TRANSLATED
+                    title={t('map.clear')}
                 >
                     <Trash2 className="w-4 h-4 mb-0.5" />
-                    <span className="text-[9px] font-bold">{t('map.clear')}</span> {/* <-- TRANSLATED */}
+                    <span className="text-[9px] font-bold">{t('map.clear')}</span> 
                 </button>
             </div>
         )}
