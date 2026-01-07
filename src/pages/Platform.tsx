@@ -4,6 +4,7 @@ import { SmartPanel } from '../components/SmartPanel';
 import { MapControls } from '../components/MapControls';
 import { PricingModal } from '../components/PricingModal';
 import { AIAssistant } from '../components/AIAssistant'; 
+import { Footer } from '../components/Footer'; // <--- NOVO IMPORT
 import { useSettingsStore } from '../stores/settingsStore';
 
 export const Platform = () => {
@@ -42,22 +43,24 @@ export const Platform = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       
+      {/* 1. Modais e Overlays Globais */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
       <AIAssistant />
 
+      {/* 2. Mapa */}
       <MapboxMap />
+
+      {/* 3. Interface Flutuante */}
       <SmartPanel />
       
-      {/* CORREÇÃO: Z-Index 50 para garantir que o menu da busca fique visível */}
-      <div className="absolute bottom-8 left-0 w-full flex justify-center z-50 pointer-events-none">
+      {/* 4. Controles do Mapa (Ajustado para bottom-12 para não bater no rodapé) */}
+      <div className="absolute bottom-12 left-0 w-full flex justify-center z-30 pointer-events-none">
         <MapControls />
       </div>
 
-      <div className="absolute bottom-[35px] right-3 z-30 pointer-events-auto">
-        <span className="bg-black/60 text-white/50 text-[9px] px-2 py-1 rounded-md backdrop-blur-sm border border-white/10 font-mono">
-          Cytyos Beta v0.9
-        </span>
-      </div>
+      {/* 5. Rodapé Global (Substitui o selo antigo) */}
+      <Footer />
+      
     </div>
   );
 }
