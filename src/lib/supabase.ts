@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 // --- ATENÇÃO: SUBSTITUA ABAIXO PELAS SUAS CHAVES REAIS ---
 // (Isso é apenas para teste, depois voltaremos para o .env)
 
-const supabaseUrl = 'https://sua-url-aqui.supabase.co'; // Cole a URL do Project Settings > API
-const supabaseAnonKey = 'sua-chave-eyJh...'; // Cole a chave "anon/public" gigante aqui
+const supabaseUrl = 'https://ucbckhkjeimgglncewfh.supabase.co'; 
+const supabaseAnonKey = 'sb_publishable_d788ZtMD0YpGP7rMYVxCEQ_KW1weffj'; 
 
 // Verificação de segurança no Console
 console.log("Tentando conectar no Supabase:", supabaseUrl);
