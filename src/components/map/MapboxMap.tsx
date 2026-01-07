@@ -55,8 +55,8 @@ export const MapboxMap = () => {
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER,
       zoom: 15.5,
-      pitch: 60, 
-      bearing: -20,
+      pitch: 0, // <--- CORREÇÃO: INICIA EM 2D (FLAT)
+      bearing: 0,
       antialias: true,
       attributionControl: false 
     });
@@ -72,28 +72,45 @@ export const MapboxMap = () => {
     drawRef.current = draw;
     m.addControl(draw);
 
-    m.on('load', () => {
-        // Setup layers (simplificado para o exemplo)
-        if (!m.getSource('project-source')) {
-            m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-            m.addLayer({ id: 'project-body', type: 'fill-extrusion', source: 'project-source', paint: { 'fill-extrusion-color': '#00f3ff', 'fill-extrusion-height': 12, 'fill-extrusion-opacity': 0.4 } });
-            m.addLayer({ id: 'project-glow', type: 'line', source: 'project-source', paint: { 'line-color': '#00f3ff', 'line-width': 4 } });
-        }
-        // Load existing blocks logic here if needed
-    });
+    m.on('load', () => loadAllLayers(m));
 
-    // Tooltip logic
     m.on('mousemove', (e) => {
-       // ... (Mantenha lógica de tooltip existente)
+        if (!drawRef.current || !tooltipRef.current) return;
+        const mode = drawRef.current.getMode();
+        if (mode === 'draw_polygon') {
+            const data = drawRef.current.getAll();
+            const currentFeature = data.features[data.features.length - 1];
+            if (currentFeature && currentFeature.geometry.type === 'Polygon') {
+                const coords = currentFeature.geometry.coordinates[0];
+                if (coords.length > 0) {
+                    const lastPoint = coords[coords.length - 2]; 
+                    if (lastPoint) {
+                        const from = turf.point(lastPoint);
+                        const to = turf.point([e.lngLat.lng, e.lngLat.lat]);
+                        const distance = turf.distance(from, to, { units: 'meters' });
+                        let text = useSettingsStore.getState().measurementSystem === 'imperial' ? `${(distance * 3.28084).toFixed(0)} ft` : `${distance.toFixed(0)} m`;
+                        tooltipRef.current.style.display = 'block';
+                        tooltipRef.current.style.left = `${e.point.x + 15}px`;
+                        tooltipRef.current.style.top = `${e.point.y + 15}px`;
+                        tooltipRef.current.innerText = text;
+                        return;
+                    }
+                }
+            }
+        }
+        tooltipRef.current.style.display = 'none';
     });
+    
+    m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
-    // --- CRITICAL EVENT: DRAW COMPLETE ---
     m.on('draw.create', async (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
 
         draw.deleteAll();
         useMapStore.getState().setDrawMode('simple_select');
+        
+        if (tooltipRef.current) tooltipRef.current.style.display = 'none';
         
         const area = Math.round(turf.area(feature));
         let centerCoords = [0, 0];
@@ -105,24 +122,120 @@ export const MapboxMap = () => {
         }
 
         updateLand({ area: area, geometry: feature.geometry });
+        
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
+        
+        // Ativa 3D automaticamente APÓS desenhar, para visualizar o prédio
         useMapStore.getState().setIs3D(true); 
 
-        // --- CALL AI ---
+        // AI CALL
         setThinking(true);
         try {
             const aiResponse = await scoutLocation(centerCoords, area, i18n.language);
             setMessage(aiResponse);
         } catch (err) {
-            setMessage("Unable to analyze location.");
+            setMessage("AI Service Unavailable.");
         }
     });
   }, []);
 
-  // ... (Mantenha os useEffects de reação a mudanças de estilo/3D/flyTo)
+  // Sync is3D Store with Map
+  useEffect(() => {
+      if (!map.current) return;
+      map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
+  }, [is3D]);
+
+  // Sync Map Style
+  useEffect(() => {
+      if (!map.current) return;
+      const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
+      map.current.setStyle(styleUrl);
+      map.current.once('style.load', () => loadAllLayers(map.current!));
+  }, [mapStyle]);
+
+  // Sync Draw Mode (THIS IS CRITICAL FOR BUTTONS TO WORK)
+  useEffect(() => {
+      if (!drawRef.current || !map.current) return;
+      
+      if (drawMode === 'draw_polygon') {
+          drawRef.current.changeMode('draw_polygon');
+          map.current.getCanvas().style.cursor = 'crosshair';
+      } else {
+          drawRef.current.changeMode('simple_select');
+          map.current.getCanvas().style.cursor = '';
+          if (tooltipRef.current) tooltipRef.current.style.display = 'none';
+      }
+  }, [drawMode]);
+
+  useEffect(() => {
+      if (flyToCoords && map.current) {
+          map.current.flyTo({ center: flyToCoords, zoom: 17, pitch: 45, duration: 2000 });
+          if (!is3D) useMapStore.getState().setIs3D(true);
+      }
+  }, [flyToCoords]);
+
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded()) return;
+    redrawBlocks(map.current, blocks);
+  }, [blocks]);
+
+  const loadAllLayers = (m: mapboxgl.Map) => {
+      safeSetupLayers(m);
+      safeAddCityLayer(m);
+      redrawBlocks(m, useProjectStore.getState().blocks);
+  };
+
+  const safeSetupLayers = (m: mapboxgl.Map) => {
+      if (m.getSource('project-source')) return;
+      m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      m.addLayer({
+          id: 'project-body', type: 'fill-extrusion', source: 'project-source',
+          paint: {
+              'fill-extrusion-color': ['get', 'color'], 'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-opacity': 0.4, 
+              'fill-extrusion-opacity-transition': { duration: 2000 }, 'fill-extrusion-vertical-gradient': true 
+          }
+      });
+      m.addLayer({
+        id: 'project-glow', type: 'line', source: 'project-source',
+        paint: {
+            'line-color': ['get', 'color'], 'line-width': 4, 'line-blur': 2, 'line-opacity': 0.5,
+            'line-width-transition': { duration: 2000 }, 'line-opacity-transition': { duration: 2000 }, 'line-blur-transition': { duration: 2000 }
+        }
+      });
+  };
+
+  const redrawBlocks = (m: mapboxgl.Map, currentBlocks: any[]) => {
+      const source = m.getSource('project-source') as mapboxgl.GeoJSONSource;
+      if (!source) return;
+      const podium = currentBlocks.find(b => b.type === 'podium');
+      const features = currentBlocks.map(block => {
+          if (!block.coordinates) return null;
+          let h = block.height;
+          let b = 0;
+          if (block.type === 'tower' && podium) { b = podium.height; h = podium.height + block.height; }
+          return {
+              type: 'Feature', geometry: { type: 'Polygon', coordinates: block.coordinates },
+              properties: { color: block.color || '#00f3ff', height: h, base: b }
+          };
+      }).filter(Boolean);
+      source.setData({ type: 'FeatureCollection', features: features as any });
+  };
+
+  const safeAddCityLayer = (m: mapboxgl.Map) => {
+    if (m.getLayer('3d-buildings')) return;
+    try {
+        const labelLayerId = m.getStyle().layers?.find((l) => l.type === 'symbol' && l.layout?.['text-field'])?.id;
+        m.addLayer({
+            'id': '3d-buildings', 'source': 'composite', 'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 14,
+            'paint': { 'fill-extrusion-color': '#18181b', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-base': ['get', 'min_height'], 'fill-extrusion-opacity': 0.3 }
+        }, labelLayerId);
+    } catch (e) {}
+  };
 
   return (
     <>
