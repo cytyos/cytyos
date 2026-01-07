@@ -4,19 +4,19 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
-import { useTranslation } from 'react-i18next'; // Importar i18n para saber a lingua
+import { useTranslation } from 'react-i18next'; 
 
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useProjectStore } from '../../stores/useProjectStore';
 import { useMapStore } from '../../stores/mapStore';
 import { useAIStore } from '../../stores/aiStore';
-import { scoutLocation } from '../../services/aiService'; // <--- IMPORTAMOS SEU SERVICE
+import { scoutLocation } from '../../services/aiService';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617]; 
 
 export const MapboxMap = () => {
-  const { i18n } = useTranslation(); // Hook para pegar a lingua atual
+  const { i18n } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
@@ -26,7 +26,7 @@ export const MapboxMap = () => {
 
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
-  const { setThinking, setMessage, hideMessage } = useAIStore();
+  const { setThinking, setMessage } = useAIStore();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -78,7 +78,6 @@ export const MapboxMap = () => {
 
     m.on('load', () => loadAllLayers(m));
 
-    // Tooltip Rápido
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -108,7 +107,6 @@ export const MapboxMap = () => {
     
     m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
-    // --- EVENTO DE CRIAÇÃO DO POLÍGONO ---
     m.on('draw.create', async (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -117,34 +115,28 @@ export const MapboxMap = () => {
         
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
         
-        // 1. Dados Geométricos
         const area = Math.round(turf.area(feature));
-        // Pega o centro do polígono para enviar para a IA (mais preciso que o primeiro ponto)
         const center = turf.center(feature).geometry.coordinates;
 
-        // 2. Atualiza Store do Projeto
         updateLand({ area: area, geometry: feature.geometry });
         
-        // 3. Adiciona Bloco Visual (Podium)
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
         useMapStore.getState().setIs3D(true); 
 
-        // 4. CHAMA A INTELIGÊNCIA ARTIFICIAL (usando o service existente)
+        // CALL AI LAYER
         setThinking(true);
         try {
-            // Chama a nova função scoutLocation que criamos no aiService
             const aiResponse = await scoutLocation(center, area, i18n.language);
             setMessage(aiResponse);
         } catch (err) {
-            setMessage("Não consegui conectar com o satélite de IA no momento.");
+            setMessage("AI connection failed.");
         }
     });
   }, []);
 
-  // Reactions
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
