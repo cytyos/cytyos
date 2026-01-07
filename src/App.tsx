@@ -1,86 +1,51 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
-// Importação das Páginas
 import { LandingPage } from './pages/LandingPage';
-
-// Importação dos Componentes
-import { MapboxMap } from './components/map/MapboxMap'; 
-import { SmartPanel } from './components/SmartPanel';
-import { MapControls } from './components/MapControls';
-import { PricingModal } from './components/PricingModal';
-import { Footer } from './components/Footer'; 
-
-// Stores e Configs
-import { useSettingsStore } from './stores/settingsStore';
+import { Platform } from './pages/Platform';
+import { LoginPage } from './pages/LoginPage'; // <--- Nova
+import { AdminPage } from './pages/AdminPage'; // <--- Nova
+import { AuthProvider, useAuth } from './contexts/AuthContext'; // <--- Novo Contexto
 import './i18n';
 
-const AppLayout = () => {
-  const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
+// Componente para Proteger Rotas (Guarda-Costas)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+  
+  if (loading) return <div className="h-screen w-screen bg-gray-900 flex items-center justify-center text-indigo-500">Loading...</div>;
+  
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
 
-  useEffect(() => {
-    setPaywallOpen(false);
-
-    const checkAccess = () => {
-        const licenseType = localStorage.getItem('cytyos_license_type'); 
-        const trialStart = localStorage.getItem('cytyos_trial_start');
-        
-        if (licenseType === 'VIP') return;
-
-        if (trialStart) {
-            const now = Date.now();
-            const timePassed = now - parseInt(trialStart);
-            const oneHour = 1000 * 60 * 60;
-            if (timePassed < oneHour) return; 
-        }
-
-        const timer = setTimeout(() => {
-            setPaywallOpen(true); 
-        }, 60000); 
-
-        return () => clearTimeout(timer);
-    };
-
-    const clearTimer = checkAccess();
-    return () => {
-        if (clearTimer) clearTimer();
-    };
-  }, [setPaywallOpen]);
-
-  return (
-    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
-      
-      {/* 1. Modais (Z-Index Máximo) */}
-      <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
-      
-      {/* 2. Mapa (Fundo) */}
-      <MapboxMap />
-
-      {/* 3. Interface Flutuante */}
-      <SmartPanel />
-      
-      {/* 4. Controles do Mapa (MOVIDO PARA O TOPO) */}
-      {/* Mudamos de 'bottom-12' para 'top-6' para a busca abrir para baixo corretamente */}
-      <div className="absolute top-6 left-0 w-full flex justify-center z-50 pointer-events-none">
-        <MapControls />
-      </div>
-
-      {/* 5. Rodapé Global */}
-      <Footer />
-      
-    </div>
-  );
+  return <>{children}</>;
 };
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<AppLayout />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+        <BrowserRouter>
+        <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Rota Protegida: App Principal */}
+            <Route path="/app" element={
+                <ProtectedRoute>
+                    <Platform />
+                </ProtectedRoute>
+            } />
+
+            {/* Rota Protegida: Admin */}
+            <Route path="/admin" element={
+                <ProtectedRoute>
+                    <AdminPage />
+                </ProtectedRoute>
+            } />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        </BrowserRouter>
+    </AuthProvider>
   );
 }
 
