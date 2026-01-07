@@ -11,6 +11,7 @@
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@mapbox/mapbox-gl-geocoder": "^5.1.2",
+    "@supabase/supabase-js": "^2.39.7",
     "@turf/turf": "^6.5.0",
     "framer-motion": "^11.0.8",
     "i18next": "^25.7.3",
@@ -20,7 +21,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^16.5.0",
-    "react-router-dom": "^7.11.0",
+    "react-router-dom": "^6.22.3",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
