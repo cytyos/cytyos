@@ -3,14 +3,14 @@ import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useAIStore } from '../stores/aiStore'; 
+import { useAIStore } from '../stores/aiStore';
 import { analyzeProject } from '../services/aiService';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, Rocket 
+  Trash2, Coins, FileText, MapPin, Rocket, Check 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -32,7 +32,7 @@ export const SmartPanel = () => {
       setRoadmapOpen 
   } = useSettingsStore();
 
-  const { setThinking, setMessage } = useAIStore();
+  const { message, setThinking, setMessage } = useAIStore(); // Added 'message' to destructuring
 
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +50,24 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
+  // --- NEW: AUTO-OPEN CHAT ON AI MESSAGE ---
+  useEffect(() => {
+    if (message) {
+        // 1. Force the chat panel to open
+        setIsChatOpen(true);
+        
+        // 2. Add the global message to the chat history
+        setChatMessages(prev => {
+            // Avoid duplicates: check if the last message is the same
+            if (prev.length > 0 && prev[prev.length - 1].content === message) {
+                return prev;
+            }
+            return [...prev, { role: 'assistant', content: message }];
+        });
+    }
+  }, [message]); // Listener: triggers whenever 'message' changes in the AI Store
+
+  // --- LOGIC: ANALYZE ZONING TEXT (Local) ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
@@ -107,6 +125,7 @@ export const SmartPanel = () => {
   const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
   const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
   
+  // --- AI ANALYSIS (Manual Button) ---
   const handleStartAnalysis = async () => {
     setThinking(true);
     if(window.innerWidth < 768) setMobileState('max'); 
@@ -114,11 +133,9 @@ export const SmartPanel = () => {
 
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
-        setMessage(report);
-        setChatMessages([{ role: 'assistant', content: report || "No analysis generated." }]);
+        setMessage(report); // Set Global Message -> Triggers useEffect above
     } catch (e) { 
         setMessage("⚠️ Connection Error."); 
-        setChatMessages([{ role: 'assistant', content: "⚠️ Connection Error." }]); 
     } finally { 
         setIsAiLoading(false); 
     }
@@ -249,27 +266,14 @@ export const SmartPanel = () => {
         </div>
         
         {activeTab !== 'settings' && (
-            <>
-                <div className="flex justify-between items-start mb-3">
-                    <div>
-                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
-                        <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
-                    </div>
-                    <div className="text-right">
-                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
-                        <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
-                    </div>
-                </div>
-                <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-                    <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-                </div>
-            </>
+            <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+                <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
+            </div>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
-          {/* --- AQUI ESTÁ O CONTEÚDO QUE TINHA SUMIDO --- */}
           {activeTab === 'editor' && (
             <>
                 {blocks.length > 0 ? (
@@ -339,7 +343,6 @@ export const SmartPanel = () => {
 
           {activeTab === 'financial' && (
              <div className="p-4 space-y-6 pb-24 md:pb-4">
-                {/* FINANCIAL CONTENT RESTORED */}
                 <div className="space-y-2">
                     <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                     <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
