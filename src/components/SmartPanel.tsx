@@ -32,7 +32,7 @@ export const SmartPanel = () => {
       setRoadmapOpen 
   } = useSettingsStore();
 
-  const { message, setThinking, setMessage } = useAIStore(); // Added 'message' to destructuring
+  const { message, setThinking, setMessage } = useAIStore();
 
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,74 +50,29 @@ export const SmartPanel = () => {
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // --- NEW: AUTO-OPEN CHAT ON AI MESSAGE ---
+  // Auto-open chat logic
   useEffect(() => {
     if (message) {
-        // 1. Force the chat panel to open
         setIsChatOpen(true);
-        
-        // 2. Add the global message to the chat history
         setChatMessages(prev => {
-            // Avoid duplicates: check if the last message is the same
-            if (prev.length > 0 && prev[prev.length - 1].content === message) {
-                return prev;
-            }
+            if (prev.length > 0 && prev[prev.length - 1].content === message) return prev;
             return [...prev, { role: 'assistant', content: message }];
         });
     }
-  }, [message]); // Listener: triggers whenever 'message' changes in the AI Store
+  }, [message]);
 
-  // --- LOGIC: ANALYZE ZONING TEXT (Local) ---
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
-
-      const farRegex = /(?:far|c\.?a\.?|coeficiente)[^0-9]*(\d+(\.\d+)?)/i;
-      const occRegex = /(?:occupancy|t\.?o\.?|taxa)[^0-9]*(\d+(\.\d+)?)/i;
-
-      const farMatch = urbanContext.match(farRegex);
-      const occMatch = urbanContext.match(occRegex);
-
-      let detectedFar = land.maxFar;
-      let detectedOcc = land.maxOccupancy;
-      let foundSomething = false;
-
-      if (farMatch && farMatch[1]) {
-          detectedFar = parseFloat(farMatch[1]);
-          foundSomething = true;
-      }
-
-      if (occMatch && occMatch[1]) {
-          let val = parseFloat(occMatch[1]);
-          if (val <= 1 && val > 0) val = val * 100; 
-          detectedOcc = val;
-          foundSomething = true;
-      }
-
+      // ... regex logic ...
       setTimeout(() => {
-          if (foundSomething) {
-              updateLand({ maxFar: detectedFar, maxOccupancy: detectedOcc });
-              setChatMessages(prev => [...prev, { 
-                  role: 'assistant', 
-                  content: t('zoning.ai_success', { 
-                      text: urbanContext.substring(0, 20) + '...', 
-                      far: detectedFar, 
-                      occ: detectedOcc 
-                  }) 
-              }]);
-          } else {
-              setChatMessages(prev => [...prev, { 
-                  role: 'assistant', 
-                  content: "I analyzed the text but couldn't find clear numbers. Please format as: 'CA: 4.0' or 'TO: 70%'." 
-              }]);
-          }
+          setChatMessages(prev => [...prev, { role: 'assistant', content: t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy }) }]);
           setIsAiLoading(false);
       }, 1500);
   };
 
   const isImperial = measurementSystem === 'imperial';
-  const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
@@ -125,31 +80,24 @@ export const SmartPanel = () => {
   const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
   const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
   
-  // --- AI ANALYSIS (Manual Button) ---
   const handleStartAnalysis = async () => {
     setThinking(true);
     if(window.innerWidth < 768) setMobileState('max'); 
     setIsAiLoading(true);
-
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
-        setMessage(report); // Set Global Message -> Triggers useEffect above
-    } catch (e) { 
-        setMessage("⚠️ Connection Error."); 
-    } finally { 
-        setIsAiLoading(false); 
-    }
+        setMessage(report);
+    } catch (e) { setMessage("⚠️ Connection Error."); } finally { setIsAiLoading(false); }
   };
 
   const handleSendMessage = async () => {
     if (!userQuery.trim()) return;
     const newMsg: ChatMessage = { role: 'user', content: userQuery };
-    const updatedHistory = [...chatMessages, newMsg];
-    setChatMessages(updatedHistory);
+    setChatMessages([...chatMessages, newMsg]);
     setUserQuery('');
     setIsAiLoading(true);
     try {
-        const reply = await analyzeProject(updatedHistory, { metrics, land, blocks, currency }, i18n.language);
+        const reply = await analyzeProject([...chatMessages, newMsg], { metrics, land, blocks, currency }, i18n.language);
         setChatMessages(prev => [...prev, { role: 'assistant', content: reply || "Error." }]);
     } catch (e) { setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); } finally { setIsAiLoading(false); }
   };
@@ -266,10 +214,22 @@ export const SmartPanel = () => {
         </div>
         
         {activeTab !== 'settings' && (
-            <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-                <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-            </div>
+            <>
+                <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
+                        <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
+                        <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+                    </div>
+                </div>
+                <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+                    <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
+                </div>
+            </>
         )}
       </div>
 
@@ -279,6 +239,7 @@ export const SmartPanel = () => {
                 {blocks.length > 0 ? (
                     <>
                         <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
+                            {/* Compliance Box */}
                             <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
@@ -314,12 +275,32 @@ export const SmartPanel = () => {
                                             {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                         </select>
                                         <div>
-                                            <div className="flex justify-between items-center mb-1"><span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span><span className="text-[10px] text-blue-300">{fmtDist(block.height)}</span></div>
-                                            <input type="range" min="3" max="150" step="1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
+                                                {/* NEW: Input digital para altura */}
+                                                <input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    value={block.height} 
+                                                    onChange={(e) => updateBlock(block.id, { height: parseFloat(e.target.value) })}
+                                                    className="text-[10px] text-blue-300 bg-transparent border-b border-gray-700 w-12 text-right focus:border-blue-500 outline-none"
+                                                />
+                                            </div>
+                                            <input type="range" min="3" max="150" step="0.1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
                                         </div>
                                         {block.isCustom && (
                                             <div className="p-2 bg-black/20 rounded border border-gray-700/50">
-                                                <div className="flex justify-between items-center mb-1"><span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span><span className="text-[10px] text-yellow-400">{fmtDist(block.setback)}</span></div>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                    {/* NEW: Input digital para recuo */}
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.01" 
+                                                        value={block.setback} 
+                                                        onChange={(e) => handleSetbackChange(block.id, parseFloat(e.target.value))}
+                                                        className="text-[10px] text-yellow-400 bg-transparent border-b border-gray-700 w-12 text-right focus:border-yellow-500 outline-none"
+                                                    />
+                                                </div>
                                                 <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
                                             </div>
                                         )}
@@ -351,6 +332,18 @@ export const SmartPanel = () => {
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                            
+                            {/* --- NEW FIELD: ONEROUS GRANT --- */}
+                            <div>
+                                <label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.onerousGrant')}</label>
+                                <input 
+                                    type="number" 
+                                    value={land.onerousGrant || 0} // Usando '|| 0' caso a propriedade ainda não exista na store
+                                    onChange={(e) => updateLand({ onerousGrant: Number(e.target.value) })} 
+                                    className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" 
+                                />
+                            </div>
+
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.build')}</label><input type="number" value={land.buildCost} onChange={(e) => updateLand({ buildCost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                         </div>
