@@ -26,6 +26,7 @@ export interface Land {
   maxOccupancy: number;
   efficiency: number;
   geometry: any;
+  onerousGrant?: number; // <--- NEW FIELD
 }
 
 export interface Metrics {
@@ -55,7 +56,7 @@ interface ProjectState {
   setCurrency: (currency: string) => void;
   loadProject: (data: any) => void;
   calculateMetrics: () => void;
-  clearProject: () => void; // <--- Clear Action
+  clearProject: () => void;
 }
 
 // --- CONFIG (NEON / CYBERPUNK PALETTE) ---
@@ -77,6 +78,7 @@ const INITIAL_LAND: Land = {
   maxFar: 4.0,
   maxOccupancy: 70,
   efficiency: 0.85,
+  onerousGrant: 0, // <--- INITIAL VALUE
   geometry: {
     type: 'Polygon',
     coordinates: [[
@@ -167,16 +169,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
-  // --- ACTION: CLEAR PROJECT ---
   clearProject: () => {
       set((state) => ({
-          blocks: [], // Remove all buildings
+          blocks: [], 
           land: { 
               ...state.land, 
-              geometry: null, // Clear the land drawing
-              area: 0 
+              geometry: null, 
+              area: 0,
+              onerousGrant: 0 
           },
-          metrics: INITIAL_METRICS // Reset numbers
+          metrics: INITIAL_METRICS
       }));
   },
 
@@ -199,7 +201,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     const nsa = totalGfa * land.efficiency;
     const revenue = nsa * land.sellPrice;
-    const totalCost = (totalGfa * land.buildCost) + land.cost;
+    
+    // --- UPDATED COST FORMULA: INCLUDES ONEROUS GRANT ---
+    const totalCost = (totalGfa * land.buildCost) + land.cost + (land.onerousGrant || 0);
+    
     const grossProfit = revenue - totalCost;
     
     let margin = 0;
