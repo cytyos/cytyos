@@ -1,27 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
 
-import { useSettingsStore } from '../stores/settingsStore';
-import { useProjectStore } from '../stores/useProjectStore';
-import { useMapStore } from '../stores/mapStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { useProjectStore } from '../../stores/useProjectStore';
+import { useMapStore } from '../../stores/mapStore';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''; 
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617]; 
 
-export const Map = () => {
-  const { t } = useTranslation();
+export const MapboxMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
   const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
-
   const { blocks, updateLand, addBlock } = useProjectStore();
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
 
@@ -34,7 +31,6 @@ export const Map = () => {
 
   useEffect(() => {
     if (!map.current || !map.current.getLayer('project-body')) return;
-
     if (pulseState === 'high') {
         map.current.setPaintProperty('project-body', 'fill-extrusion-opacity', 0.8);
         map.current.setPaintProperty('project-glow', 'line-width', 15);
@@ -50,9 +46,7 @@ export const Map = () => {
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
-
     mapboxgl.accessToken = MAPBOX_TOKEN;
-
     const m = new mapboxgl.Map({
       container: mapContainer.current,
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
@@ -64,9 +58,7 @@ export const Map = () => {
       attributionControl: false 
     });
     map.current = m;
-
     m.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
     const draw = new MapboxDraw({
       displayControlsDefault: false,
       controls: { polygon: false, trash: false },
@@ -74,11 +66,8 @@ export const Map = () => {
     });
     drawRef.current = draw;
     m.addControl(draw);
-
-    m.on('load', () => {
-      loadAllLayers(m);
-    });
-
+    m.on('load', () => loadAllLayers(m));
+    
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -93,13 +82,7 @@ export const Map = () => {
                         const from = turf.point(lastPoint);
                         const to = turf.point([e.lngLat.lng, e.lngLat.lat]);
                         const distance = turf.distance(from, to, { units: 'meters' });
-                        
-                        let text = '';
-                        const isImp = useSettingsStore.getState().measurementSystem === 'imperial';
-                        text = isImp 
-                            ? `${(distance * 3.28084).toFixed(0)} ft` 
-                            : `${distance.toFixed(0)} m`;
-
+                        let text = useSettingsStore.getState().measurementSystem === 'imperial' ? `${(distance * 3.28084).toFixed(0)} ft` : `${distance.toFixed(0)} m`;
                         tooltipRef.current.style.display = 'block';
                         tooltipRef.current.style.left = `${e.point.x + 15}px`;
                         tooltipRef.current.style.top = `${e.point.y + 15}px`;
@@ -111,37 +94,22 @@ export const Map = () => {
         }
         tooltipRef.current.style.display = 'none';
     });
-    
-    m.on('mouseout', () => {
-        if (tooltipRef.current) tooltipRef.current.style.display = 'none';
-    });
+    m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
     m.on('draw.create', (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
-
         draw.deleteAll();
         setDrawMode('simple_select');
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
-
         const area = turf.area(feature);
         updateLand({ area: Math.round(area), geometry: feature.geometry });
-        
         addBlock({
-            name: 'Podium Base',
-            type: 'podium',
-            usage: 'residential', 
-            isCustom: true,
-            coordinates: feature.geometry.coordinates,
-            setback: 0,
-            baseArea: area,
-            height: 12,
-            color: '#00f3ff' 
+            name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
+            coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
-
         useMapStore.getState().setIs3D(true); 
     });
-
   }, []);
 
   useEffect(() => {
@@ -188,35 +156,20 @@ export const Map = () => {
 
   const safeSetupLayers = (m: mapboxgl.Map) => {
       if (m.getSource('project-source')) return;
-      
       m.addSource('project-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      
       m.addLayer({
-          id: 'project-body',
-          type: 'fill-extrusion',
-          source: 'project-source',
+          id: 'project-body', type: 'fill-extrusion', source: 'project-source',
           paint: {
-              'fill-extrusion-color': ['get', 'color'],
-              'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': 0.4, 
-              'fill-extrusion-opacity-transition': { duration: 2000 }, 
-              'fill-extrusion-vertical-gradient': true 
+              'fill-extrusion-color': ['get', 'color'], 'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-opacity': 0.4, 
+              'fill-extrusion-opacity-transition': { duration: 2000 }, 'fill-extrusion-vertical-gradient': true 
           }
       });
-
       m.addLayer({
-        id: 'project-glow',
-        type: 'line',
-        source: 'project-source',
+        id: 'project-glow', type: 'line', source: 'project-source',
         paint: {
-            'line-color': ['get', 'color'],
-            'line-width': 4,  
-            'line-blur': 2,   
-            'line-opacity': 0.5,
-            'line-width-transition': { duration: 2000 },
-            'line-opacity-transition': { duration: 2000 },
-            'line-blur-transition': { duration: 2000 }
+            'line-color': ['get', 'color'], 'line-width': 4, 'line-blur': 2, 'line-opacity': 0.5,
+            'line-width-transition': { duration: 2000 }, 'line-opacity-transition': { duration: 2000 }, 'line-blur-transition': { duration: 2000 }
         }
       });
   };
@@ -224,21 +177,17 @@ export const Map = () => {
   const redrawBlocks = (m: mapboxgl.Map, currentBlocks: any[]) => {
       const source = m.getSource('project-source') as mapboxgl.GeoJSONSource;
       if (!source) return;
-      
       const podium = currentBlocks.find(b => b.type === 'podium');
       const features = currentBlocks.map(block => {
           if (!block.coordinates) return null;
           let h = block.height;
           let b = 0;
           if (block.type === 'tower' && podium) { b = podium.height; h = podium.height + block.height; }
-          
           return {
-              type: 'Feature',
-              geometry: { type: 'Polygon', coordinates: block.coordinates },
+              type: 'Feature', geometry: { type: 'Polygon', coordinates: block.coordinates },
               properties: { color: block.color || '#00f3ff', height: h, base: b }
           };
       }).filter(Boolean);
-      
       source.setData({ type: 'FeatureCollection', features: features as any });
   };
 
@@ -247,18 +196,9 @@ export const Map = () => {
     try {
         const labelLayerId = m.getStyle().layers?.find((l) => l.type === 'symbol' && l.layout?.['text-field'])?.id;
         m.addLayer({
-            'id': '3d-buildings',
-            'source': 'composite',
-            'source-layer': 'building',
-            'filter': ['==', 'extrude', 'true'],
-            'type': 'fill-extrusion',
-            'minzoom': 14,
-            'paint': { 
-                'fill-extrusion-color': '#18181b', 
-                'fill-extrusion-height': ['get', 'height'], 
-                'fill-extrusion-base': ['get', 'min_height'], 
-                'fill-extrusion-opacity': 0.3 
-            }
+            'id': '3d-buildings', 'source': 'composite', 'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'], 'type': 'fill-extrusion', 'minzoom': 14,
+            'paint': { 'fill-extrusion-color': '#18181b', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-base': ['get', 'min_height'], 'fill-extrusion-opacity': 0.3 }
         }, labelLayerId);
     } catch (e) {}
   };
