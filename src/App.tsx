@@ -1,93 +1,72 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Importação das Páginas
-import { LandingPage } from './pages/LandingPage';
+// --- IMPORTAÇÕES ---
+// Tente importar a LandingPage. Se der erro, verifique se no arquivo LandingPage.tsx está 'export default' ou 'export const'
+import { LandingPage } from './pages/LandingPage'; 
 
-// Importação dos Componentes
 import { MapboxMap } from './components/map/MapboxMap'; 
-import { SmartPanel } from './components/SmartPanel';
 import { MapControls } from './components/MapControls';
+import { SmartPanel } from './components/SmartPanel';
 import { PricingModal } from './components/PricingModal';
 import { AIAssistant } from './components/AIAssistant'; 
-import { Footer } from './components/Footer'; 
-
-// Stores e Configs
+import { Footer } from './components/Footer'; // <--- O Novo Rodapé
 import { useSettingsStore } from './stores/settingsStore';
 import './i18n';
 
-// --- COMPONENTE DE LAYOUT INTERNO ---
-// Definimos o layout do App aqui dentro para evitar erros de importação
-const AppLayout = () => {
+// Helper para o Paywall (Como estava no seu código original)
+const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
-
-  useEffect(() => {
-    setPaywallOpen(false);
-
-    const checkAccess = () => {
-        const licenseType = localStorage.getItem('cytyos_license_type'); 
-        const trialStart = localStorage.getItem('cytyos_trial_start');
-        
-        if (licenseType === 'VIP') return;
-
-        if (trialStart) {
-            const now = Date.now();
-            const timePassed = now - parseInt(trialStart);
-            const oneHour = 1000 * 60 * 60;
-            if (timePassed < oneHour) return; 
-        }
-
-        const timer = setTimeout(() => {
-            setPaywallOpen(true); 
-        }, 60000); 
-
-        return () => clearTimeout(timer);
-    };
-
-    const clearTimer = checkAccess();
-    return () => {
-        if (clearTimer) clearTimer();
-    };
-  }, [setPaywallOpen]);
-
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
-      
-      {/* 1. Modais e IA (Z-Index Máximo) */}
-      <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
-      <AIAssistant />
-
-      {/* 2. Mapa (Fundo) */}
-      <MapboxMap />
-
-      {/* 3. Interface Flutuante */}
-      <SmartPanel />
-      
-      {/* 4. Controles do Mapa */}
-      {/* 'bottom-12' (48px) garante que fique ACIMA do rodapé (32px) */}
-      <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
-        <MapControls />
-      </div>
-
-      {/* 5. Rodapé Global */}
-      <Footer />
-      
-    </div>
+    <PricingModal 
+      isOpen={isPaywallOpen} 
+      onClose={() => setPaywallOpen(false)} 
+    />
   );
 };
 
-// --- COMPONENTE PRINCIPAL (ROTEADOR) ---
 function App() {
   return (
     <BrowserRouter>
+      {/* Componentes Globais que flutuam sobre tudo */}
+      <PaywallGlobal />
+      <AIAssistant />
+
       <Routes>
         {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Rota 2: App Principal (Usa o Layout definido acima) */}
-        <Route path="/app" element={<AppLayout />} />
+        {/* Rota 2: App Principal */}
+        <Route path="/app" element={
+          <div className="h-screen w-screen overflow-hidden bg-gray-900 relative">
+            
+            {/* 1. Mapa (Fundo) */}
+            <MapboxMap />
+            
+            {/* 2. Container da Interface (Fica por cima do mapa) */}
+            {/* pointer-events-none deixa clicar no mapa através do container */}
+            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
+                
+                {/* Topo: Vazio ou Header se tiver */}
+                <div className="w-full p-4"></div>
 
-        {/* Rota Coringa (Redireciona erros para Home) */}
+                {/* Centro/Baixo: Controles */}
+                <div className="w-full flex justify-center pb-16 z-50">
+                   {/* pointer-events-auto reativa o clique nos botões */}
+                   <div className="pointer-events-auto">
+                      <MapControls />
+                   </div>
+                </div>
+            </div>
+
+            {/* 3. Painel Lateral (Já tem posição absoluta própria) */}
+            <SmartPanel />
+
+            {/* 4. Rodapé Global (Fixo) */}
+            <Footer />
+          </div>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
