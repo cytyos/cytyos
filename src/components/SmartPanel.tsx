@@ -5,20 +5,21 @@ import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAIStore } from '../stores/aiStore'; 
 import { analyzeProject } from '../services/aiService';
+import { useAuth } from '../contexts/AuthContext'; // <--- NEW: Import Auth
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, Rocket 
+  Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon // <--- NEW: Logout icons
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
-
 type MobileState = 'min' | 'mid' | 'max';
 
 export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
+  const { user, signOut } = useAuth(); // <--- NEW: Get user and signOut
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
   const { 
@@ -33,24 +34,20 @@ export const SmartPanel = () => {
   } = useSettingsStore();
 
   const { message, setThinking, setMessage } = useAIStore();
-
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [userQuery, setUserQuery] = useState('');
-  
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
 
-  // Auto-open chat logic
   useEffect(() => {
     if (message) {
         setIsChatOpen(true);
@@ -65,7 +62,6 @@ export const SmartPanel = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
-      // ... regex logic ...
       setTimeout(() => {
           setChatMessages(prev => [...prev, { role: 'assistant', content: t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy }) }]);
           setIsAiLoading(false);
@@ -73,9 +69,7 @@ export const SmartPanel = () => {
   };
 
   const isImperial = measurementSystem === 'imperial';
-  const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
-  
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
   const changeCurrency = (curr: string) => { setCurrency(curr); setIsCurrencyMenuOpen(false); };
   const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
@@ -178,7 +172,7 @@ export const SmartPanel = () => {
     <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 pointer-events-auto ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
-      {/* HEADER */}
+      {/* HEADER WITH LOGO AND USER INFO */}
       <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative cursor-pointer md:cursor-default" onClick={cycleMobileState}>
         <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-700 rounded-full opacity-50"></div>
 
@@ -186,6 +180,13 @@ export const SmartPanel = () => {
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                {/* --- USER LOGGED IN DISPLAY (NEW) --- */}
+                <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
+                   <UserIcon className="w-3 h-3 text-indigo-400" />
+                   <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
+                   <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
+                </div>
+
                 <div className="relative">
                     <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
                         <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
@@ -277,7 +278,6 @@ export const SmartPanel = () => {
                                         <div>
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                                {/* DIGITAL INPUT FOR HEIGHT */}
                                                 <input 
                                                     type="number" 
                                                     step="0.01" 
@@ -292,7 +292,6 @@ export const SmartPanel = () => {
                                             <div className="p-2 bg-black/20 rounded border border-gray-700/50">
                                                 <div className="flex justify-between items-center mb-1">
                                                     <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                                    {/* DIGITAL INPUT FOR SETBACK */}
                                                     <input 
                                                         type="number" 
                                                         step="0.01" 
@@ -332,18 +331,15 @@ export const SmartPanel = () => {
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            
-                            {/* --- NEW FIELD: ADDITIONAL FEES / IMPACT FEES --- */}
                             <div>
                                 <label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.onerousGrant')}</label>
                                 <input 
                                     type="number" 
-                                    value={land.additionalCosts || 0} // Renamed for global context
+                                    value={land.additionalCosts || 0}
                                     onChange={(e) => updateLand({ additionalCosts: Number(e.target.value) })} 
                                     className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" 
                                 />
                             </div>
-
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.build')}</label><input type="number" value={land.buildCost} onChange={(e) => updateLand({ buildCost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                         </div>
