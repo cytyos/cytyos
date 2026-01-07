@@ -42,25 +42,17 @@ export const Platform = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       
-      {/* 1. Modais e Overlays Globais (Z-Index Máximo) */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
       <AIAssistant />
 
-      {/* 2. Camada do Mapa (Z-Index 0) */}
       <MapboxMap />
-
-      {/* 3. Interface Flutuante (Z-Index Intermediário) */}
-      {/* O SmartPanel já gerencia sua posição absoluta */}
       <SmartPanel />
       
-      {/* Container dos Controles do Mapa */}
-      {/* pointer-events-none garante que a área vazia ao redor dos botões não bloqueie o mapa */}
-      <div className="absolute bottom-8 left-0 w-full flex justify-center z-30 pointer-events-none">
-        {/* O componente filho deve ter pointer-events-auto */}
+      {/* CORREÇÃO: Z-Index 50 para garantir que o menu da busca fique visível */}
+      <div className="absolute bottom-8 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
 
-      {/* Rodapé Pequeno */}
       <div className="absolute bottom-[35px] right-3 z-30 pointer-events-auto">
         <span className="bg-black/60 text-white/50 text-[9px] px-2 py-1 rounded-md backdrop-blur-sm border border-white/10 font-mono">
           Cytyos Beta v0.9
