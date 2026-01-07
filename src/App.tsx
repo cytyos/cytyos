@@ -1,16 +1,23 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// Importação das Páginas
 import { LandingPage } from './pages/LandingPage';
+
+// Importação dos Componentes
 import { MapboxMap } from './components/map/MapboxMap'; 
 import { SmartPanel } from './components/SmartPanel';
 import { MapControls } from './components/MapControls';
 import { PricingModal } from './components/PricingModal';
 import { AIAssistant } from './components/AIAssistant'; 
-import { Footer } from './components/Footer'; // Certifique-se que criou este arquivo
+import { Footer } from './components/Footer'; 
+
+// Stores e Configs
 import { useSettingsStore } from './stores/settingsStore';
 import './i18n';
 
-// Componente Interno para organizar o Layout do App
+// --- COMPONENTE DE LAYOUT INTERNO ---
+// Definimos o layout do App aqui dentro para evitar erros de importação
 const AppLayout = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
 
@@ -53,12 +60,11 @@ const AppLayout = () => {
       {/* 2. Mapa (Fundo) */}
       <MapboxMap />
 
-      {/* 3. Interface Flutuante (SmartPanel já tem posição absoluta) */}
+      {/* 3. Interface Flutuante */}
       <SmartPanel />
       
       {/* 4. Controles do Mapa */}
-      {/* Container invisível para posicionar no centro inferior */}
-      {/* 'bottom-12' garante que fique ACIMA do rodapé */}
+      {/* 'bottom-12' (48px) garante que fique ACIMA do rodapé (32px) */}
       <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
@@ -70,6 +76,7 @@ const AppLayout = () => {
   );
 };
 
+// --- COMPONENTE PRINCIPAL (ROTEADOR) ---
 function App() {
   return (
     <BrowserRouter>
@@ -77,10 +84,10 @@ function App() {
         {/* Rota 1: Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Rota 2: App Principal */}
+        {/* Rota 2: App Principal (Usa o Layout definido acima) */}
         <Route path="/app" element={<AppLayout />} />
 
-        {/* Rota Coringa */}
+        {/* Rota Coringa (Redireciona erros para Home) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
