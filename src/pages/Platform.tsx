@@ -11,17 +11,17 @@ export const Platform = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
 
   useEffect(() => {
-    // Garante que o modal comece fechado
+    // 1. Segurança: Garante modal fechado ao iniciar
     setPaywallOpen(false);
 
     const checkAccess = () => {
         const licenseType = localStorage.getItem('cytyos_license_type'); 
         const trialStart = localStorage.getItem('cytyos_trial_start');
         
-        // VIPs (Founders) nunca são bloqueados
+        // VIPs não têm bloqueio
         if (licenseType === 'VIP') return;
 
-        // Lógica de Trial (1 hora grátis)
+        // Lógica de Trial (1 hora)
         if (trialStart) {
             const now = Date.now();
             const timePassed = now - parseInt(trialStart);
@@ -29,7 +29,7 @@ export const Platform = () => {
             if (timePassed < oneHour) return; 
         }
 
-        // Timer de 60 segundos para novos usuários
+        // Timer de 60 segundos para bloquear novos usuários
         console.log("⏳ Timer started: Locking in 60 seconds...");
         const timer = setTimeout(() => {
             setPaywallOpen(true); 
@@ -47,23 +47,27 @@ export const Platform = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       
-      {/* 1. Camada de Modais (Z-Index Máximo) */}
+      {/* --- CAMADA 1: MODAIS (Z-Index Máximo) --- */}
       <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
       <AIAssistant />
 
-      {/* 2. Camada do Mapa (Fundo) */}
+      {/* --- CAMADA 2: MAPA (Fundo, Z-Index 0) --- */}
       <MapboxMap />
 
-      {/* 3. Interface Flutuante (SmartPanel) */}
+      {/* --- CAMADA 3: INTERFACE FLUTUANTE --- */}
+      
+      {/* Painel Lateral (Já tem posicionamento absoluto interno) */}
       <SmartPanel />
       
-      {/* 4. Controles do Mapa */}
-      {/* Posicionado bottom-12 para respeitar o rodapé */}
+      {/* Controles do Mapa */}
+      {/* Container invisível (pointer-events-none) para posicionar no centro inferior */}
+      {/* 'bottom-12' garante que fique ACIMA do rodapé */}
       <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
+        {/* O componente MapControls tem pointer-events-auto internamente */}
         <MapControls />
       </div>
 
-      {/* 5. Rodapé Global (Agora vai aparecer!) */}
+      {/* --- CAMADA 4: RODAPÉ FIXO --- */}
       <Footer />
       
     </div>
