@@ -107,47 +107,57 @@ export const MapboxMap = () => {
     
     m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
+    // --- EVENTO CRÍTICO: CRIAÇÃO DO POLÍGONO ---
     m.on('draw.create', async (e) => {
+        console.log("Draw Create Triggered!"); // DEBUG: Veja se isso aparece no console
         const feature = e.features?.[0];
         if (!feature) return;
+
+        // 1. Limpeza Imediata
         draw.deleteAll();
         useMapStore.getState().setDrawMode('simple_select');
-        
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
         
+        // 2. Cálculos Geométricos
         const area = Math.round(turf.area(feature));
         
-        // --- CORREÇÃO: Pegar coordenadas do centro ---
+        // CORREÇÃO: Usando Centroid (mais seguro que center para polígonos irregulares)
         let centerCoords = [0, 0];
         try {
-            const center = turf.center(feature);
-            centerCoords = center.geometry.coordinates;
+            const centroid = turf.centroid(feature);
+            centerCoords = centroid.geometry.coordinates;
         } catch (err) {
-            // Fallback se turf.center falhar: usar o primeiro ponto
-            centerCoords = feature.geometry.coordinates[0][0];
+            console.error("Turf Centroid Error:", err);
+            centerCoords = feature.geometry.coordinates[0][0]; // Fallback
         }
 
+        // 3. Atualizar Estado do Projeto
         updateLand({ area: area, geometry: feature.geometry });
-        
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
         useMapStore.getState().setIs3D(true); 
 
-        // --- DISPARO IMEDIATO DA IA ---
-        setThinking(true);
+        // 4. CHAMADA DE IA (IMEDIATA)
+        // Isso força a bolha a aparecer "Pensando..."
+        setThinking(true); 
+
         try {
-            // Chama a função scoutLocation do service
+            console.log("Calling Scout Location Service...");
+            // Chama o serviço
             const aiResponse = await scoutLocation(centerCoords, area, i18n.language);
+            console.log("AI Response received:", aiResponse);
+            // Atualiza com a resposta
             setMessage(aiResponse);
         } catch (err) {
-            console.error(err);
-            setMessage("I couldn't analyze this specific location right now.");
+            console.error("AI Service Error:", err);
+            setMessage("Não foi possível conectar ao satélite de análise. Tente novamente.");
         }
     });
   }, []);
 
+  // Reactions Hooks (Mantidos iguais)
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
