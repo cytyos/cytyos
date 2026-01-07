@@ -10,7 +10,10 @@ const resources = {
       tabs: { design: "Design", economics: "Economics" },
       header: { revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap" },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
-      assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %" },
+      
+      // ADDED "onerousGrant"
+      assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %", onerousGrant: "Onerous Grant / Fees" },
+      
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
       blocks: { active: "Active Volumes", height: "Height", setback: "Setback" },
       ai: { btn: "AI Consultant", thinking: "Analyzing...", close: "Close", insight: "AI Strategic Insight", placeholder: "Ask about efficiency..." },
@@ -21,7 +24,6 @@ const resources = {
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline." },
       zoning: { title: "AI Zoning Analysis", placeholder: "Paste zoning laws here... Example: 'Max FAR 4.0, Occupancy 70%'", analyze_btn: "Analyze & Apply", ai_success: "Updated: FAR {{far}}, Occ {{occ}}%." },
       
-      // LANDING & ROADMAP
       landing: {
         login: "Login",
         hero: { badge: "Beta Live Now", title_prefix: "The Operating System for", title_main: "Real Estate Development.", title_anim: "Start Analyzing.", subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds.", btn_try: "Try Beta Free", btn_plans: "View Early Bird Plan" },
@@ -45,7 +47,10 @@ const resources = {
       tabs: { design: "Projeto", economics: "Viabilidade" },
       header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap" },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
-      assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)" },
+      
+      // ADICIONADO "onerousGrant"
+      assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)", onerousGrant: "Outorga Onerosa / Taxas" },
+      
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
       blocks: { active: "Volumetria", height: "Altura", setback: "Recuo" },
       ai: { btn: "Consultor IA", thinking: "Analisando...", close: "Fechar", insight: "Análise Estratégica", placeholder: "Pergunte sobre margem..." },
@@ -72,7 +77,7 @@ const resources = {
     }
   },
 
-  // --- SPANISH ---
+  // --- SPANISH (Simplified for brevity, maintained existing) ---
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -92,7 +97,7 @@ const resources = {
     }
   },
 
-  // --- FRENCH ---
+  // --- FRENCH (Simplified) ---
   fr: {
     translation: {
       app: { title: "Cytyos Beta" },
@@ -112,7 +117,7 @@ const resources = {
     }
   },
 
-  // --- CHINESE ---
+  // --- CHINESE (Simplified) ---
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
