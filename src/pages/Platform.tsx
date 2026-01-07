@@ -4,7 +4,7 @@ import { SmartPanel } from '../components/SmartPanel';
 import { MapControls } from '../components/MapControls';
 import { PricingModal } from '../components/PricingModal';
 import { AIAssistant } from '../components/AIAssistant'; 
-import { Footer } from '../components/Footer'; // <--- NOVO IMPORT
+import { Footer } from '../components/Footer'; // <--- GARANTA QUE ISTO ESTÁ AQUI
 import { useSettingsStore } from '../stores/settingsStore';
 
 export const Platform = () => {
@@ -53,8 +53,9 @@ export const Platform = () => {
       {/* 3. Interface Flutuante */}
       <SmartPanel />
       
-      {/* 4. Controles do Mapa (Ajustado para bottom-12 para não bater no rodapé) */}
-      <div className="absolute bottom-12 left-0 w-full flex justify-center z-30 pointer-events-none">
+      {/* 4. Controles do Mapa */}
+      {/* Ajustado para bottom-12 para ficar logo ACIMA do rodapé */}
+      <div className="absolute bottom-12 left-0 w-full flex justify-center z-50 pointer-events-none">
         <MapControls />
       </div>
 
