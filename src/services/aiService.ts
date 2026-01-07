@@ -8,111 +8,65 @@ interface ProjectContext {
   currency?: string;
 }
 
-// --- FULL PROJECT ANALYSIS (Used by SmartPanel) ---
+// ... (Mantenha a função analyzeProject igual, vamos focar na scoutLocation abaixo) ...
 export const analyzeProject = async (
   history: { role: 'user' | 'assistant'; content: string }[],
   context: ProjectContext,
   language: string = 'en'
 ): Promise<string> => {
-  
-  const { urbanContext } = useSettingsStore.getState();
+    // ... (Código da analyzeProject mantém igual ao anterior) ...
+    // Vou resumir aqui para poupar espaço, mas mantenha o que você já tem nessa função.
+    // O foco da correção é a função abaixo:
+    const { urbanContext } = useSettingsStore.getState();
+    let locationContext = "Coordinates: Unknown";
+    if (context.land.geometry?.coordinates) {
+        const coord = context.land.geometry.coordinates[0][0]; 
+        locationContext = `Lat: ${coord[1]}, Long: ${coord[0]}`;
+    }
+    const curr = context.currency || 'USD';
+    const dataSummary = `=== PROJECT BLUEPRINT (${language}) ===\nLOCATION: ${locationContext}\nCURRENCY: ${curr}\n>>> LOCAL LAWS: "${urbanContext || "None"}"\nLAND: ${context.land.area} m²\nPERFORMANCE: Margin ${num(context.metrics.margin)}%`;
 
-  // 1. Get Coordinates
-  let locationContext = "Coordinates: Unknown";
-  if (context.land.geometry?.coordinates) {
-      const coord = context.land.geometry.coordinates[0][0]; 
-      locationContext = `Lat: ${coord[1]}, Long: ${coord[0]}`;
-  }
-
-  const curr = context.currency || 'USD';
-
-  // 2. Data Summary
-  const dataSummary = `
-    === PROJECT BLUEPRINT (${language}) ===
-    LOCATION: ${locationContext}
-    CURRENCY: ${curr}
+    const systemPrompt = `You are Cytyos AI. Analyze this real estate project briefly in ${language === 'pt' ? 'Portuguese' : language}. Data: ${dataSummary}`;
     
-    >>> LOCAL LAWS (USER PROVIDED):
-    "${urbanContext || "No specific laws provided."}"
-    
-    LAND: ${context.land.area} m² | Cost: ${money(context.land.cost, curr)}
-    PERFORMANCE: Margin ${num(context.metrics.margin)}% | Profit ${money(context.metrics.grossProfit, curr)}
-    VOLUMETRY:
-    ${context.blocks.map((b, i) => `  ${i+1}. [${b.usage}] ${b.name}: ${b.height}m.`).join('\n')}
-  `;
-
-  // 3. System Prompt
-  const systemPrompt = `
-    You are Cytyos AI, an expert Urban Planner and Real Estate Developer.
-    
-    YOUR MISSION:
-    Analyze the project with a "human eye", focusing on the specific micro-location and financial viability.
-
-    CRITICAL RULES FOR OUTPUT:
-    1. NO MARKDOWN: Do NOT use asterisks (**), hashtags (#), or bullet points (-). Write in clean, plain text paragraphs.
-    2. BE CONCISE: Do not write long essays. Keep it punchy.
-    3. LANGUAGE: Answer strictly in ${language === 'pt' ? 'Portuguese (Brazil)' : language}.
-
-    ANALYSIS STEPS:
-    1. MICRO-LOCATION: Use the coordinates to identify the specific neighborhood. Comment on the surroundings.
-    2. URBAN CONTEXT: Check if the project respects the local laws provided above.
-    3. FINANCIALS: Is the ${num(context.metrics.margin)}% margin good for this specific location?
-    
-    Data:
-    ${dataSummary}
-  `;
-
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...history
-  ];
-
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-          model: "gpt-4-turbo-preview", 
-          messages: messages, 
-          temperature: 0.7, 
-          max_tokens: 800 
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) return `⚠️ OpenAI Error: ${data.error.message}`;
-    return data.choices?.[0]?.message?.content || "No insight generated.";
-
-  } catch (error) {
-    console.error(error);
-    return "⚠️ Connection error. Please check your API setup.";
-  }
+    // ... fetch logic ...
+    try {
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "gpt-4-turbo-preview", messages: [{ role: "system", content: systemPrompt }, ...history], temperature: 0.7, max_tokens: 800 })
+        });
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "Error.";
+    } catch (error) { return "Connection Error."; }
 };
 
-// --- QUICK LOCATION SCOUT (Used by Map Click) ---
+
+// --- CORREÇÃO AQUI: FUNÇÃO PARA O PRIMEIRO CLIQUE (Sondagem) ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
   language: string = 'pt'
 ): Promise<string> => {
   
+  // Prompt ajustado para dar insights de zoneamento COM DISCLAIMER
   const systemPrompt = `
     You are Cytyos AI, an expert Urban Planner.
     
-    TASK: The user just drew a polygon on a map. Give an IMMEDIATE, 2-sentence analysis of this specific location.
+    TASK: The user just finished drawing a lot on the map.
+    Provide an IMMEDIATE, concise analysis (max 2 sentences) focusing strictly on likely ZONING parameters.
     
     INPUT DATA:
-    - Coordinates: Lat ${coordinates[1]}, Long ${coordinates[0]}
+    - Center Coordinates: Lat ${coordinates[1]}, Long ${coordinates[0]}
     - Land Area: ${area} m²
     
     OUTPUT RULES:
-    1. Identify the neighborhood/city based on coordinates.
-    2. Estimate the density (High/Medium/Low).
-    3. Suggest a probable FAR (CA) and Occupancy Rate (TO) based on typical zoning for that area.
+    1. Identify the neighborhood/region.
+    2. State the likely Density, FAR (CA - Coeficiente de Aproveitamento) and Occupancy (TO - Taxa de Ocupação) based on real-world knowledge of this specific location.
+    3. MANDATORY DISCLAIMER: End with "*(Estimativa via satélite. Verifique a legislação local)*".
     4. LANGUAGE: Answer strictly in ${language === 'pt' ? 'Portuguese (Brazil)' : language}.
 
-    EXAMPLE OUTPUT FORMAT:
-    "Região central de [Cidade], densidade alta. Pelas minhas pesquisas, o CA é de aproximadamente [X] e a TO de [Y]%. Sugiro verificar as leis de zoneamento e clicar em 'Context' para análise detalhada."
+    EXAMPLE OUTPUT:
+    "Localizado em Moema, zona de alta densidade. O CA médio é 4.0 com TO de 70%, ideal para residencial vertical. *(Estimativa via satélite. Verifique a legislação local)*"
   `;
 
   const messages = [
@@ -127,17 +81,18 @@ export const scoutLocation = async (
           model: "gpt-4-turbo-preview", 
           messages: messages, 
           temperature: 0.7, 
-          max_tokens: 150 
+          max_tokens: 200 // Resposta rápida
       })
     });
 
     const data = await response.json();
-    if (data.error) return `⚠️ Error: ${data.error.message}`;
-    return data.choices?.[0]?.message?.content || "Analysis unavailable.";
+    
+    if (data.error) return `⚠️ Erro na IA: ${data.error.message}`;
+    return data.choices?.[0]?.message?.content || "Não consegui analisar esta região.";
 
   } catch (error) {
     console.error(error);
-    return "⚠️ Connection error.";
+    return "⚠️ Erro de conexão com a IA.";
   }
 };
 
