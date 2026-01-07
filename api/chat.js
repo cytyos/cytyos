@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // Configuração para permitir que o site converse com o servidor (CORS)
+  // Configuração CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -8,14 +8,12 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // Responde OK se o navegador estiver apenas testando a conexão
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
   try {
-    // AQUI O SERVIDOR CHAMA A OPENAI (Usando a chave segura)
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
