@@ -3,14 +3,14 @@ import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useAIStore } from '../stores/aiStore';
+import { useAIStore } from '../stores/aiStore'; 
 import { analyzeProject } from '../services/aiService';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, Rocket, Check 
+  Trash2, Coins, FileText, MapPin, Rocket 
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -73,6 +73,7 @@ export const SmartPanel = () => {
   };
 
   const isImperial = measurementSystem === 'imperial';
+  const fmtDist = (val: number) => isImperial ? (val * 3.28084).toFixed(1) + ' ft' : val.toFixed(1) + ' m';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
@@ -239,7 +240,6 @@ export const SmartPanel = () => {
                 {blocks.length > 0 ? (
                     <>
                         <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
-                            {/* Compliance Box */}
                             <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
@@ -277,7 +277,7 @@ export const SmartPanel = () => {
                                         <div>
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                                {/* NEW: Input digital para altura */}
+                                                {/* DIGITAL INPUT FOR HEIGHT */}
                                                 <input 
                                                     type="number" 
                                                     step="0.01" 
@@ -292,7 +292,7 @@ export const SmartPanel = () => {
                                             <div className="p-2 bg-black/20 rounded border border-gray-700/50">
                                                 <div className="flex justify-between items-center mb-1">
                                                     <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                                    {/* NEW: Input digital para recuo */}
+                                                    {/* DIGITAL INPUT FOR SETBACK */}
                                                     <input 
                                                         type="number" 
                                                         step="0.01" 
@@ -333,13 +333,13 @@ export const SmartPanel = () => {
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                             
-                            {/* --- NEW FIELD: ONEROUS GRANT --- */}
+                            {/* --- NEW FIELD: ADDITIONAL FEES / IMPACT FEES --- */}
                             <div>
                                 <label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.onerousGrant')}</label>
                                 <input 
                                     type="number" 
-                                    value={land.onerousGrant || 0} // Usando '|| 0' caso a propriedade ainda não exista na store
-                                    onChange={(e) => updateLand({ onerousGrant: Number(e.target.value) })} 
+                                    value={land.additionalCosts || 0} // Renamed for global context
+                                    onChange={(e) => updateLand({ additionalCosts: Number(e.target.value) })} 
                                     className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" 
                                 />
                             </div>
