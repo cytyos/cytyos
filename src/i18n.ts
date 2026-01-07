@@ -11,8 +11,8 @@ const resources = {
       header: { revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap" },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
       
-      // ADDED "onerousGrant"
-      assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %", onerousGrant: "Onerous Grant / Fees" },
+      // ADDED "onerousGrant" (Impact Fees)
+      assumptions: { title: "Assumptions", landArea: "Land Area", landCost: "Land Cost", sales: "Sales/m²", build: "Build/m²", maxFar: "Max FAR", maxOcc: "Max Occ %", onerousGrant: "Impact Fees / Add-ons" },
       
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
       blocks: { active: "Active Volumes", height: "Height", setback: "Setback" },
@@ -48,8 +48,8 @@ const resources = {
       header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap" },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
       
-      // ADICIONADO "onerousGrant"
-      assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)", onerousGrant: "Outorga Onerosa / Taxas" },
+      // ADICIONADO "onerousGrant" (Outorga)
+      assumptions: { title: "Premissas", landArea: "Área Terreno", landCost: "Custo Terreno", sales: "Venda/m²", build: "Obra/m²", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima (%)", onerousGrant: "Outorga / Taxas Extras" },
       
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
       blocks: { active: "Volumetria", height: "Altura", setback: "Recuo" },
@@ -77,7 +77,7 @@ const resources = {
     }
   },
 
-  // --- SPANISH (Simplified for brevity, maintained existing) ---
+  // --- SPANISH (Simplified) ---
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
