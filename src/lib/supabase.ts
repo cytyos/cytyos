@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Busca as chaves no arquivo .env (que vamos configurar no próximo passo)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// --- ATENÇÃO: SUBSTITUA ABAIXO PELAS SUAS CHAVES REAIS ---
+// (Isso é apenas para teste, depois voltaremos para o .env)
 
-// Verifica se as chaves existem para evitar erros silenciosos
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Faltam as chaves do Supabase no arquivo .env');
+const supabaseUrl = 'https://sua-url-aqui.supabase.co'; // Cole a URL do Project Settings > API
+const supabaseAnonKey = 'sua-chave-eyJh...'; // Cole a chave "anon/public" gigante aqui
+
+// Verificação de segurança no Console
+console.log("Tentando conectar no Supabase:", supabaseUrl);
+
+if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('sua-url-aqui')) {
+  console.error("ERRO CRÍTICO: As chaves do Supabase não foram preenchidas no arquivo src/lib/supabase.ts");
 }
 
-// Cria a conexão real (que tem todas as funções, incluindo Google Login)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
