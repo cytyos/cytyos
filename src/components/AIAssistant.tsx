@@ -1,50 +1,64 @@
-import React from 'react';
-import { Sparkles, Bot, X } from 'lucide-react';
-import { useAIStore } from '../stores/aiStore';
+import React, { useEffect } from 'react';
+import { MapboxMap } from '../components/map/MapboxMap'; // Ensure path is correct (Map vs map)
+import { SmartPanel } from '../components/SmartPanel';
+import { MapControls } from '../components/MapControls';
+import { PricingModal } from '../components/PricingModal';
+import { AIAssistant } from '../components/AIAssistant'; // <--- NEW COMPONENT
+import { useSettingsStore } from '../stores/settingsStore';
 
-export const AIAssistant = () => {
-  const { message, isVisible, isThinking, hideMessage } = useAIStore();
+export const Platform = () => {
+  const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
 
-  if (!isVisible) return null;
+  useEffect(() => {
+    setPaywallOpen(false);
+
+    const checkAccess = () => {
+        const licenseType = localStorage.getItem('cytyos_license_type'); 
+        const trialStart = localStorage.getItem('cytyos_trial_start');
+        
+        if (licenseType === 'VIP') return;
+
+        if (trialStart) {
+            const now = Date.now();
+            const timePassed = now - parseInt(trialStart);
+            const oneHour = 1000 * 60 * 60;
+            if (timePassed < oneHour) return; 
+        }
+
+        console.log("⏳ Timer started: Locking in 60 seconds...");
+        const timer = setTimeout(() => {
+            setPaywallOpen(true); 
+        }, 60000); 
+
+        return () => clearTimeout(timer);
+    };
+
+    const clearTimer = checkAccess();
+    return () => {
+        if (clearTimer) clearTimer();
+    };
+  }, [setPaywallOpen]);
 
   return (
-    <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg pointer-events-none animate-in fade-in slide-in-from-top-4 duration-500">
-      <div className="mx-4 bg-[#0f111a]/90 backdrop-blur-md border border-indigo-500/30 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.2)] p-4 pointer-events-auto relative overflow-hidden">
-        
-        {/* Glow de Fundo */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x" />
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
+      
+      <PricingModal isOpen={isPaywallOpen} onClose={() => setPaywallOpen(false)} />
+      
+      {/* AI LAYER */}
+      <AIAssistant />
 
-        <div className="flex items-start gap-4">
-          {/* Avatar da IA */}
-          <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/40 shrink-0">
-            {isThinking ? (
-              <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
-            ) : (
-              <Bot className="w-5 h-5 text-indigo-400" />
-            )}
-          </div>
+      <MapboxMap />
+      <SmartPanel />
+      
+      <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-full flex justify-center">
+        <MapControls />
+      </div>
 
-          {/* Texto */}
-          <div className="flex-1 pt-1">
-            <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-1 flex items-center gap-2">
-              Cytyos Intelligence Core v2.0
-              {isThinking && <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping" />}
-            </h4>
-            
-            <p className="text-sm text-gray-200 leading-relaxed font-medium">
-              {isThinking ? "Analisando dados geoespaciais e zoneamento..." : message}
-            </p>
-          </div>
-
-          {/* Botão Fechar */}
-          <button 
-            onClick={hideMessage}
-            className="text-gray-500 hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+      <div className="absolute bottom-[35px] right-3 z-30 pointer-events-auto">
+        <span className="bg-black/60 text-white/50 text-[9px] px-2 py-1 rounded-md backdrop-blur-sm border border-white/10 font-mono">
+          Cytyos Beta v0.9
+        </span>
       </div>
     </div>
   );
-};
+}
