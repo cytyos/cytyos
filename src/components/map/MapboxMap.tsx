@@ -111,12 +111,21 @@ export const MapboxMap = () => {
         const feature = e.features?.[0];
         if (!feature) return;
         draw.deleteAll();
-        setDrawMode('simple_select');
+        useMapStore.getState().setDrawMode('simple_select');
         
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
         
         const area = Math.round(turf.area(feature));
-        const center = turf.center(feature).geometry.coordinates;
+        
+        // --- CORREÇÃO: Pegar coordenadas do centro ---
+        let centerCoords = [0, 0];
+        try {
+            const center = turf.center(feature);
+            centerCoords = center.geometry.coordinates;
+        } catch (err) {
+            // Fallback se turf.center falhar: usar o primeiro ponto
+            centerCoords = feature.geometry.coordinates[0][0];
+        }
 
         updateLand({ area: area, geometry: feature.geometry });
         
@@ -126,13 +135,15 @@ export const MapboxMap = () => {
         });
         useMapStore.getState().setIs3D(true); 
 
-        // CALL AI LAYER
+        // --- DISPARO IMEDIATO DA IA ---
         setThinking(true);
         try {
-            const aiResponse = await scoutLocation(center, area, i18n.language);
+            // Chama a função scoutLocation do service
+            const aiResponse = await scoutLocation(centerCoords, area, i18n.language);
             setMessage(aiResponse);
         } catch (err) {
-            setMessage("AI connection failed.");
+            console.error(err);
+            setMessage("I couldn't analyze this specific location right now.");
         }
     });
   }, []);
