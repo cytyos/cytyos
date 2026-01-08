@@ -115,7 +115,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         {/* ================= LEFT SIDE: ROADMAP VALUE STACK ================= */}
         <div className="w-full md:w-5/12 bg-gradient-to-b from-[#0a0c10] to-black p-6 flex flex-col border-r border-white/5 relative">
           
-          {/* Header */}
           <div className="mb-6 relative z-10">
             <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
                 <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
@@ -129,10 +128,9 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             </p>
           </div>
 
-          {/* ROADMAP BLOCKS */}
           <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
             
-            {/* 1. BETA BLOCK (Green) */}
+            {/* 1. BETA BLOCK */}
             <div className="rounded-xl bg-[#0f111a] border border-green-500/20 p-4 relative overflow-hidden group hover:border-green-500/40 transition-colors">
                 <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
                 <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-1">{t('pricing.beta_tag')}</div>
@@ -146,7 +144,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                 </ul>
             </div>
 
-            {/* 2. V1 BLOCK (Indigo) */}
+            {/* 2. V1 BLOCK */}
             <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors">
                 <div className="absolute top-0 right-0 p-2 opacity-10"><Rocket className="w-12 h-12 text-indigo-500" /></div>
                 <div className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('pricing.v1_tag')}</div>
@@ -160,7 +158,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                 </ul>
             </div>
 
-            {/* 3. V2 BLOCK (Purple) */}
+            {/* 3. V2 BLOCK */}
             <div className="rounded-xl bg-[#0f111a] border border-purple-500/20 p-4 relative overflow-hidden group hover:border-purple-500/40 transition-colors">
                 <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles className="w-12 h-12 text-purple-500" /></div>
                 <div className="text-[9px] font-bold text-purple-300 uppercase tracking-widest mb-1">{t('pricing.v2_tag')}</div>
@@ -176,7 +174,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
 
           </div>
 
-          {/* Small PDF Option */}
           <div className="mt-4 pt-4 border-t border-white/10">
             <div className="flex items-center justify-between mb-2">
                  <div className="text-[10px] text-gray-400">
@@ -195,20 +192,29 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">{t('pricing.select_plan')}</h2>
             
-            <div className="inline-flex bg-black p-1 rounded-full border border-white/10 relative">
+            {/* CORREÇÃO DO BOTÃO:
+               1. Usamos 'grid-cols-2' para forçar 50% para cada botão.
+               2. Definimos 'max-w-[350px]' para garantir espaço suficiente para o texto "SAVE 77%".
+            */}
+            <div className="grid grid-cols-2 bg-black p-1 rounded-full border border-white/10 relative w-full max-w-[350px] mx-auto">
                 <button 
                     onClick={() => setBillingCycle('monthly')} 
-                    className={`relative px-6 py-2 rounded-full text-xs font-bold transition-all z-10 ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                    className={`relative z-10 py-2 rounded-full text-xs font-bold transition-all flex items-center justify-center ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                     {t('pricing.monthly')}
                 </button>
                 <button 
                     onClick={() => setBillingCycle('yearly')} 
-                    className={`relative px-6 py-2 rounded-full text-xs font-bold transition-all z-10 flex items-center gap-2 ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                    className={`relative z-10 py-2 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                 >
-                    {t('pricing.yearly')} <span className="bg-green-500 text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold shadow-[0_0_10px_rgba(34,197,94,0.5)]">{t('pricing.save_pct')}</span>
+                    {t('pricing.yearly')} 
+                    <span className="bg-green-500 text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold shadow-[0_0_10px_rgba(34,197,94,0.5)] whitespace-nowrap">
+                        {t('pricing.save_pct')}
+                    </span>
                 </button>
-                <div className={`absolute top-1 bottom-1 w-[50%] bg-indigo-600 rounded-full transition-all duration-300 ease-out shadow-lg shadow-indigo-500/30 ${billingCycle === 'monthly' ? 'left-1' : 'left-[49%]'}`}></div>
+                
+                {/* Sliding Background */}
+                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-indigo-600 rounded-full transition-all duration-300 ease-out shadow-lg shadow-indigo-500/30 ${billingCycle === 'monthly' ? 'left-1' : 'left-[calc(50%+2px)]'}`}></div>
             </div>
           </div>
 
