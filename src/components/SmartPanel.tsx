@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
-import ReactMarkdown from 'react-markdown'; // <--- NEW IMPORT
+import ReactMarkdown from 'react-markdown'; 
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAIStore } from '../stores/aiStore'; 
@@ -17,6 +17,32 @@ import {
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 type MobileState = 'min' | 'mid' | 'max';
+
+// --- CONFIGURAÇÃO DE MOEDAS (GLOBAL + LATAM) ---
+const CURRENCY_OPTIONS = [
+  // Globais Fortes
+  { code: 'USD', label: 'US Dollar ($)' },
+  { code: 'EUR', label: 'Euro (€)' },
+  { code: 'GBP', label: 'Pound Sterling (£)' },
+  { code: 'CHF', label: 'Swiss Franc (Fr)' },
+  { code: 'CNY', label: 'Chinese Yuan (¥)' },
+  { code: 'JPY', label: 'Japanese Yen (¥)' },
+  // América Latina
+  { code: 'BRL', label: 'Real Brasileiro (R$)' },
+  { code: 'MXN', label: 'Peso Mexicano ($)' },
+  { code: 'COP', label: 'Peso Colombiano ($)' },
+  { code: 'ARS', label: 'Peso Argentino ($)' },
+  { code: 'CLP', label: 'Peso Chileno ($)' },
+  { code: 'PEN', label: 'Sol Peruano (S/)' },
+  { code: 'UYU', label: 'Peso Uruguayo ($)' },
+  { code: 'BOB', label: 'Boliviano (Bs)' },
+  { code: 'PYG', label: 'Guaraní (₲)' },
+  { code: 'CRC', label: 'Colón (₡)' },
+  { code: 'DOP', label: 'Peso Dominicano (RD$)' },
+  { code: 'GTQ', label: 'Quetzal (Q)' },
+  { code: 'HNL', label: 'Lempira (L)' },
+  { code: 'NIO', label: 'Córdoba (C$)' },
+];
 
 export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
@@ -34,7 +60,7 @@ export const SmartPanel = () => {
       setRoadmapOpen 
   } = useSettingsStore();
 
-  const { message, thinking, setThinking, setMessage } = useAIStore(); // Added 'thinking' here
+  const { message, thinking, setThinking, setMessage } = useAIStore(); 
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -221,9 +247,15 @@ export const SmartPanel = () => {
                         <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
                     </button>
                     {isCurrencyMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
-                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider">{t('currency.main')}</div>
-                             {['USD', 'BRL', 'EUR'].map(c => <button key={c} onClick={() => changeCurrency(c)} className="block w-full text-left px-3 py-1.5 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 font-bold">{c}</button>)}
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
+                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
+                             {/* MENU DE MOEDAS EXPANDIDO */}
+                             {CURRENCY_OPTIONS.map(c => (
+                                <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
+                                    <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
+                                    <span className="text-[10px] text-gray-500">{c.label}</span>
+                                </button>
+                             ))}
                         </div>
                     )}
                 </div>
@@ -301,37 +333,37 @@ export const SmartPanel = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-3 pl-1">
-                                        <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
-                                            {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                        </select>
-                                        <div>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={block.height} 
-                                                    onChange={(e) => updateBlock(block.id, { height: parseFloat(e.target.value) })}
-                                                    className="text-[10px] text-blue-300 bg-transparent border-b border-gray-700 w-12 text-right focus:border-blue-500 outline-none"
-                                                />
-                                            </div>
-                                            <input type="range" min="3" max="150" step="0.1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
-                                        </div>
-                                        {block.isCustom && (
-                                            <div className="p-2 bg-black/20 rounded border border-gray-700/50">
+                                            <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
+                                                {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                            </select>
+                                            <div>
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                    <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
                                                     <input 
                                                         type="number" 
                                                         step="0.01" 
-                                                        value={block.setback} 
-                                                        onChange={(e) => handleSetbackChange(block.id, parseFloat(e.target.value))}
-                                                        className="text-[10px] text-yellow-400 bg-transparent border-b border-gray-700 w-12 text-right focus:border-yellow-500 outline-none"
+                                                        value={block.height} 
+                                                        onChange={(e) => updateBlock(block.id, { height: parseFloat(e.target.value) })}
+                                                        className="text-[10px] text-blue-300 bg-transparent border-b border-gray-700 w-12 text-right focus:border-blue-500 outline-none"
                                                     />
                                                 </div>
-                                                <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
+                                                <input type="range" min="3" max="150" step="0.1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
                                             </div>
-                                        )}
+                                            {block.isCustom && (
+                                                <div className="p-2 bg-black/20 rounded border border-gray-700/50">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                        <input 
+                                                            type="number" 
+                                                            step="0.01" 
+                                                            value={block.setback} 
+                                                            onChange={(e) => handleSetbackChange(block.id, parseFloat(e.target.value))}
+                                                            className="text-[10px] text-yellow-400 bg-transparent border-b border-gray-700 w-12 text-right focus:border-yellow-500 outline-none"
+                                                        />
+                                                    </div>
+                                                    <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
+                                                </div>
+                                            )}
                                     </div>
                                 </div>
                             ))}
