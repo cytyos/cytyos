@@ -16,13 +16,10 @@ const resources = {
       ai: { btn: "AI Consultant", thinking: "Analyzing...", close: "Close", insight: "AI Strategic Insight", placeholder: "Ask about efficiency..." },
       usage: { residential: "Residential", corporate: "Corporate Office", retail: "Retail / Mall", hotel: "Hotel", parking: "Parking Garage", amenities: "Amenities" },
       currency: { main: "Major", latam: "Latam (Pesos)", global: "Global" },
-      
       footer: { disclaimer: "Cytyos is a decision support tool. AI results may vary. Always consult a technical professional." },
-      
       map: { search_placeholder: "Search location...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the <1>Draw</1> tool to define your lot outline." },
       zoning: { title: "AI Zoning Analysis", placeholder: "Paste zoning laws here... Example: 'Max FAR 4.0, Occupancy 70%'", analyze_btn: "Analyze & Apply", ai_success: "Updated: FAR {{far}}, Occ {{occ}}%." },
-      
       landing: {
         login: "Login",
         hero: { badge: "Beta Live Now", title_prefix: "The Operating System for", title_main: "Real Estate Development.", title_anim: "Start Analyzing.", subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds.", btn_try: "Try Beta Free", btn_plans: "View Early Bird Plan" },
@@ -36,19 +33,33 @@ const resources = {
         col2: { tag: "Included", subtag: "Coming March", title: "Guarantee for March (v1.0)", f1: "Automatic Zoning Data", f2: "Site Comparison Tool", f3: "PDF Export for Investors", f4: "Smart Volumetry" },
         col3: { tag: "Founders Edition", title: "The Future 2026 (v2.0)", f1: "Predictive AI Heatmaps", f2: "Highest & Best Use Recommender", f3: "Global Expansion Pack", f4: "Multi-layer Intelligence" }
       },
-      // --- PRICING TRANSLATIONS ---
+      // PRICING EN
       pricing: {
         badge: "Founder Opportunity",
         title: "Unlock the Full Platform",
         warning: "Warning: Price increases when v1.0 launches. Secure your Early Bird rate for the entire year.",
-        included: "What's Included:",
-        f1: "Unlimited AI Feasibility Studies",
-        f2: "Global 3D City Visualization",
-        f3: "Automated Zoning Analysis",
-        f4: "Shadow & Solar Analysis",
-        f5: "Professional PDF Exports",
-        f6: "1-Year Access to v1.0 & v2.0",
-        f7: "Priority Founder Support",
+        
+        beta_tag: "LIVE NOW",
+        beta_title: "Get Today (Beta)",
+        beta_f1: "Instant 3D Zoning Visualization",
+        beta_f2: "Manual Plot Control",
+        beta_f3: "Basic ROI & GFA Calculator",
+        beta_f4: "Unlimited Projects",
+
+        v1_tag: "COMING MARCH",
+        v1_title: "Guarantee for March (v1.0)",
+        v1_f1: "Automatic Zoning Data",
+        v1_f2: "Fully Modelable Volumetry", // NEW
+        v1_f3: "PDF Export for Investors",
+        v1_f4: "Site Comparison Tool",
+
+        v2_tag: "FOUNDERS EDITION",
+        v2_title: "The Future 2026 (v2.0)",
+        v2_f1: "BIM/DWG Upload for Analysis", // NEW
+        v2_f2: "Predictive AI Heatmaps",
+        v2_f3: "Highest & Best Use Recommender",
+        v2_f4: "Multi-layer Intelligence",
+
         small_title: "Small project?",
         small_desc: "Generate a single PDF report.",
         btn_pdf: "Buy One Report ($17)",
@@ -101,19 +112,33 @@ const resources = {
         col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" },
         col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" }
       },
-      // --- PRICING TRANSLATIONS PT ---
+      // PRICING PT
       pricing: {
         badge: "Oportunidade Founder",
         title: "Desbloqueie a Plataforma",
         warning: "Aviso: O preço aumentará no lançamento da v1.0. Garanta a taxa Early Bird pelo ano todo.",
-        included: "O que está incluso:",
-        f1: "Estudos de Massa Ilimitados (IA)",
-        f2: "Visualização 3D Global",
-        f3: "Análise de Zoneamento Automática",
-        f4: "Análise Solar e de Sombras",
-        f5: "Exportação de PDF Profissional",
-        f6: "Acesso de 1 Ano (v1.0 & v2.0)",
-        f7: "Suporte Founder Prioritário",
+        
+        beta_tag: "NO AR",
+        beta_title: "Você Leva Hoje (Beta)",
+        beta_f1: "Visualização 3D Instantânea",
+        beta_f2: "Controle Manual de Terreno",
+        beta_f3: "Calculadora de VGV",
+        beta_f4: "Projetos Ilimitados",
+
+        v1_tag: "GARANTIDO MARÇO",
+        v1_title: "Versão 1.0 (Março)",
+        v1_f1: "Dados de Zoneamento Automáticos",
+        v1_f2: "Volumetria Totalmente Modelável", // NOVO
+        v1_f3: "Exportação PDF Profissional",
+        v1_f4: "Comparador de Terrenos",
+
+        v2_tag: "FUTURO 2026",
+        v2_title: "Versão 2.0 (Intelligence Core)",
+        v2_f1: "Upload BIM/DWG para Análise", // NOVO
+        v2_f2: "Mapas de Calor Preditivos (IA)",
+        v2_f3: "Recomendador 'Highest & Best Use'",
+        v2_f4: "Inteligência Multicamadas",
+
         small_title: "Projeto pequeno?",
         small_desc: "Gere apenas um relatório PDF.",
         btn_pdf: "Comprar 1 Relatório ($17)",
@@ -154,19 +179,33 @@ const resources = {
         col2: { tag: "Incluido", subtag: "Marzo", title: "Garantía Marzo (v1.0)", f1: "Datos Automáticos", f2: "Comparador", f3: "Exportar PDF", f4: "Volumetría Smart" },
         col3: { tag: "Edición Founders", title: "Futuro 2026 (v2.0)", f1: "Mapas de Calor IA", f2: "Recomendador", f3: "Expansión Global", f4: "Multi-capas" }
       },
-      // --- PRICING TRANSLATIONS ES ---
+      // PRICING ES
       pricing: {
         badge: "Oportunidad Founder",
         title: "Desbloquea la Plataforma",
         warning: "Aviso: El precio subirá al lanzar la v1.0. Asegura tu tarifa Early Bird por todo el año.",
-        included: "Qué está incluido:",
-        f1: "Estudios de Cabida Ilimitados (IA)",
-        f2: "Visualización 3D Global",
-        f3: "Análisis de Zonificación Automático",
-        f4: "Análisis Solar y Sombras",
-        f5: "Exportación PDF Profesional",
-        f6: "Acceso 1 Año (v1.0 & v2.0)",
-        f7: "Soporte Founder Prioritario",
+        
+        beta_tag: "EN VIVO",
+        beta_title: "Hoy (Beta)",
+        beta_f1: "Visualización 3D",
+        beta_f2: "Control Manual de Terreno",
+        beta_f3: "Calculadora ROI",
+        beta_f4: "Proyectos Ilimitados",
+
+        v1_tag: "LLEGA EN MARZO",
+        v1_title: "Garantía Marzo (v1.0)",
+        v1_f1: "Datos Automáticos",
+        v1_f2: "Volumetría Totalmente Modelable", // NEW
+        v1_f3: "Exportar PDF Profesional",
+        v1_f4: "Comparador de Terrenos",
+
+        v2_tag: "EDICIÓN FOUNDERS",
+        v2_title: "Futuro 2026 (v2.0)",
+        v2_f1: "Carga de BIM/DWG para Análisis", // NEW
+        v2_f2: "Mapas de Calor IA",
+        v2_f3: "Recomendador 'Best Use'",
+        v2_f4: "Inteligencia Multi-capas",
+
         small_title: "¿Proyecto pequeño?",
         small_desc: "Genera un solo reporte PDF.",
         btn_pdf: "Comprar 1 Reporte ($17)",
@@ -207,19 +246,33 @@ const resources = {
         col2: { tag: "Inclus", subtag: "Mars", title: "Garanti Mars (v1.0)", f1: "Données Auto", f2: "Comparateur", f3: "Export PDF", f4: "Volumétrie Smart" },
         col3: { tag: "Édition Founders", title: "Futur 2026 (v2.0)", f1: "Cartes Thermiques IA", f2: "Recommandations", f3: "Expansion Globale", f4: "Intelligence Multi-couches" }
       },
-      // --- PRICING TRANSLATIONS FR ---
+      // PRICING FR
       pricing: {
         badge: "Opportunité Founder",
         title: "Débloquez la Plateforme",
         warning: "Attention : Le prix augmentera au lancement de la v1.0. Sécurisez votre tarif Early Bird.",
-        included: "Inclus :",
-        f1: "Études de Faisabilité Illimitées (IA)",
-        f2: "Visualisation 3D Globale",
-        f3: "Analyse de Zonage Automatique",
-        f4: "Analyse Solaire et Ombres",
-        f5: "Export PDF Professionnel",
-        f6: "Accès 1 An (v1.0 & v2.0)",
-        f7: "Support Founder Prioritaire",
+        
+        beta_tag: "EN LIGNE",
+        beta_title: "Aujourd'hui (Beta)",
+        beta_f1: "Visualisation 3D",
+        beta_f2: "Contrôle Manuel",
+        beta_f3: "Calculateur ROI",
+        beta_f4: "Projets Illimités",
+
+        v1_tag: "ARRIVE EN MARS",
+        v1_title: "Garanti Mars (v1.0)",
+        v1_f1: "Données Auto",
+        v1_f2: "Volumétrie Entièrement Modélisable", // NEW
+        v1_f3: "Export PDF",
+        v1_f4: "Comparateur",
+
+        v2_tag: "ÉDITION FOUNDERS",
+        v2_title: "Futur 2026 (v2.0)",
+        v2_f1: "Upload BIM/DWG pour Analyse", // NEW
+        v2_f2: "Cartes Thermiques IA",
+        v2_f3: "Recommandations",
+        v2_f4: "Intelligence Multi-couches",
+
         small_title: "Petit projet ?",
         small_desc: "Générez un seul rapport PDF.",
         btn_pdf: "Acheter 1 Rapport ($17)",
@@ -260,19 +313,33 @@ const resources = {
         col2: { tag: "包含", subtag: "三月", title: "三月更新 (v1.0)", f1: "自动数据", f2: "场地比较", f3: "PDF 导出", f4: "智能体量" },
         col3: { tag: "创始人版", title: "未来 2026 (v2.0)", f1: "AI 热力图", f2: "最佳用途推荐", f3: "全球扩展", f4: "多层智能" }
       },
-      // --- PRICING TRANSLATIONS ZH ---
+      // PRICING ZH
       pricing: {
         badge: "创始人机会",
         title: "解锁完整平台",
         warning: "警告：v1.0 发布后价格将上涨。立即锁定全年的早鸟价格。",
-        included: "包含内容：",
-        f1: "无限 AI 可行性研究",
-        f2: "全球 3D 城市可视化",
-        f3: "自动区划分析",
-        f4: "日照与阴影分析",
-        f5: "专业 PDF 导出",
-        f6: "1 年访问权限 (v1.0 & v2.0)",
-        f7: "优先创始人支持",
+        
+        beta_tag: "现已上线",
+        beta_title: "今日可用 (Beta)",
+        beta_f1: "即时 3D 区划可视化",
+        beta_f2: "手动地块控制",
+        beta_f3: "基础 ROI 计算器",
+        beta_f4: "无限项目",
+
+        v1_tag: "三月发布",
+        v1_title: "三月保证 (v1.0)",
+        v1_f1: "自动区划数据",
+        v1_f2: "完全可建模体量", // NEW
+        v1_f3: "PDF 导出",
+        v1_f4: "场地比较工具",
+
+        v2_tag: "创始人版",
+        v2_title: "未来 2026 (v2.0)",
+        v2_f1: "BIM/DWG 上传分析", // NEW
+        v2_f2: "AI 预测热力图",
+        v2_f3: "最佳用途推荐",
+        v2_f4: "多层智能",
+
         small_title: "小型项目？",
         small_desc: "生成单个 PDF 报告。",
         btn_pdf: "购买 1 份报告 ($17)",
