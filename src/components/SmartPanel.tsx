@@ -6,13 +6,15 @@ import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAIStore } from '../stores/aiStore'; 
 import { analyzeProject } from '../services/aiService';
+import { generateReport } from '../services/pdfGenerator'; // Importação do PDF
 import { useAuth } from '../contexts/AuthContext';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon
+  Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
+  Minus // <--- Importado ícone de minimizar
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -68,7 +70,6 @@ export const SmartPanel = () => {
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
-  // Local loading state combined with global store thinking state
   const [isAiLoading, setIsAiLoading] = useState(false);
   
   const [userQuery, setUserQuery] = useState('');
@@ -77,33 +78,50 @@ export const SmartPanel = () => {
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
-  // Auto-scroll to bottom of chat
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
-  // Sync Global AI Store with Local Chat
   useEffect(() => {
     if (message) {
         setIsChatOpen(true);
-        setIsAiLoading(false); // Stop loading when message arrives
+        setIsAiLoading(false);
         setChatMessages(prev => {
-            // Prevent duplicates if the last message is identical
             if (prev.length > 0 && prev[prev.length - 1].content === message) return prev;
             return [...prev, { role: 'assistant', content: message }];
         });
     }
     
-    // If the global store says we are thinking, open the chat
     if (thinking) {
         setIsChatOpen(true);
         setIsAiLoading(true);
     }
   }, [message, thinking]);
 
+  // --- FUNÇÃO PARA GERAR PDF (Direto, sem Paywall) ---
+  const handleExportPDF = () => {
+      const projectDataForPdf = {
+          terrainArea: land.area,
+          totalBuiltArea: metrics.far * land.area, 
+          coefficientCA: land.maxFar,
+          volumetriaBlocks: blocks,
+          totalRevenue: metrics.revenue,
+          totalCost: metrics.totalCost,
+          profitMargin: metrics.margin,
+          aproveitamentoRealizado: metrics.far,
+          landValue: land.cost,
+          constructionCostPerSqm: land.buildCost,
+          saleValuePerSqm: land.sellPrice,
+          currency: currency,
+          unitSystem: measurementSystem
+      };
+
+      // Gera o relatório com os dados atuais e o histórico do chat
+      generateReport(null, projectDataForPdf, i18n.language as any, chatMessages);
+  };
+
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
-      // Simulate analysis for zoning text
       setTimeout(() => {
           const successMsg = t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy });
           setChatMessages(prev => [...prev, { role: 'assistant', content: successMsg }]);
@@ -118,15 +136,30 @@ export const SmartPanel = () => {
   const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
   const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
   
+  // --- LÓGICA INTELIGENTE DO BOTÃO IA ---
+  const handleMainAiButtonClick = async () => {
+    // 1. Se já estiver aberto, não faz nada (ou foca)
+    if (isChatOpen) return;
+
+    // 2. Se já tiver mensagens, apenas abre o histórico (NÃO gasta token)
+    if (chatMessages.length > 0) {
+        setIsChatOpen(true);
+        return;
+    }
+
+    // 3. Se estiver vazio, aí sim roda a análise inicial
+    handleStartAnalysis();
+  };
+
   const handleStartAnalysis = async () => {
-    setThinking(true); // Global store
-    setIsAiLoading(true); // Local state
+    setIsChatOpen(true);
+    setThinking(true); 
+    setIsAiLoading(true); 
     if(window.innerWidth < 768) setMobileState('max'); 
     
     try {
-        // We don't set local message here, we wait for the global store to update via useEffect
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
-        setMessage(report); // This will trigger the useEffect
+        setMessage(report); 
     } catch (e) { 
         setMessage("⚠️ Connection Error."); 
     } finally { 
@@ -249,11 +282,10 @@ export const SmartPanel = () => {
                     {isCurrencyMenuOpen && (
                         <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
                              <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
-                             {/* MENU DE MOEDAS EXPANDIDO */}
                              {CURRENCY_OPTIONS.map(c => (
                                 <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
                                     <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
-                                    <span className="text-[10px] text-gray-500">{c.label}</span>
+                                    <span className="text-gray-500 text-[10px]">{c.label}</span>
                                 </button>
                              ))}
                         </div>
@@ -425,10 +457,13 @@ export const SmartPanel = () => {
                     <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
-                <button onClick={handleStartAnalysis} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
+                {/* BOTÃO PRINCIPAL IA - Agora chama a função inteligente */}
+                <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
                 </button>
-                <button onClick={() => setPaywallOpen(true)} className="px-3 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 flex items-center justify-center"><Download className="w-4 h-4" /></button>
+                
+                {/* BOTÃO DOWNLOAD - Agora chama a exportação direta */}
+                <button onClick={handleExportPDF} className="px-3 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 flex items-center justify-center cursor-pointer transition-colors"><Download className="w-4 h-4" /></button>
             </div>
         )}
 
@@ -438,7 +473,12 @@ export const SmartPanel = () => {
                     <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
                     <div className="flex gap-2">
                         <button onClick={() => setZoningModalOpen(true)} className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-colors border ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 text-indigo-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'}`}><FileText className="w-3 h-3" /> {t('header.zoning')}</button>
-                        <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
+                        
+                        {/* NOVO BOTÃO MINIMIZAR */}
+                        <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Minimize"><Minus className="w-3 h-3" /></button>
+                        
+                        {/* BOTÃO FECHAR (Igual ao minimizar visualmente, mas mantemos o X para padrão UX) */}
+                        <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Close"><X className="w-3 h-3" /></button>
                     </div>
                 </div>
                 
@@ -471,7 +511,6 @@ export const SmartPanel = () => {
                         </div>
                     ))}
                     
-                    {/* LOADING SPINNER INSIDE CHAT */}
                     {isAiLoading && (
                         <div className="flex justify-start">
                             <div className="bg-gray-800 border border-gray-700 text-gray-400 p-3 rounded-2xl rounded-bl-none flex items-center gap-2">
