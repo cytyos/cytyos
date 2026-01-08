@@ -6,12 +6,16 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 // import { AdminPage } from './pages/AdminPage'; 
 
+// CRITICAL: Ensure MapboxMap is exported as 'export const MapboxMap' in its file
 import { MapboxMap } from './components/map/MapboxMap'; 
 import { MapControls } from './components/MapControls';
 import { SmartPanel } from './components/SmartPanel';
 import { PricingModal } from './components/PricingModal';
-// Removed duplicate AIAssistant import here
 import { Footer } from './components/Footer'; 
+
+// CRITICAL: We need to import the AI Assistant to render it
+import { AIAssistant } from './components/AIAssistant';
+
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './i18n';
@@ -62,8 +66,7 @@ function App() {
     <AuthProvider>
         <BrowserRouter>
         <PaywallGlobal />
-        {/* AIAssistant removed from here to avoid duplication */}
-
+        
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -73,10 +76,14 @@ function App() {
                 </ProtectedRoute>
             } />
             
+            {/* APP ROUTE (MAIN PLATFORM) */}
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-screen w-screen overflow-hidden bg-gray-900 relative">
+                        {/* 1. The Map */}
                         <MapboxMap />
+                        
+                        {/* 2. UI Layers */}
                         <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
                             <div className="w-full p-4"></div>
 
@@ -87,7 +94,12 @@ function App() {
                             </div>
                         </div>
 
+                        {/* 3. Panels & Modals */}
                         <SmartPanel />
+                        
+                        {/* THIS IS CRITICAL: The AI Chat needs to be here to show up */}
+                        <AIAssistant />
+
                         <Footer />
                     </div>
                 </ProtectedRoute>
