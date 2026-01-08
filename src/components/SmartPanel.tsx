@@ -75,7 +75,7 @@ export const SmartPanel = () => {
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // DETECTAR MOBILE PARA LÓGICA DE RENDERIZAÇÃO
+  // DETECÇÃO MOBILE
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
       const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -83,34 +83,30 @@ export const SmartPanel = () => {
       return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // SE FOR MOBILE E ESTIVER MINIMIZADO, ESSA VAR VAI ESCONDER O HEADER
   const shouldHideHeader = isMobile && mobileState === 'min';
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
+  // --- SINCRONIZAÇÃO DA IA (AUTO-OPEN RESTAURADO) ---
   useEffect(() => {
     if (message) {
-        if (!isChatOpen) setHasUnreadAi(true);
-        else setIsAiLoading(false);
+        setIsChatOpen(true); // <--- Força abertura ao receber mensagem
+        setIsAiLoading(false);
+        setHasUnreadAi(false);
 
         setChatMessages(prev => {
             if (prev.length > 0 && prev[prev.length - 1].content === message) return prev;
             return [...prev, { role: 'assistant', content: message }];
         });
     }
+    
     if (thinking) {
-        if (isChatOpen) setIsAiLoading(true);
+        setIsChatOpen(true); // <--- Força abertura ao pensar
+        setIsAiLoading(true);
     }
-  }, [message, thinking, isChatOpen]);
-
-  useEffect(() => {
-      if (isChatOpen) {
-          setHasUnreadAi(false);
-          if (thinking) setIsAiLoading(true);
-      }
-  }, [isChatOpen, thinking]);
+  }, [message, thinking]);
 
   const handleExportPDF = async () => {
       if (isPdfLoading) return;
@@ -176,13 +172,13 @@ export const SmartPanel = () => {
       setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
   };
   
-  // Altura dinâmica: Se minimizado, apenas a barra de 85px aparece.
   const getMobileHeightClass = () => {
       if (mobileState === 'min') return 'h-[85px]'; 
       if (mobileState === 'mid') return 'h-[50vh]';
       return 'h-[95vh]';
   };
   
+  // Botão IA (ainda existe, mas a abertura automática cuida do fluxo principal)
   const handleMainAiButtonClick = async () => {
     if (isChatOpen) return;
     if (chatMessages.length > 0) { setIsChatOpen(true); return; }
@@ -361,7 +357,7 @@ export const SmartPanel = () => {
           </div>
       )}
 
-      {/* --- CONTENT AREA (ESCONDIDO QUANDO MINIMIZADO) --- */}
+      {/* --- CONTENT AREA --- */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
           {!shouldHideHeader && (
               <>
@@ -369,7 +365,6 @@ export const SmartPanel = () => {
                     <>
                         {blocks.length > 0 ? (
                             <>
-                                {/* ... Conteúdo dos Blocos (Compliance e Lista) ... */}
                                 <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
                                     <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                                         <div className="flex justify-between items-center">
@@ -456,7 +451,6 @@ export const SmartPanel = () => {
                         <div className="space-y-2">
                             <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                             <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
-                                {/* Inputs Financeiros (Mantidos, apenas ocultados na view) */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                                     <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
@@ -489,8 +483,6 @@ export const SmartPanel = () => {
           )}
       </div>
 
-      {/* --- BARRA INFERIOR (SEMPRE VISIVEL) --- */}
-      {/* ... Resto do código da barra inferior ... */}
       <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-96' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
@@ -499,10 +491,9 @@ export const SmartPanel = () => {
                     <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
-                {/* BOTÃO PRINCIPAL IA */}
                 <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="relative flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
-                    {/* BOLINHA VERMELHA NOTIFICAÇÃO */}
+                    {/* Mantive a notificação visual, pois é um bom padrão, mesmo abrindo automático */}
                     {hasUnreadAi && (
                         <span className="absolute -top-1 -right-1 flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -511,7 +502,6 @@ export const SmartPanel = () => {
                     )}
                 </button>
                 
-                {/* BOTÃO DOWNLOAD */}
                 <button 
                     onClick={handleExportPDF} 
                     disabled={isPdfLoading}
@@ -525,7 +515,6 @@ export const SmartPanel = () => {
 
         {isChatOpen && (
             <div className="flex flex-col h-full">
-                {/* Cabeçalho Chat */}
                 <div className="px-3 py-2 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center shrink-0">
                     <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
                     <div className="flex gap-2">
@@ -535,7 +524,6 @@ export const SmartPanel = () => {
                     </div>
                 </div>
                 
-                {/* Corpo Chat */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
                     {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
