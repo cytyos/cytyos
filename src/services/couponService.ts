@@ -1,7 +1,7 @@
-import { supabase } from '../lib/supabase'; // Certifique-se que o supabase está configurado aqui
+import { supabase } from '../lib/supabase';
 
 export const couponService = {
-  // Listar todos (Admin)
+  // --- ADMIN: Listar Cupons ---
   async getAll() {
     const { data, error } = await supabase
       .from('coupons')
@@ -11,8 +11,20 @@ export const couponService = {
     return data;
   },
 
-  // Criar cupom (Admin)
-  async create(code: string, minutes: number = 60) {
+  // --- ADMIN: Listar Quem Usou (Leads) ---
+  async getLeads(couponCode: string) {
+    const { data, error } = await supabase
+      .from('coupon_usages')
+      .select('*')
+      .eq('coupon_code', couponCode)
+      .order('used_at', { ascending: false });
+    
+    if (error) return [];
+    return data;
+  },
+
+  // --- ADMIN: Criar com Duração Personalizada ---
+  async create(code: string, minutes: number) {
     const { data, error } = await supabase
       .from('coupons')
       .insert([{ code: code.toUpperCase(), duration_minutes: minutes, active: true }])
@@ -21,22 +33,44 @@ export const couponService = {
     return data[0];
   },
 
-  // Apagar cupom (Admin)
+  // --- ADMIN: Deletar ---
   async delete(id: string) {
     const { error } = await supabase.from('coupons').delete().match({ id });
     if (error) throw error;
   },
 
-  // Validar cupom (Usuário Final)
-  async validate(code: string) {
-    const { data, error } = await supabase
+  // --- USUÁRIO: Validar e Registrar Uso ---
+  async validateAndTrack(code: string, userEmail: string | undefined) {
+    if (!userEmail) throw new Error("Você precisa estar logado.");
+
+    // 1. Busca o cupom
+    const { data: coupon, error } = await supabase
       .from('coupons')
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('active', true)
       .single();
     
-    if (error || !data) throw new Error("Cupom inválido ou expirado.");
-    return data; // Retorna { duration_minutes: 60, ... }
+    if (error || !coupon) throw new Error("Cupom inválido ou expirado.");
+
+    // 2. Verifica se já usou (Opcional: Impede reuso do mesmo cupom pelo mesmo user)
+    const { data: usage } = await supabase
+      .from('coupon_usages')
+      .select('id')
+      .eq('coupon_code', coupon.code)
+      .eq('user_email', userEmail)
+      .single();
+      
+    if (usage) {
+        // Se quiser bloquear reuso, descomente a linha abaixo:
+        // throw new Error("Você já utilizou este cupom.");
+    }
+
+    // 3. Registra o uso (Rastreamento do Lead)
+    await supabase
+      .from('coupon_usages')
+      .insert([{ coupon_code: coupon.code, user_email: userEmail }]);
+
+    return coupon;
   }
 };
