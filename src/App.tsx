@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; // <--- useLocation ADICIONADO
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; 
 import { X, Monitor } from 'lucide-react'; 
 
 // --- EAGER IMPORTS ---
@@ -19,7 +19,7 @@ const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({
 
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-const FREE_USAGE_MS = 3 * 60 * 1000; // 3 MINUTOS
+const FREE_USAGE_MS = 3 * 60 * 1000; 
 
 // --- LOADING SCREEN ---
 const LoadingScreen = () => (
@@ -32,7 +32,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-// --- MOBILE WARNING ---
+// --- MOBILE WARNING (Mantido, mas menos intrusivo se desejar) ---
 const MobileOptimizationWarning = () => {
   const [isVisible, setIsVisible] = useState(true);
   if (!isVisible) return null;
@@ -53,20 +53,16 @@ const MobileOptimizationWarning = () => {
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
-  const location = useLocation(); // <--- Para saber onde estamos
+  const location = useLocation(); 
 
   useEffect(() => {
-    // Inicializa sessão
     if (!sessionStorage.getItem('cytyos_first_visit')) {
         sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
     }
 
     const checkAccess = () => {
-        // 1. Se NÃO estivermos dentro do App (ex: Landing Page), não faz nada.
-        // Isso impede que o modal abra sozinho na Home.
         if (!location.pathname.startsWith('/app')) return;
 
-        // 2. Checagens Normais (VIP, Trial, Tempo)
         if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
         const trialEnd = localStorage.getItem('cytyos_trial_end');
         if (trialEnd && Date.now() < Number(trialEnd)) return;
@@ -77,7 +73,6 @@ const PaywallGlobal = () => {
             if (elapsed < FREE_USAGE_MS) return; 
         }
 
-        // 3. Se chegou aqui, bloqueia.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
@@ -88,7 +83,6 @@ const PaywallGlobal = () => {
     return () => clearInterval(interval);
   }, [setPaywallOpen, isPaywallOpen, location.pathname]); 
 
-  // --- LÓGICA DE FECHAMENTO ---
   const handleCloseAttempt = () => {
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
@@ -98,12 +92,11 @@ const PaywallGlobal = () => {
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      // Se estourou o tempo e não pagou
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
-          setPaywallOpen(false); // <--- FECHA O MODAL ANTES DE SAIR
-          navigate('/');         // <--- CHUTA PARA A HOME
+          setPaywallOpen(false); 
+          navigate('/');         
       } else {
-          setPaywallOpen(false); // Fecha o modal normal e deixa ficar
+          setPaywallOpen(false); 
       }
   };
 
@@ -135,7 +128,6 @@ function App() {
   return (
     <AuthProvider>
         <BrowserRouter>
-        {/* PaywallGlobal agora tem acesso ao useLocation pois está dentro do BrowserRouter */}
         <PaywallGlobal />
         
         <Routes>
@@ -164,14 +156,22 @@ function App() {
                         <MobileOptimizationWarning />
                         <Suspense fallback={<LoadingScreen />}>
                             <MapboxMap />
+                            
+                            {/* --- CAMADA DE UI --- */}
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                                <div className="w-full p-4"></div>
-                                <div className="w-full flex justify-center pb-16 z-50">
-                                    <div className="pointer-events-auto">
+                                
+                                {/* CONTROLES DE MAPA (Agora no TOPO no Mobile para não conflitar com painel) */}
+                                <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
+                                    <div className="pointer-events-auto w-full max-w-md">
                                         <MapControls />
                                     </div>
                                 </div>
+
+                                {/* Espaço vazio para garantir que o centro do mapa fique livre */}
+                                <div className="flex-1"></div>
                             </div>
+                            
+                            {/* SMART PANEL (Fica na base) */}
                             <SmartPanel />
                         </Suspense>
                         <Footer />
