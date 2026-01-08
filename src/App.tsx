@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; // <--- useLocation ADICIONADO
 import { X, Monitor } from 'lucide-react'; 
 
 // --- EAGER IMPORTS ---
@@ -53,25 +53,31 @@ const MobileOptimizationWarning = () => {
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
+  const location = useLocation(); // <--- Para saber onde estamos
 
   useEffect(() => {
-    // USA SESSION STORAGE: Reseta ao fechar o navegador
+    // Inicializa sessão
     if (!sessionStorage.getItem('cytyos_first_visit')) {
         sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
     }
 
     const checkAccess = () => {
+        // 1. Se NÃO estivermos dentro do App (ex: Landing Page), não faz nada.
+        // Isso impede que o modal abra sozinho na Home.
+        if (!location.pathname.startsWith('/app')) return;
+
+        // 2. Checagens Normais (VIP, Trial, Tempo)
         if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
         const trialEnd = localStorage.getItem('cytyos_trial_end');
         if (trialEnd && Date.now() < Number(trialEnd)) return;
         
-        // Verifica Sessão
         const firstVisit = sessionStorage.getItem('cytyos_first_visit');
         if (firstVisit) {
             const elapsed = Date.now() - Number(firstVisit);
             if (elapsed < FREE_USAGE_MS) return; 
         }
 
+        // 3. Se chegou aqui, bloqueia.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
@@ -80,9 +86,9 @@ const PaywallGlobal = () => {
     const interval = setInterval(checkAccess, 2000); 
     checkAccess(); 
     return () => clearInterval(interval);
-  }, [setPaywallOpen, isPaywallOpen]); 
+  }, [setPaywallOpen, isPaywallOpen, location.pathname]); 
 
-  // --- LÓGICA DE FECHAMENTO SEGURA ---
+  // --- LÓGICA DE FECHAMENTO ---
   const handleCloseAttempt = () => {
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
@@ -94,9 +100,10 @@ const PaywallGlobal = () => {
 
       // Se estourou o tempo e não pagou
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
-          navigate('/'); // Manda para Home (dá de cara com a Landing Page)
+          setPaywallOpen(false); // <--- FECHA O MODAL ANTES DE SAIR
+          navigate('/');         // <--- CHUTA PARA A HOME
       } else {
-          setPaywallOpen(false); // Fecha o modal normal
+          setPaywallOpen(false); // Fecha o modal normal e deixa ficar
       }
   };
 
@@ -110,6 +117,7 @@ const PaywallGlobal = () => {
   );
 };
 
+// --- GUARDS ---
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -127,6 +135,7 @@ function App() {
   return (
     <AuthProvider>
         <BrowserRouter>
+        {/* PaywallGlobal agora tem acesso ao useLocation pois está dentro do BrowserRouter */}
         <PaywallGlobal />
         
         <Routes>
