@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Sparkles, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, X, Sparkles, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown'; // <--- New Import
+import remarkGfm from 'remark-gfm';       // <--- New Import
 import { useAIStore } from '../stores/aiStore';
-import { useProjectStore } from '../stores/useProjectStore';
 
-// --- A CORREÇÃO ESTÁ AQUI: "export const" ---
 export const AIAssistant = () => {
   const { t } = useTranslation();
   const { message, thinking, setMessage, setThinking } = useAIStore();
@@ -57,10 +57,22 @@ export const AIAssistant = () => {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        <div className="bg-indigo-900/20 border border-indigo-500/20 rounded-xl p-3">
-                            <p className="text-xs text-gray-200 leading-relaxed whitespace-pre-line">
+                        <div className="bg-indigo-900/20 border border-indigo-500/20 rounded-xl p-3 text-xs text-gray-200">
+                            {/* React Markdown renders the bold text and tables properly */}
+                            <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    // Custom styling for tables within the chat
+                                    table: ({node, ...props}) => <table className="w-full border-collapse my-2" {...props} />,
+                                    th: ({node, ...props}) => <th className="border border-indigo-500/30 bg-indigo-500/20 p-1 text-left" {...props} />,
+                                    td: ({node, ...props}) => <td className="border border-indigo-500/30 p-1" {...props} />,
+                                    strong: ({node, ...props}) => <strong className="text-indigo-300 font-bold" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-1" {...props} />,
+                                    li: ({node, ...props}) => <li className="marker:text-indigo-500" {...props} />
+                                }}
+                            >
                                 {message || "Olá! Desenhe um terreno no mapa para que eu possa analisar o zoneamento."}
-                            </p>
+                            </ReactMarkdown>
                         </div>
                     </div>
                 )}
