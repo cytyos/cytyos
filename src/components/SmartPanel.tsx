@@ -14,7 +14,7 @@ import {
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
   Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
-  Minus, Loader2 // <--- Loader2 adicionado para feedback visual
+  Minus, Loader2
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -22,14 +22,12 @@ type MobileState = 'min' | 'mid' | 'max';
 
 // --- CONFIGURAÇÃO DE MOEDAS (GLOBAL + LATAM) ---
 const CURRENCY_OPTIONS = [
-  // Globais Fortes
   { code: 'USD', label: 'US Dollar ($)' },
   { code: 'EUR', label: 'Euro (€)' },
   { code: 'GBP', label: 'Pound Sterling (£)' },
   { code: 'CHF', label: 'Swiss Franc (Fr)' },
   { code: 'CNY', label: 'Chinese Yuan (¥)' },
   { code: 'JPY', label: 'Japanese Yen (¥)' },
-  // América Latina
   { code: 'BRL', label: 'Real Brasileiro (R$)' },
   { code: 'MXN', label: 'Peso Mexicano ($)' },
   { code: 'COP', label: 'Peso Colombiano ($)' },
@@ -70,9 +68,9 @@ export const SmartPanel = () => {
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
-  // Estados de Loading
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isPdfLoading, setIsPdfLoading] = useState(false); // <--- Loading específico para o PDF
+  const [isPdfLoading, setIsPdfLoading] = useState(false); 
+  const [hasUnreadAi, setHasUnreadAi] = useState(false); // <--- ESTADO PARA NOTIFICAÇÃO
   
   const [userQuery, setUserQuery] = useState('');
   const [mobileState, setMobileState] = useState<MobileState>('min');
@@ -80,14 +78,15 @@ export const SmartPanel = () => {
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
-  // Auto-scroll
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
-  // Sync AI Store
+  // Sync AI Store & Notification
   useEffect(() => {
     if (message) {
-        setIsChatOpen(true);
-        setIsAiLoading(false);
+        // Se receber mensagem e chat estiver fechado, marca como não lida
+        if (!isChatOpen) setHasUnreadAi(true);
+        else setIsAiLoading(false);
+
         setChatMessages(prev => {
             if (prev.length > 0 && prev[prev.length - 1].content === message) return prev;
             return [...prev, { role: 'assistant', content: message }];
@@ -95,18 +94,24 @@ export const SmartPanel = () => {
     }
     
     if (thinking) {
-        setIsChatOpen(true);
-        setIsAiLoading(true);
+        if (isChatOpen) setIsAiLoading(true); // Só mostra loading se aberto
     }
-  }, [message, thinking]);
+  }, [message, thinking, isChatOpen]);
 
-  // --- EXPORTAÇÃO PDF INTELIGENTE ---
+  // Limpa notificação ao abrir o chat
+  useEffect(() => {
+      if (isChatOpen) {
+          setHasUnreadAi(false);
+          // Se abriu e estava pensando, garante que o loading apareça
+          if (thinking) setIsAiLoading(true);
+      }
+  }, [isChatOpen, thinking]);
+
   const handleExportPDF = async () => {
       if (isPdfLoading) return;
       setIsPdfLoading(true);
 
       try {
-          // 1. Prepara dados numéricos
           const projectDataForPdf = {
               terrainArea: land.area,
               totalBuiltArea: metrics.far * land.area, 
@@ -123,8 +128,6 @@ export const SmartPanel = () => {
               unitSystem: measurementSystem
           };
 
-          // 2. GERA O RESUMO EXECUTIVO (IA)
-          // Em vez de passar o histórico bruto, pedimos para a IA criar um resumo agora.
           let executiveSummary = "";
           try {
               const summaryPrompt = [
@@ -132,7 +135,6 @@ export const SmartPanel = () => {
                   { 
                       role: 'user', 
                       content: `[SYSTEM INSTRUCTION]: Based on the project data and our entire discussion above, write a professional **Executive Summary** for a PDF report.
-                      
                       Requirements:
                       1. Synthesize the key points discussed (e.g., Financial Viability, Zoning issues, Efficiency).
                       2. Do NOT copy-paste the chat. Write it as a formal conclusion/recommendation.
@@ -141,14 +143,12 @@ export const SmartPanel = () => {
                       5. Max length: 400 words.`
                   }
               ];
-              // Chama a IA para gerar o texto (usando cast 'any' para evitar erro de tipagem estrita no array)
               executiveSummary = await analyzeProject(summaryPrompt as any, { metrics, land, blocks, currency }, i18n.language);
           } catch (aiError) {
               console.warn("AI Summary generation failed, using fallback.", aiError);
               executiveSummary = t('pdf_fallback_summary');
           }
 
-          // 3. Gera o PDF com o texto "limpo" e analítico
           await generateReport(null, projectDataForPdf, i18n.language as any, executiveSummary as any);
 
       } catch (error) {
@@ -175,20 +175,16 @@ export const SmartPanel = () => {
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
   const changeCurrency = (curr: string) => { setCurrency(curr); setIsCurrencyMenuOpen(false); };
   const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
-  const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
   
-  // --- IA: BOTÃO INTELIGENTE ---
+  // UX Mobile: min=apenas header, mid=metade, max=quase tudo
+  const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[90vh]' : 'h-[140px]'; 
+  
   const handleMainAiButtonClick = async () => {
-    // Se já aberto, ignora
     if (isChatOpen) return;
-
-    // Se tem histórico, só abre (economiza token)
     if (chatMessages.length > 0) {
         setIsChatOpen(true);
         return;
     }
-
-    // Se vazio, inicia análise
     handleStartAnalysis();
   };
 
@@ -309,7 +305,6 @@ export const SmartPanel = () => {
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-                {/* --- USER LOGGED IN DISPLAY --- */}
                 <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
                     <UserIcon className="w-3 h-3 text-indigo-400" />
                     <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
@@ -498,12 +493,19 @@ export const SmartPanel = () => {
                     <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
-                {/* BOTÃO PRINCIPAL IA - Agora chama a função inteligente */}
-                <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
+                {/* BOTÃO PRINCIPAL IA (Com Notificação) */}
+                <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="relative flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
+                    {/* BOLINHA VERMELHA DE NOTIFICAÇÃO */}
+                    {hasUnreadAi && (
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    )}
                 </button>
                 
-                {/* BOTÃO DOWNLOAD ATUALIZADO */}
+                {/* BOTÃO DOWNLOAD (Com Loading) */}
                 <button 
                     onClick={handleExportPDF} 
                     disabled={isPdfLoading}
@@ -522,14 +524,14 @@ export const SmartPanel = () => {
                     <div className="flex gap-2">
                         <button onClick={() => setZoningModalOpen(true)} className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-colors border ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 text-indigo-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'}`}><FileText className="w-3 h-3" /> {t('header.zoning')}</button>
                         
-                        {/* NOVO BOTÃO MINIMIZAR */}
+                        {/* BOTÃO MINIMIZAR */}
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Minimize"><Minus className="w-3 h-3" /></button>
                         
+                        {/* BOTÃO FECHAR */}
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Close"><X className="w-3 h-3" /></button>
                     </div>
                 </div>
                 
-                {/* --- CHAT CONTENT AREA --- */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
                     {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
