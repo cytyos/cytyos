@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import * as turf from '@turf/turf';
 import ReactMarkdown from 'react-markdown'; 
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -74,23 +75,21 @@ export const SmartPanel = () => {
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // --- DETECTAR MOBILE ---
+  // DETECTAR MOBILE PARA LÓGICA DE RENDERIZAÇÃO
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
   useEffect(() => {
       const handleResize = () => setIsMobile(window.innerWidth < 768);
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Variável Mágica: Se for mobile e estiver minimizado, esconde o header
-  const isMobileMin = isMobile && mobileState === 'min';
+  // SE FOR MOBILE E ESTIVER MINIMIZADO, ESSA VAR VAI ESCONDER O HEADER
+  const shouldHideHeader = isMobile && mobileState === 'min';
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
-  // Sync AI
   useEffect(() => {
     if (message) {
         if (!isChatOpen) setHasUnreadAi(true);
@@ -177,7 +176,7 @@ export const SmartPanel = () => {
       setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
   };
   
-  // UX Mobile Ajustada: Altura mínima para mostrar SÓ a barra inferior
+  // Altura dinâmica: Se minimizado, apenas a barra de 85px aparece.
   const getMobileHeightClass = () => {
       if (mobileState === 'min') return 'h-[85px]'; 
       if (mobileState === 'mid') return 'h-[50vh]';
@@ -288,14 +287,13 @@ export const SmartPanel = () => {
     <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 pointer-events-auto ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
-      {/* DRAG HANDLE PARA MOBILE */}
+      {/* DRAG HANDLE */}
       <div className="md:hidden w-full flex justify-center pt-2 pb-1 cursor-pointer bg-gray-900 rounded-t-3xl border-b border-gray-800/50" onClick={cycleMobileState}>
           <div className="w-12 h-1.5 bg-gray-700 rounded-full opacity-60"></div>
       </div>
 
-      {/* --- HEADER (LOGO, USER, STATS) --- */}
-      {/* SEGREDO: ESCONDE TOTALMENTE SE FOR MOBILE MINIMIZADO */}
-      {!isMobileMin && (
+      {/* --- HEADER (ESCONDIDO QUANDO MINIMIZADO NO MOBILE) --- */}
+      {!shouldHideHeader && (
           <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
             <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
                 <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
@@ -307,7 +305,6 @@ export const SmartPanel = () => {
                         <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
                     </div>
 
-                    {/* MOEDAS */}
                     <div className="relative">
                         <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
                             <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
@@ -325,7 +322,6 @@ export const SmartPanel = () => {
                         )}
                     </div>
                     
-                    {/* IDIOMA */}
                     <div className="relative">
                         <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
                             <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
@@ -337,7 +333,6 @@ export const SmartPanel = () => {
                         )}
                     </div>
                     
-                    {/* SAVE/LOAD */}
                     <div className="flex gap-1">
                         <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
                         <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
@@ -366,14 +361,15 @@ export const SmartPanel = () => {
           </div>
       )}
 
-      {/* --- CONTENT AREA (Também esconde no Min) --- */}
+      {/* --- CONTENT AREA (ESCONDIDO QUANDO MINIMIZADO) --- */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
-          {!isMobileMin && (
+          {!shouldHideHeader && (
               <>
                 {activeTab === 'editor' && (
                     <>
                         {blocks.length > 0 ? (
                             <>
+                                {/* ... Conteúdo dos Blocos (Compliance e Lista) ... */}
                                 <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
                                     <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
                                         <div className="flex justify-between items-center">
@@ -460,6 +456,7 @@ export const SmartPanel = () => {
                         <div className="space-y-2">
                             <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
                             <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
+                                {/* Inputs Financeiros (Mantidos, apenas ocultados na view) */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                                     <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
@@ -493,6 +490,7 @@ export const SmartPanel = () => {
       </div>
 
       {/* --- BARRA INFERIOR (SEMPRE VISIVEL) --- */}
+      {/* ... Resto do código da barra inferior ... */}
       <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-96' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
@@ -542,38 +540,13 @@ export const SmartPanel = () => {
                     {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[95%] p-3 rounded-2xl text-[11px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none'}`}>
-                                <ReactMarkdown 
-                                    components={{
-                                        strong: (props) => <span className="font-bold text-indigo-300" {...props} />,
-                                        em: (props) => <span className="italic text-indigo-200" {...props} />,
-                                        ul: (props) => <ul className="list-disc pl-4 my-1 space-y-0.5" {...props} />,
-                                        ol: (props) => <ol className="list-decimal pl-4 my-1 space-y-0.5" {...props} />,
-                                        li: (props) => <li className="pl-0.5" {...props} />,
-                                        h1: (props) => <h3 className="text-sm font-bold text-white mt-2 mb-1 border-b border-gray-600 pb-1" {...props} />,
-                                        h2: (props) => <h4 className="text-xs font-bold text-white mt-2 mb-1" {...props} />,
-                                        h3: (props) => <h5 className="text-[11px] font-bold text-indigo-200 mt-1" {...props} />,
-                                        p: (props) => <p className="mb-2 last:mb-0" {...props} />,
-                                        table: (props) => <div className="overflow-x-auto my-2 rounded border border-gray-600"><table className="w-full text-[10px] text-left" {...props} /></div>,
-                                        thead: (props) => <thead className="bg-gray-700 text-white uppercase font-bold" {...props} />,
-                                        th: (props) => <th className="px-2 py-1 border-b border-gray-600 whitespace-nowrap" {...props} />,
-                                        td: (props) => <td className="px-2 py-1 border-b border-gray-700" {...props} />,
-                                        tr: (props) => <tr className="hover:bg-white/5" {...props} />
-                                    }}
-                                >
+                                <ReactMarkdown components={{ strong: (props) => <span className="font-bold text-indigo-300" {...props} />, em: (props) => <span className="italic text-indigo-200" {...props} />, ul: (props) => <ul className="list-disc pl-4 my-1 space-y-0.5" {...props} />, ol: (props) => <ol className="list-decimal pl-4 my-1 space-y-0.5" {...props} />, li: (props) => <li className="pl-0.5" {...props} />, h1: (props) => <h3 className="text-sm font-bold text-white mt-2 mb-1 border-b border-gray-600 pb-1" {...props} />, h2: (props) => <h4 className="text-xs font-bold text-white mt-2 mb-1" {...props} />, h3: (props) => <h5 className="text-[11px] font-bold text-indigo-200 mt-1" {...props} />, p: (props) => <p className="mb-2 last:mb-0" {...props} />, table: (props) => <div className="overflow-x-auto my-2 rounded border border-gray-600"><table className="w-full text-[10px] text-left" {...props} /></div>, thead: (props) => <thead className="bg-gray-700 text-white uppercase font-bold" {...props} />, th: (props) => <th className="px-2 py-1 border-b border-gray-600 whitespace-nowrap" {...props} />, td: (props) => <td className="px-2 py-1 border-b border-gray-700" {...props} />, tr: (props) => <tr className="hover:bg-white/5" {...props} /> }}>
                                     {m.content}
                                 </ReactMarkdown>
                             </div>
                         </div>
                     ))}
-                    
-                    {isAiLoading && (
-                        <div className="flex justify-start">
-                            <div className="bg-gray-800 border border-gray-700 text-gray-400 p-3 rounded-2xl rounded-bl-none flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-indigo-400 animate-spin" />
-                                <span className="text-[10px] animate-pulse">Analyzing...</span>
-                            </div>
-                        </div>
-                    )}
+                    {isAiLoading && ( <div className="flex justify-start"><div className="bg-gray-800 border border-gray-700 text-gray-400 p-3 rounded-2xl rounded-bl-none flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-400 animate-spin" /><span className="text-[10px] animate-pulse">Analyzing...</span></div></div> )}
                     <div ref={chatEndRef} />
                 </div>
 
