@@ -25,7 +25,7 @@ export const MapboxMap = () => {
   const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
 
   const { blocks, updateLand, addBlock } = useProjectStore();
-  const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D, setMapInstance } = useMapStore(); // <--- setMapInstance
+  const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D, setMapInstance } = useMapStore();
   const { setThinking, setMessage } = useAIStore();
 
   useEffect(() => {
@@ -61,7 +61,9 @@ export const MapboxMap = () => {
       attributionControl: false 
     });
     map.current = m;
-    setMapInstance(m); // <--- Salva o mapa para o controle de zoom externo
+    setMapInstance(m); // IMPORTANTE: Salva mapa na store para zoom funcionar
+
+    // NÃO ADICIONAR NavigationControl AQUI (usamos o customizado)
 
     const draw = new MapboxDraw({
       displayControlsDefault: false,
@@ -123,10 +125,12 @@ export const MapboxMap = () => {
         }
 
         updateLand({ area: area, geometry: feature.geometry });
+        
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
+        
         useMapStore.getState().setIs3D(true); 
 
         try {
@@ -154,6 +158,7 @@ export const MapboxMap = () => {
 
   useEffect(() => {
       if (!drawRef.current || !map.current) return;
+      
       if (drawMode === 'draw_polygon') {
           drawRef.current.changeMode('draw_polygon');
           map.current.getCanvas().style.cursor = 'crosshair';
