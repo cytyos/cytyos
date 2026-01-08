@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2 } from 'lucide-react';
+import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2, Map, Layers, Sun, FileCheck } from 'lucide-react';
 import { couponService } from '../services/couponService';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +14,7 @@ const STRIPE_LINKS = {
   pdfOnly: "https://buy.stripe.com/test_cNicN4aeTanx8as2mHdjO06"  // $17.00
 };
 
-// 2. HARDCODED KEYS CONFIGURATION (FALLBACK)
+// 2. HARDCODED KEYS CONFIGURATION
 const OFFLINE_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; label?: string }> = {
   'CYTYOS-MASTER-2025': { type: 'UNLIMITED', label: 'Founder Access' },
 };
@@ -27,7 +27,7 @@ interface PricingModalProps {
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const navigate = useNavigate();
   const { setPaywallOpen } = useSettingsStore();
-  const { user } = useAuth(); // Required to track who used the coupon
+  const { user } = useAuth();
   
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
@@ -61,7 +61,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     const code = accessKey.toUpperCase().trim();
 
     try {
-        // 1. Check Offline Keys (Master Keys)
+        // 1. Check Offline Keys
         if (OFFLINE_KEYS[code]) {
             const keyData = OFFLINE_KEYS[code];
             if (keyData.type === 'UNLIMITED') {
@@ -76,15 +76,12 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             }
         }
 
-        // 2. Check Database Coupons (Influencers/Campaigns)
+        // 2. Check Database Coupons
         try {
             const coupon = await couponService.validateAndTrack(code, user?.email);
             const trialEndsAt = Date.now() + (coupon.duration_minutes * 60 * 1000);
-            
             localStorage.setItem('cytyos_trial_end', trialEndsAt.toString());
-            
             setSuccessMsg(`Trial Activated! ${coupon.duration_minutes}min access granted.`);
-            
             setTimeout(() => { 
                 setPaywallOpen(false);
                 onClose(); 
@@ -106,8 +103,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
 
       <div className="relative w-full max-w-5xl bg-[#0f111a] rounded-3xl border border-indigo-500/30 flex flex-col md:flex-row overflow-hidden shadow-2xl animate-fade-in max-h-[95vh] overflow-y-auto custom-scrollbar z-50">
         
-        {/* Left Side: Value Proposition */}
-        <div className="w-full md:w-2/5 bg-gradient-to-b from-indigo-900/40 to-black p-8 flex flex-col justify-between border-r border-white/5 relative overflow-hidden">
+        {/* Left Side: Features & Value Proposition */}
+        <div className="w-full md:w-5/12 bg-gradient-to-b from-indigo-900/40 to-black p-8 flex flex-col border-r border-white/5 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
 
           <div className="relative z-10">
@@ -117,27 +114,33 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             </div>
             
             <h3 className="text-3xl font-extrabold text-white mb-2 leading-tight">
-              Secure the <br/> <span className="text-indigo-400">Beta Price</span>
+              Unlock the <br/> <span className="text-indigo-400">Full Platform</span>
             </h3>
             
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 my-4">
                 <p className="text-yellow-200/90 text-xs flex items-start gap-2 leading-relaxed">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>
-                      Warning: Price will increase to <strong className="text-white">$1,295/year</strong> when version 1.0 launches. Lock in your rate today.
+                      Warning: Price increases when v1.0 launches. Secure your Early Bird rate for the entire year.
                     </span>
                 </p>
             </div>
 
-            <div className="space-y-5 mt-6">
-              <Feature text="Unlimited AI Feasibility Studies" highlighted />
-              <Feature text="Lock in $296/yr forever" highlighted />
-              <Feature text="Grandfathered into v1.0 features" />
-              <Feature text="Priority Founder Support" />
+            {/* EXPANDED FEATURE LIST */}
+            <div className="space-y-4 mt-6">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">What's Included:</h4>
+              
+              <Feature text="Unlimited AI Feasibility Studies" highlighted icon={<Zap className="w-3 h-3 text-indigo-200"/>} />
+              <Feature text="Global 3D City Visualization" icon={<Map className="w-3 h-3"/>} />
+              <Feature text="Automated Zoning Analysis" icon={<Layers className="w-3 h-3"/>} />
+              <Feature text="Shadow & Solar Analysis" icon={<Sun className="w-3 h-3"/>} />
+              <Feature text="Professional PDF Exports" icon={<FileCheck className="w-3 h-3"/>} />
+              <Feature text="1-Year Access to v1.0 & v2.0" highlighted icon={<Star className="w-3 h-3 text-indigo-200"/>} />
+              <Feature text="Priority Founder Support" icon={<Shield className="w-3 h-3"/>} />
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-white/10 relative z-10">
+          <div className="mt-8 pt-6 border-t border-white/10 relative z-10">
             <div className="flex items-center gap-3 mb-3">
                  <div className="bg-blue-500/20 p-2 rounded-lg">
                     <FileText className="w-4 h-4 text-blue-400"/>
@@ -153,8 +156,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           </div>
         </div>
 
-        {/* Right Side: Plan Selection */}
-        <div className="w-full md:w-3/5 p-8 flex flex-col bg-[#0f111a] relative">
+        {/* Right Side: Pricing Selection */}
+        <div className="w-full md:w-7/12 p-8 flex flex-col bg-[#0f111a] relative">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">Select your Plan</h2>
             <div className="inline-flex bg-black p-1 rounded-full border border-white/10 relative">
@@ -170,19 +173,20 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
               <div className="text-center md:text-left">
                 <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? 'Standard Access' : 'Founder Annual'}</h4>
-                <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? 'Cancel anytime.' : 'Secure v1.0 access today.'}</p>
+                <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? 'Cancel anytime.' : 'Secure v1.0 & v2.0 access.'}</p>
                 {billingCycle === 'yearly' && (<div className="mt-2 inline-block bg-green-500/10 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-500/20">SAVE $999 vs Future Price</div>)}
               </div>
 
               <div className="text-center md:text-right">
-                {billingCycle === 'yearly' && (
-                     <div className="flex flex-col items-end">
-                        <span className="text-xs text-gray-500 font-medium">v1.0 Price</span>
-                        <div className="text-gray-400 text-lg line-through font-medium decoration-red-500/50 mb-1">
-                            $1,295
-                        </div>
-                     </div>
-                )}
+                
+                {/* --- DISPLAYING STRIKETHROUGH PRICES FOR BOTH PLANS --- */}
+                <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-500 font-medium">Future Price</span>
+                    <div className="text-gray-400 text-lg line-through font-medium decoration-red-500/50 mb-1">
+                        {billingCycle === 'yearly' ? '$1,295' : '$59.30'}
+                    </div>
+                </div>
+
                 <div className="flex items-baseline gap-1 justify-center md:justify-end">
                     <span className="text-4xl font-extrabold text-white tracking-tight">${billingCycle === 'monthly' ? '29.60' : '296'}</span>
                     <span className="text-gray-500 text-sm font-medium">{billingCycle === 'monthly' ? '/mo' : '/year'}</span>
@@ -227,9 +231,11 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   );
 };
 
-const Feature = ({ text, highlighted = false }: { text: string, highlighted?: boolean }) => (
+const Feature = ({ text, highlighted = false, icon }: { text: string, highlighted?: boolean, icon?: React.ReactNode }) => (
   <div className="flex items-center gap-3">
-    <div className={`p-1 rounded-full shrink-0 ${highlighted ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}><Check className="w-3 h-3" /></div>
+    <div className={`p-1 rounded-full shrink-0 ${highlighted ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}>
+        {icon || <Check className="w-3 h-3" />}
+    </div>
     <span className={`text-sm ${highlighted ? 'text-white font-medium' : 'text-gray-400'}`}>{text}</span>
   </div>
 );
