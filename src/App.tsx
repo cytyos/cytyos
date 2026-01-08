@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 // --- IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
-// import { AdminPage } from './pages/AdminPage'; 
 
 // CRITICAL: Ensure MapboxMap is exported as 'export const MapboxMap' in its file
 import { MapboxMap } from './components/map/MapboxMap'; 
@@ -13,8 +12,7 @@ import { SmartPanel } from './components/SmartPanel';
 import { PricingModal } from './components/PricingModal';
 import { Footer } from './components/Footer'; 
 
-// CRITICAL: We need to import the AI Assistant to render it
-import { AIAssistant } from './components/AIAssistant';
+// REMOVED: AIAssistant import is gone
 
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -26,11 +24,10 @@ const AdminPage = () => <div className="p-10 text-white">Admin Dashboard (Under 
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
 
-  // Trigger Paywall after 60 seconds of activity
   useEffect(() => {
     const timer = setTimeout(() => {
       setPaywallOpen(true);
-    }, 60000); // 60,000ms = 1 minute
+    }, 60000); 
 
     return () => clearTimeout(timer);
   }, [setPaywallOpen]);
@@ -97,8 +94,7 @@ function App() {
                         {/* 3. Panels & Modals */}
                         <SmartPanel />
                         
-                        {/* THIS IS CRITICAL: The AI Chat needs to be here to show up */}
-                        <AIAssistant />
+                        {/* REMOVED: Floating AI Assistant */}
 
                         <Footer />
                     </div>
