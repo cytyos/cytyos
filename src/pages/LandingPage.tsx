@@ -19,17 +19,10 @@ export const LandingPage = () => {
     setIsLangMenuOpen(false);
   };
 
-  const scrollToRoadmap = () => {
-    const el = document.getElementById('roadmap-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Navegação para o App (protegido)
   const handleEnterApp = () => {
       navigate('/app'); 
   };
 
-  // Navegação para o Login
   const handleLogin = () => {
       navigate('/login');
   };
@@ -45,7 +38,6 @@ export const LandingPage = () => {
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Seletor de Idioma */}
             <div className="relative">
                 <button onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider transition-colors py-2">
                     <Globe className="w-3 h-3" />
@@ -66,12 +58,10 @@ export const LandingPage = () => {
 
             <div className="h-4 w-px bg-white/10 mx-1"></div>
 
-            {/* BOTÃO LOGIN */}
             <button onClick={handleLogin} className="text-gray-300 hover:text-white text-xs font-bold transition-colors">
               {t('landing.login')}
             </button>
             
-            {/* CTA NAVBAR - Oculto em telas muito pequenas para dar espaço */}
             <button onClick={() => setPaywallOpen(true)} className="hidden sm:block bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105">
               {t('roadmap.cta')}
             </button>
@@ -80,7 +70,6 @@ export const LandingPage = () => {
       </nav>
 
       {/* HERO SECTION */}
-      {/* Padding ajustado para mobile: pt-28 em vez de pt-36 */}
       <section className="relative pt-28 md:pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
 
@@ -89,7 +78,6 @@ export const LandingPage = () => {
           {t('landing.hero.badge')}
         </div>
 
-        {/* AJUSTE DE FONTE: text-4xl no mobile, text-7xl no desktop */}
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white max-w-5xl leading-[1.1]">
           {t('landing.hero.title_prefix')} <br className="hidden md:block" />
           {t('landing.hero.title_main')} <br />
@@ -106,7 +94,6 @@ export const LandingPage = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-          {/* BOTÃO PRINCIPAL: Vai para o App */}
           <button 
             onClick={handleEnterApp} 
             className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all transform hover:-translate-y-1 shadow-xl shadow-white/10 z-10 cursor-pointer"
@@ -115,7 +102,6 @@ export const LandingPage = () => {
             {t('landing.hero.btn_try')}
           </button>
 
-          {/* BOTÃO SECUNDÁRIO: Vai para o Roadmap ou Paywall */}
           <button 
             onClick={() => setPaywallOpen(true)} 
             className="flex items-center justify-center gap-3 bg-[#1a1d26] text-white border border-gray-700 px-8 py-4 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all hover:border-gray-500 z-10 cursor-pointer"
@@ -176,7 +162,6 @@ export const LandingPage = () => {
 
           </div>
 
-          {/* CTA */}
           <div className="relative rounded-2xl p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 animate-gradient-x shadow-2xl">
             <div className="bg-[#0f111a] rounded-xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
@@ -197,7 +182,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="border-t border-white/5 bg-[#020305] py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
