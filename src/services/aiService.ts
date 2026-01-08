@@ -26,12 +26,11 @@ const fetchAI = async (messages: any[], max_tokens: number = 1000) => {
       body: JSON.stringify({ 
         model: "gpt-4-turbo-preview", 
         messages, 
-        temperature: 0.2, // Baixa temperatura para precisão técnica
+        temperature: 0.2, // Low temperature for technical precision
         max_tokens 
       })
     });
 
-    // Captura o texto primeiro para evitar erro de JSON vazio
     const responseText = await response.text();
     
     if (!response.ok) {
@@ -58,7 +57,7 @@ export const analyzeProject = async (
   const { urbanContext } = useSettingsStore.getState();
   const curr = context.currency || 'USD';
 
-  // Manifest técnico para injeção de contexto pro
+  // Technical manifest for pro context injection
   const projectManifest = {
     financials: {
       gdv: context.metrics.revenue,
@@ -88,7 +87,7 @@ export const analyzeProject = async (
     4. OPTIMIZATION: Suggest specific block adjustments to maximize IRR (Internal Rate of Return).
     
     Output must be a structured executive summary in ${language === 'pt' ? 'Portuguese' : 'English'}. 
-    Use markdown tables for financial comparisons. Highlight risks in BOLD.`;
+    Use MARKDOWN syntax. Use bold for key numbers and tables for financial comparisons.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -106,7 +105,7 @@ export const analyzeProject = async (
   }
 };
 
-// --- LOCATION SCOUT ---
+// --- LOCATION SCOUT (New Personality) ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
@@ -114,19 +113,31 @@ export const scoutLocation = async (
 ): Promise<string> => {
   
   try {
-    const systemPrompt = `You are an Urban AI Scout. Analyze the location [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] for a site of ${area}m².
-    Provide a professional estimation of:
-    - Expected FAR (Floor Area Ratio) for this specific region.
-    - Typical Land Use (Residential, Commercial, Industrial).
-    - Market Potential.
-    Language: ${language}. Be concise but technical. Max 150 words.`;
+    // This prompt ensures the AI estimates data but provides the legal disclaimer
+    const systemPrompt = `You are an Urban AI Scout and Town Planner. 
+    The user has just defined a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with an area of ${area}m².
+
+    Your Task:
+    1. Identify the Neighborhood/City.
+    2. ESTIMATE the likely Zoning Parameters (FAR/CA, Occupancy/TO) based on your knowledge of the area.
+    3. Analyze the Market Potential (Residential/Commercial).
+    
+    CRITICAL DISCLAIMER:
+    You must explicitly state that these parameters are *estimates based on location* and may not be accurate. 
+    Strongly advise the user to upload the official Zoning Law (PDF) or use the "Upload Regulation" button to validate these assumptions.
+
+    Output format:
+    - Use Markdown.
+    - Use Bold for values.
+    - Be concise (Max 200 words).
+    - Language: ${language === 'pt' ? 'Portuguese' : 'English'}.`;
 
     const messages = [{ role: "system", content: systemPrompt }];
-    const data = await fetchAI(messages, 400);
+    const data = await fetchAI(messages, 500);
     return data.choices?.[0]?.message?.content || "Scout data unavailable.";
   } catch (error: any) {
     return language === 'pt'
-      ? `Erro na Geocalização: ${error.message}`
+      ? `Erro na Geolocalização: ${error.message}`
       : `Geospatial Error: ${error.message}`;
   }
 };
