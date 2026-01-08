@@ -15,7 +15,6 @@ import { scoutLocation } from '../../services/aiService';
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 const DEFAULT_CENTER: [number, number] = [-80.1918, 25.7617];
 
-// --- AQUI ESTÁ A CORREÇÃO IMPORTANTE: export const ---
 export const MapboxMap = () => {
   const { i18n } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -29,7 +28,6 @@ export const MapboxMap = () => {
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
   const { setThinking, setMessage } = useAIStore();
 
-  // Glow Animation Effect
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
@@ -64,7 +62,8 @@ export const MapboxMap = () => {
     });
     map.current = m;
 
-    m.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // --- CORREÇÃO DE UI: Mover zoom para Esquerda para não cobrir o Menu/Busca ---
+    m.addControl(new mapboxgl.NavigationControl(), 'top-left');
 
     const draw = new MapboxDraw({
       displayControlsDefault: false,
@@ -76,7 +75,6 @@ export const MapboxMap = () => {
 
     m.on('load', () => loadAllLayers(m));
 
-    // Tooltip for measurement while drawing
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -106,21 +104,17 @@ export const MapboxMap = () => {
     
     m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
-    // --- TRIGGER: WHEN POLYGON IS CLOSED ---
     m.on('draw.create', async (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
 
-        // 1. UI RESET
         draw.deleteAll();
         useMapStore.getState().setDrawMode('simple_select');
         if (tooltipRef.current) tooltipRef.current.style.display = 'none';
         
-        // 2. OPEN CHAT IMMEDIATELY
         setThinking(true);
         setMessage("");
 
-        // 3. PROCESS GEOMETRY
         const area = Math.round(turf.area(feature));
         let centerCoords = [0, 0];
         try {
@@ -139,7 +133,6 @@ export const MapboxMap = () => {
         
         useMapStore.getState().setIs3D(true); 
 
-        // 4. CALL AI
         try {
             const aiResponse = await scoutLocation(centerCoords, area, i18n.language);
             setMessage(aiResponse);
@@ -151,13 +144,11 @@ export const MapboxMap = () => {
     });
   }, []);
 
-  // Sync is3D Store with Map
   useEffect(() => {
       if (!map.current) return;
       map.current.easeTo({ pitch: is3D ? 60 : 0, bearing: is3D ? -20 : 0, duration: 1500 });
   }, [is3D]);
 
-  // Sync Map Style
   useEffect(() => {
       if (!map.current) return;
       const styleUrl = mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11';
@@ -165,7 +156,6 @@ export const MapboxMap = () => {
       map.current.once('style.load', () => loadAllLayers(map.current!));
   }, [mapStyle]);
 
-  // Sync Draw Mode
   useEffect(() => {
       if (!drawRef.current || !map.current) return;
       
@@ -179,7 +169,6 @@ export const MapboxMap = () => {
       }
   }, [drawMode]);
 
-  // Sync FlyTo
   useEffect(() => {
       if (flyToCoords && map.current) {
           map.current.flyTo({ center: flyToCoords, zoom: 17, pitch: 45, duration: 2000 });
@@ -187,7 +176,6 @@ export const MapboxMap = () => {
       }
   }, [flyToCoords]);
 
-  // Redraw blocks
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
     redrawBlocks(map.current, blocks);
