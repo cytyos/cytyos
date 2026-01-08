@@ -1,6 +1,7 @@
 import { Metrics, Land, Block } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
+// Access environment variable safely
 const DIRECT_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 interface ProjectContext {
@@ -12,7 +13,8 @@ interface ProjectContext {
 
 // --- HELPER: ROBUST PROXY FETCH ---
 const fetchAI = async (messages: any[], max_tokens: number = 1000) => {
-  if (!DIRECT_API_KEY || DIRECT_API_KEY.includes('your-key')) {
+  // Simple check to ensure key exists
+  if (!DIRECT_API_KEY) {
     throw new Error("Missing OpenAI API Key");
   }
 
@@ -26,7 +28,7 @@ const fetchAI = async (messages: any[], max_tokens: number = 1000) => {
       body: JSON.stringify({ 
         model: "gpt-4-turbo-preview", 
         messages, 
-        temperature: 0.2, // Low temperature for technical precision
+        temperature: 0.2, // Low temperature for consistency
         max_tokens 
       })
     });
@@ -78,13 +80,21 @@ export const analyzeProject = async (
   };
 
   try {
+    // --- ATUALIZAÇÃO: REGRAS DE FORMATAÇÃO RIGOROSAS ---
     const systemPrompt = `You are a Chief Investment Officer (CIO) for a Global Real Estate Fund. 
-    Analyze the following project manifest using high-complexity auditing standards:
+    Analyze the following project manifest using high-complexity auditing standards.
     
-    1. RESIDUAL LAND VALUE AUDIT: Does the land cost (${curr} ${context.land.cost}) align with a ${context.metrics.margin}% margin?
-    2. ARCHITECTURAL RATIOS: Evaluate GFA vs NSA efficiency. Current NSA: ${context.metrics.nsa}m².
-    3. ZONING COMPLIANCE: Contrast achieved FAR (${context.metrics.far}) vs Max FAR (${context.land.maxFar}).
-    4. OPTIMIZATION: Suggest specific block adjustments to maximize IRR (Internal Rate of Return).
+    CRITICAL FORMATTING RULES (DO NOT BREAK THESE):
+    1. NEVER output long floating-point numbers (e.g., 2.6999566).
+    2. ALWAYS round Currency to 2 decimal places (e.g., $1,250.00).
+    3. ALWAYS round Areas and Ratios (FAR/Occupancy) to a maximum of 2 decimal places (e.g., 2,500.50 m², FAR 2.70).
+    4. Use thousands separators for readability (e.g., 10,000,000).
+    
+    Tasks:
+    1. RESIDUAL LAND VALUE AUDIT: Does the land cost (${curr} ${context.land.cost}) align with a ${context.metrics.margin.toFixed(2)}% margin?
+    2. ARCHITECTURAL RATIOS: Evaluate GFA vs NSA efficiency. Current NSA: ${context.metrics.nsa.toFixed(0)}m².
+    3. ZONING COMPLIANCE: Contrast achieved FAR (${context.metrics.far.toFixed(2)}) vs Max FAR (${context.land.maxFar}).
+    4. OPTIMIZATION: Suggest specific block adjustments to maximize IRR.
     
     Output must be a structured executive summary in ${language === 'pt' ? 'Portuguese' : 'English'}. 
     Use MARKDOWN syntax. Use bold for key numbers and tables for financial comparisons.`;
@@ -105,7 +115,7 @@ export const analyzeProject = async (
   }
 };
 
-// --- LOCATION SCOUT (New Personality) ---
+// --- LOCATION SCOUT ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
@@ -113,9 +123,8 @@ export const scoutLocation = async (
 ): Promise<string> => {
   
   try {
-    // This prompt ensures the AI estimates data but provides the legal disclaimer
     const systemPrompt = `You are an Urban AI Scout and Town Planner. 
-    The user has just defined a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with an area of ${area}m².
+    The user has just defined a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with an area of ${area.toFixed(0)}m².
 
     Your Task:
     1. Identify the Neighborhood/City.
@@ -128,7 +137,7 @@ export const scoutLocation = async (
 
     Output format:
     - Use Markdown.
-    - Use Bold for values.
+    - Round all numbers clearly.
     - Be concise (Max 200 words).
     - Language: ${language === 'pt' ? 'Portuguese' : 'English'}.`;
 
