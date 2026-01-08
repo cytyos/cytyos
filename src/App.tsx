@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'; // <--- useNavigate importado
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { X, Monitor } from 'lucide-react'; 
 
 // --- EAGER IMPORTS ---
@@ -19,6 +19,9 @@ const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({
 
 // 1. IMPORTANDO A PÁGINA DE PRIVACIDADE
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+
+// --- CONSTANTES ---
+const FREE_USAGE_MS = 3 * 60 * 1000; // 3 MINUTOS em milissegundos
 
 // --- LOADING SCREEN ---
 const LoadingScreen = () => (
@@ -48,52 +51,82 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL (SEGURANÇA REFORÇADA) ---
+// --- PAYWALL CONTROL (LÓGICA DOS 3 MINUTOS) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
-  const navigate = useNavigate(); // Hook para redirecionar
+  const navigate = useNavigate();
 
-  // 1. Checagem Periódica (a cada 1 min ou mudança de rota)
   useEffect(() => {
-    const checkTrial = () => {
-        // Se for VIP, ignora tudo
+    // 1. Inicializa o cronômetro na primeira visita (se não existir)
+    const initTimer = () => {
+        if (!localStorage.getItem('cytyos_first_visit')) {
+            localStorage.setItem('cytyos_first_visit', Date.now().toString());
+        }
+    };
+    initTimer();
+
+    const checkAccess = () => {
+        // A. Se for VIP (Founder), libera tudo
         if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
 
-        // Se tiver trial válido, ignora
+        // B. Se tiver um Cupom de Trial ATIVO, libera tudo
         const trialEnd = localStorage.getItem('cytyos_trial_end');
         if (trialEnd && Date.now() < Number(trialEnd)) {
             return; 
         }
         
-        // Se chegou aqui, bloqueia!
-        if (!isPaywallOpen) setPaywallOpen(true);
+        // C. Checa o "Free Tier" de 3 minutos
+        const firstVisit = localStorage.getItem('cytyos_first_visit');
+        if (firstVisit) {
+            const elapsed = Date.now() - Number(firstVisit);
+            // Se ainda não passou 3 minutos, deixa usar (return)
+            if (elapsed < FREE_USAGE_MS) {
+                return;
+            }
+        }
+
+        // D. Se chegou aqui: Não é VIP, Não tem Trial e Acabou os 3 min.
+        // Abre o Paywall (se já não estiver aberto)
+        if (!isPaywallOpen) {
+            setPaywallOpen(true);
+        }
     };
 
-    const timer = setTimeout(checkTrial, 60000); 
-    checkTrial(); // Checa imediatamente ao montar
-    return () => clearTimeout(timer);
+    // Checa a cada 2 segundos para não pesar
+    const interval = setInterval(checkAccess, 2000); 
+    checkAccess(); // Checa imediatamente também
+    
+    return () => clearInterval(interval);
   }, [setPaywallOpen, isPaywallOpen]);
 
-  // 2. Lógica de Fechamento "Blindada"
+
+  // Lógica "Blindada" ao fechar o modal
   const handleCloseAttempt = () => {
-      setPaywallOpen(false); // Fecha o modal visualmente
+      setPaywallOpen(false); // Tenta fechar visualmente...
 
-      // Verifica se o usuário tem permissão para continuar na App
+      // Mas verificamos se pode continuar navegando
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
+      
       const trialEnd = localStorage.getItem('cytyos_trial_end');
-      const hasActiveTrial = trialEnd && Date.now() < Number(trialEnd);
+      const hasActiveCoupon = trialEnd && Date.now() < Number(trialEnd);
+      
+      const firstVisit = localStorage.getItem('cytyos_first_visit');
+      const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
+      const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      // Se não for VIP e não tiver Trial ativo, expulsa para a Home
-      if (!isVip && !hasActiveTrial) {
+      // Se NÃO for VIP, NEM tiver Cupom, E já estourou os 3 min...
+      if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
+          // Redireciona para a Home (acabou a festa)
           navigate('/'); 
       }
+      // Se ainda estiver nos 3 min (ou pagou), o modal fecha e a vida segue.
   };
 
   return (
     <Suspense fallback={null}>
       <PricingModal 
         isOpen={isPaywallOpen} 
-        onClose={handleCloseAttempt} // Usamos a nova função segura
+        onClose={handleCloseAttempt} 
       />
     </Suspense>
   );
@@ -117,7 +150,6 @@ function App() {
   return (
     <AuthProvider>
         <BrowserRouter>
-        {/* PaywallGlobal agora está dentro do Router e usa useNavigate */}
         <PaywallGlobal />
         
         <Routes>
