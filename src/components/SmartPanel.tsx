@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import * as turf from '@turf/turf';
 import ReactMarkdown from 'react-markdown'; 
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -75,15 +74,23 @@ export const SmartPanel = () => {
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Detectar se é mobile para lógica de renderização
-  const isMobile = window.innerWidth < 768;
-  // Flag crítica: Se for mobile E estiver minimizado, esconde o header pesado
+  // --- DETECTAR MOBILE ---
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Variável Mágica: Se for mobile e estiver minimizado, esconde o header
   const isMobileMin = isMobile && mobileState === 'min';
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
+  // Sync AI
   useEffect(() => {
     if (message) {
         if (!isChatOpen) setHasUnreadAi(true);
@@ -94,7 +101,6 @@ export const SmartPanel = () => {
             return [...prev, { role: 'assistant', content: message }];
         });
     }
-    
     if (thinking) {
         if (isChatOpen) setIsAiLoading(true);
     }
@@ -110,7 +116,6 @@ export const SmartPanel = () => {
   const handleExportPDF = async () => {
       if (isPdfLoading) return;
       setIsPdfLoading(true);
-
       try {
           const projectDataForPdf = {
               terrainArea: land.area,
@@ -134,8 +139,7 @@ export const SmartPanel = () => {
                   ...chatMessages, 
                   { 
                       role: 'user', 
-                      content: `[SYSTEM INSTRUCTION]: Based on the project data and our entire discussion above, write a professional **Executive Summary** for a PDF report. 
-                      Synthesize key points (Financial, Zoning, Strategic). Do NOT copy-paste. Max 400 words. Language: ${i18n.language === 'pt' ? 'Portuguese' : 'English'}.`
+                      content: `[SYSTEM INSTRUCTION]: Based on the project data and our entire discussion above, write a professional **Executive Summary** for a PDF report. Max 400 words. Language: ${i18n.language === 'pt' ? 'Portuguese' : 'English'}.`
                   }
               ];
               executiveSummary = await analyzeProject(summaryPrompt as any, { metrics, land, blocks, currency }, i18n.language);
@@ -143,9 +147,7 @@ export const SmartPanel = () => {
               console.warn("AI Summary generation failed", aiError);
               executiveSummary = t('pdf_fallback_summary');
           }
-
           await generateReport(null, projectDataForPdf, i18n.language as any, executiveSummary as any);
-
       } catch (error) {
           console.error("PDF Error:", error);
           alert("Could not generate report. Please try again.");
@@ -170,25 +172,21 @@ export const SmartPanel = () => {
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
   const changeCurrency = (curr: string) => { setCurrency(curr); setIsCurrencyMenuOpen(false); };
   
-  // Função para controlar estados do painel
   const cycleMobileState = () => { 
       if (!isMobile) return;
       setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
   };
   
-  // UX Mobile Ajustada: No modo 'min', a altura é mínima (apenas barra inferior)
+  // UX Mobile Ajustada: Altura mínima para mostrar SÓ a barra inferior
   const getMobileHeightClass = () => {
-      if (mobileState === 'min') return 'h-[85px]'; // Altura apenas para a barra de botões
+      if (mobileState === 'min') return 'h-[85px]'; 
       if (mobileState === 'mid') return 'h-[50vh]';
       return 'h-[95vh]';
   };
   
   const handleMainAiButtonClick = async () => {
     if (isChatOpen) return;
-    if (chatMessages.length > 0) {
-        setIsChatOpen(true);
-        return;
-    }
+    if (chatMessages.length > 0) { setIsChatOpen(true); return; }
     handleStartAnalysis();
   };
 
@@ -197,16 +195,10 @@ export const SmartPanel = () => {
     setThinking(true); 
     setIsAiLoading(true); 
     if(isMobile) setMobileState('max'); 
-    
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
         setMessage(report); 
-    } catch (e) { 
-        setMessage("⚠️ Connection Error."); 
-    } finally { 
-        setThinking(false);
-        setIsAiLoading(false); 
-    }
+    } catch (e) { setMessage("⚠️ Connection Error."); } finally { setThinking(false); setIsAiLoading(false); }
   };
 
   const handleSendMessage = async () => {
@@ -214,16 +206,11 @@ export const SmartPanel = () => {
     const newMsg: ChatMessage = { role: 'user', content: userQuery };
     setChatMessages([...chatMessages, newMsg]);
     setUserQuery('');
-    
     setIsAiLoading(true);
     try {
         const reply = await analyzeProject([...chatMessages, newMsg], { metrics, land, blocks, currency }, i18n.language);
         setChatMessages(prev => [...prev, { role: 'assistant', content: reply || "Error." }]);
-    } catch (e) { 
-        setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); 
-    } finally { 
-        setIsAiLoading(false); 
-    }
+    } catch (e) { setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); } finally { setIsAiLoading(false); }
   };
 
   const handleSaveProject = () => {
@@ -307,7 +294,7 @@ export const SmartPanel = () => {
       </div>
 
       {/* --- HEADER (LOGO, USER, STATS) --- */}
-      {/* LÓGICA DE UX: Se for Mobile e estiver no estado MIN, ESCONDE este bloco inteiro */}
+      {/* SEGREDO: ESCONDE TOTALMENTE SE FOR MOBILE MINIMIZADO */}
       {!isMobileMin && (
           <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
             <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
