@@ -18,8 +18,10 @@ export const useMapStore = create<MapStore>((set) => ({
   mapInstance: null,
   setMapInstance: (map) => set({ mapInstance: map }),
   
-  mapStyle: 'satellite',
+  // --- CORREÇÃO: Inicia no modo 'streets' (Mapa Escuro) ---
+  mapStyle: 'streets', 
   setMapStyle: (style) => set({ mapStyle: style }),
+  
   drawMode: 'simple_select',
   setDrawMode: (mode) => set({ drawMode: mode }),
   flyToCoords: null,
