@@ -6,7 +6,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useAuth } from '../contexts/AuthContext';
 
 // ==============================================================================
-// 1. SEUS LINKS DO STRIPE (OFICIAIS - NUMEROLOGIA 8)
+// 1. SEUS LINKS DO STRIPE 
 // ==============================================================================
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04", // $29.60
@@ -233,4 +233,4 @@ const Feature = ({ text, highlighted = false }: { text: string, highlighted?: bo
     <div className={`p-1 rounded-full shrink-0 ${highlighted ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}><Check className="w-3 h-3" /></div>
     <span className={`text-sm ${highlighted ? 'text-white font-medium' : 'text-gray-400'}`}>{text}</span>
   </div>
-);
+);a
