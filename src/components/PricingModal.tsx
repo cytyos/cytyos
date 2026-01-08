@@ -6,7 +6,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useAuth } from '../contexts/AuthContext';
 
 // ==============================================================================
-// 1. SEUS LINKS DO STRIPE 
+// 1. STRIPE PAYMENT LINKS
 // ==============================================================================
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04", // $29.60
@@ -14,7 +14,7 @@ const STRIPE_LINKS = {
   pdfOnly: "https://buy.stripe.com/test_cNicN4aeTanx8as2mHdjO06"  // $17.00
 };
 
-// 2. CONFIGURAÇÃO DE CHAVES HARDCODED (FALLBACK)
+// 2. HARDCODED KEYS CONFIGURATION (FALLBACK)
 const OFFLINE_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; label?: string }> = {
   'CYTYOS-MASTER-2025': { type: 'UNLIMITED', label: 'Founder Access' },
 };
@@ -27,7 +27,7 @@ interface PricingModalProps {
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const navigate = useNavigate();
   const { setPaywallOpen } = useSettingsStore();
-  const { user } = useAuth(); // Importante para rastrear quem usou o cupom
+  const { user } = useAuth(); // Required to track who used the coupon
   
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
@@ -61,7 +61,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     const code = accessKey.toUpperCase().trim();
 
     try {
-        // 1. Verifica Chaves Offline
+        // 1. Check Offline Keys (Master Keys)
         if (OFFLINE_KEYS[code]) {
             const keyData = OFFLINE_KEYS[code];
             if (keyData.type === 'UNLIMITED') {
@@ -76,7 +76,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             }
         }
 
-        // 2. Verifica Cupons do Banco (Influencers)
+        // 2. Check Database Coupons (Influencers/Campaigns)
         try {
             const coupon = await couponService.validateAndTrack(code, user?.email);
             const trialEndsAt = Date.now() + (coupon.duration_minutes * 60 * 1000);
@@ -106,7 +106,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
 
       <div className="relative w-full max-w-5xl bg-[#0f111a] rounded-3xl border border-indigo-500/30 flex flex-col md:flex-row overflow-hidden shadow-2xl animate-fade-in max-h-[95vh] overflow-y-auto custom-scrollbar z-50">
         
-        {/* Lado Esquerdo */}
+        {/* Left Side: Value Proposition */}
         <div className="w-full md:w-2/5 bg-gradient-to-b from-indigo-900/40 to-black p-8 flex flex-col justify-between border-r border-white/5 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
 
@@ -153,7 +153,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           </div>
         </div>
 
-        {/* Lado Direito */}
+        {/* Right Side: Plan Selection */}
         <div className="w-full md:w-3/5 p-8 flex flex-col bg-[#0f111a] relative">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">Select your Plan</h2>
@@ -171,7 +171,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               <div className="text-center md:text-left">
                 <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? 'Standard Access' : 'Founder Annual'}</h4>
                 <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? 'Cancel anytime.' : 'Secure v1.0 access today.'}</p>
-                {/* SAVE CALCULATION: $1295 - $296 = $999 */}
                 {billingCycle === 'yearly' && (<div className="mt-2 inline-block bg-green-500/10 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-500/20">SAVE $999 vs Future Price</div>)}
               </div>
 
@@ -233,4 +232,4 @@ const Feature = ({ text, highlighted = false }: { text: string, highlighted?: bo
     <div className={`p-1 rounded-full shrink-0 ${highlighted ? 'bg-indigo-500 text-white' : 'bg-white/10 text-gray-400'}`}><Check className="w-3 h-3" /></div>
     <span className={`text-sm ${highlighted ? 'text-white font-medium' : 'text-gray-400'}`}>{text}</span>
   </div>
-);a
+);
