@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import * as turf from '@turf/turf';
+import ReactMarkdown from 'react-markdown'; // <--- NEW IMPORT
 import { useProjectStore, BlockUsage } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAIStore } from '../stores/aiStore'; 
 import { analyzeProject } from '../services/aiService';
-import { useAuth } from '../contexts/AuthContext'; // <--- NEW: Import Auth
+import { useAuth } from '../contexts/AuthContext';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
-  Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon // <--- NEW: Logout icons
+  Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
@@ -19,7 +20,7 @@ type MobileState = 'min' | 'mid' | 'max';
 
 export const SmartPanel = () => {
   const { t, i18n } = useTranslation();
-  const { user, signOut } = useAuth(); // <--- NEW: Get user and signOut
+  const { user, signOut } = useAuth();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
   
   const { 
@@ -33,37 +34,53 @@ export const SmartPanel = () => {
       setRoadmapOpen 
   } = useSettingsStore();
 
-  const { message, setThinking, setMessage } = useAIStore();
+  const { message, thinking, setThinking, setMessage } = useAIStore(); // Added 'thinking' here
   const [activeTab, setActiveTab] = useState<'editor' | 'financial'>('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  
+  // Local loading state combined with global store thinking state
   const [isAiLoading, setIsAiLoading] = useState(false);
+  
   const [userQuery, setUserQuery] = useState('');
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen]);
+  
+  // Auto-scroll to bottom of chat
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
+  // Sync Global AI Store with Local Chat
   useEffect(() => {
     if (message) {
         setIsChatOpen(true);
+        setIsAiLoading(false); // Stop loading when message arrives
         setChatMessages(prev => {
+            // Prevent duplicates if the last message is identical
             if (prev.length > 0 && prev[prev.length - 1].content === message) return prev;
             return [...prev, { role: 'assistant', content: message }];
         });
     }
-  }, [message]);
+    
+    // If the global store says we are thinking, open the chat
+    if (thinking) {
+        setIsChatOpen(true);
+        setIsAiLoading(true);
+    }
+  }, [message, thinking]);
 
   const handleAnalyzeLaw = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
+      // Simulate analysis for zoning text
       setTimeout(() => {
-          setChatMessages(prev => [...prev, { role: 'assistant', content: t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy }) }]);
+          const successMsg = t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy });
+          setChatMessages(prev => [...prev, { role: 'assistant', content: successMsg }]);
           setIsAiLoading(false);
       }, 1500);
   };
@@ -76,13 +93,20 @@ export const SmartPanel = () => {
   const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[95vh]' : 'h-28';
   
   const handleStartAnalysis = async () => {
-    setThinking(true);
+    setThinking(true); // Global store
+    setIsAiLoading(true); // Local state
     if(window.innerWidth < 768) setMobileState('max'); 
-    setIsAiLoading(true);
+    
     try {
+        // We don't set local message here, we wait for the global store to update via useEffect
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
-        setMessage(report);
-    } catch (e) { setMessage("⚠️ Connection Error."); } finally { setIsAiLoading(false); }
+        setMessage(report); // This will trigger the useEffect
+    } catch (e) { 
+        setMessage("⚠️ Connection Error."); 
+    } finally { 
+        setThinking(false);
+        setIsAiLoading(false); 
+    }
   };
 
   const handleSendMessage = async () => {
@@ -90,11 +114,16 @@ export const SmartPanel = () => {
     const newMsg: ChatMessage = { role: 'user', content: userQuery };
     setChatMessages([...chatMessages, newMsg]);
     setUserQuery('');
+    
     setIsAiLoading(true);
     try {
         const reply = await analyzeProject([...chatMessages, newMsg], { metrics, land, blocks, currency }, i18n.language);
         setChatMessages(prev => [...prev, { role: 'assistant', content: reply || "Error." }]);
-    } catch (e) { setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); } finally { setIsAiLoading(false); }
+    } catch (e) { 
+        setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); 
+    } finally { 
+        setIsAiLoading(false); 
+    }
   };
 
   const handleSaveProject = () => {
@@ -180,11 +209,11 @@ export const SmartPanel = () => {
              <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
             
             <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-                {/* --- USER LOGGED IN DISPLAY (NEW) --- */}
+                {/* --- USER LOGGED IN DISPLAY --- */}
                 <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
-                   <UserIcon className="w-3 h-3 text-indigo-400" />
-                   <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
-                   <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
+                    <UserIcon className="w-3 h-3 text-indigo-400" />
+                    <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
+                    <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
                 </div>
 
                 <div className="relative">
@@ -356,7 +385,7 @@ export const SmartPanel = () => {
           )}
       </div>
 
-      <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-72' : 'h-16'}`}>
+      <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-96' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
                 <button onClick={() => setZoningModalOpen(true)} className={`h-full px-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-0.5 transition-all group ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 animate-pulse' : 'bg-gray-800 hover:bg-gray-700'}`}>
@@ -380,14 +409,48 @@ export const SmartPanel = () => {
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1"><X className="w-3 h-3" /></button>
                     </div>
                 </div>
+                
+                {/* --- CHAT CONTENT AREA (WITH MARKDOWN) --- */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
                     {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[90%] p-2.5 rounded-2xl text-[11px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none'}`}>{m.content}</div>
+                            <div className={`max-w-[95%] p-3 rounded-2xl text-[11px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-bl-none'}`}>
+                                <ReactMarkdown 
+                                    components={{
+                                        strong: (props) => <span className="font-bold text-indigo-300" {...props} />,
+                                        em: (props) => <span className="italic text-indigo-200" {...props} />,
+                                        ul: (props) => <ul className="list-disc pl-4 my-1 space-y-0.5" {...props} />,
+                                        ol: (props) => <ol className="list-decimal pl-4 my-1 space-y-0.5" {...props} />,
+                                        li: (props) => <li className="pl-0.5" {...props} />,
+                                        h1: (props) => <h3 className="text-sm font-bold text-white mt-2 mb-1 border-b border-gray-600 pb-1" {...props} />,
+                                        h2: (props) => <h4 className="text-xs font-bold text-white mt-2 mb-1" {...props} />,
+                                        h3: (props) => <h5 className="text-[11px] font-bold text-indigo-200 mt-1" {...props} />,
+                                        p: (props) => <p className="mb-2 last:mb-0" {...props} />,
+                                        table: (props) => <div className="overflow-x-auto my-2 rounded border border-gray-600"><table className="w-full text-[10px] text-left" {...props} /></div>,
+                                        thead: (props) => <thead className="bg-gray-700 text-white uppercase font-bold" {...props} />,
+                                        th: (props) => <th className="px-2 py-1 border-b border-gray-600 whitespace-nowrap" {...props} />,
+                                        td: (props) => <td className="px-2 py-1 border-b border-gray-700" {...props} />,
+                                        tr: (props) => <tr className="hover:bg-white/5" {...props} />
+                                    }}
+                                >
+                                    {m.content}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     ))}
+                    
+                    {/* LOADING SPINNER INSIDE CHAT */}
+                    {isAiLoading && (
+                        <div className="flex justify-start">
+                            <div className="bg-gray-800 border border-gray-700 text-gray-400 p-3 rounded-2xl rounded-bl-none flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-indigo-400 animate-spin" />
+                                <span className="text-[10px] animate-pulse">Analyzing...</span>
+                            </div>
+                        </div>
+                    )}
                     <div ref={chatEndRef} />
                 </div>
+
                 <div className="p-2 border-t border-gray-800 bg-gray-900 flex gap-2 shrink-0">
                     <input className="flex-1 bg-gray-800 text-white text-[11px] rounded-lg px-3 py-2 border border-gray-700 focus:border-blue-500 outline-none placeholder-gray-500" placeholder={t('ai.placeholder')} value={userQuery} onChange={(e) => setUserQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} />
                     <button onClick={handleSendMessage} disabled={isAiLoading || !userQuery.trim()} className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 transition-colors"><Send className="w-3.5 h-3.5" /></button>
