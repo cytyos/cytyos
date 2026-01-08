@@ -14,13 +14,12 @@ import {
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
   Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
-  Minus, Loader2
+  Minus, Loader2, ChevronUp
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 type MobileState = 'min' | 'mid' | 'max';
 
-// --- CONFIGURAÇÃO DE MOEDAS (GLOBAL + LATAM) ---
 const CURRENCY_OPTIONS = [
   { code: 'USD', label: 'US Dollar ($)' },
   { code: 'EUR', label: 'Euro (€)' },
@@ -70,20 +69,23 @@ export const SmartPanel = () => {
   
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false); 
-  const [hasUnreadAi, setHasUnreadAi] = useState(false); // <--- ESTADO PARA NOTIFICAÇÃO
+  const [hasUnreadAi, setHasUnreadAi] = useState(false);
   
   const [userQuery, setUserQuery] = useState('');
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Detectar se é mobile para lógica de renderização
+  const isMobile = window.innerWidth < 768;
+  // Flag crítica: Se for mobile E estiver minimizado, esconde o header pesado
+  const isMobileMin = isMobile && mobileState === 'min';
+
   useEffect(() => { if (calculateMetrics) calculateMetrics(); }, [blocks, land]);
   
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
-  // Sync AI Store & Notification
   useEffect(() => {
     if (message) {
-        // Se receber mensagem e chat estiver fechado, marca como não lida
         if (!isChatOpen) setHasUnreadAi(true);
         else setIsAiLoading(false);
 
@@ -94,15 +96,13 @@ export const SmartPanel = () => {
     }
     
     if (thinking) {
-        if (isChatOpen) setIsAiLoading(true); // Só mostra loading se aberto
+        if (isChatOpen) setIsAiLoading(true);
     }
   }, [message, thinking, isChatOpen]);
 
-  // Limpa notificação ao abrir o chat
   useEffect(() => {
       if (isChatOpen) {
           setHasUnreadAi(false);
-          // Se abriu e estava pensando, garante que o loading apareça
           if (thinking) setIsAiLoading(true);
       }
   }, [isChatOpen, thinking]);
@@ -134,18 +134,13 @@ export const SmartPanel = () => {
                   ...chatMessages, 
                   { 
                       role: 'user', 
-                      content: `[SYSTEM INSTRUCTION]: Based on the project data and our entire discussion above, write a professional **Executive Summary** for a PDF report.
-                      Requirements:
-                      1. Synthesize the key points discussed (e.g., Financial Viability, Zoning issues, Efficiency).
-                      2. Do NOT copy-paste the chat. Write it as a formal conclusion/recommendation.
-                      3. Use clear paragraphs. No complex tables.
-                      4. Language: ${i18n.language === 'pt' ? 'Portuguese' : 'English'}.
-                      5. Max length: 400 words.`
+                      content: `[SYSTEM INSTRUCTION]: Based on the project data and our entire discussion above, write a professional **Executive Summary** for a PDF report. 
+                      Synthesize key points (Financial, Zoning, Strategic). Do NOT copy-paste. Max 400 words. Language: ${i18n.language === 'pt' ? 'Portuguese' : 'English'}.`
                   }
               ];
               executiveSummary = await analyzeProject(summaryPrompt as any, { metrics, land, blocks, currency }, i18n.language);
           } catch (aiError) {
-              console.warn("AI Summary generation failed, using fallback.", aiError);
+              console.warn("AI Summary generation failed", aiError);
               executiveSummary = t('pdf_fallback_summary');
           }
 
@@ -174,10 +169,19 @@ export const SmartPanel = () => {
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
   const changeCurrency = (curr: string) => { setCurrency(curr); setIsCurrencyMenuOpen(false); };
-  const cycleMobileState = () => { if (window.innerWidth < 768) setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); };
   
-  // UX Mobile: min=apenas header, mid=metade, max=quase tudo
-  const getMobileHeightClass = () => mobileState === 'mid' ? 'h-[50vh]' : mobileState === 'max' ? 'h-[90vh]' : 'h-[140px]'; 
+  // Função para controlar estados do painel
+  const cycleMobileState = () => { 
+      if (!isMobile) return;
+      setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
+  };
+  
+  // UX Mobile Ajustada: No modo 'min', a altura é mínima (apenas barra inferior)
+  const getMobileHeightClass = () => {
+      if (mobileState === 'min') return 'h-[85px]'; // Altura apenas para a barra de botões
+      if (mobileState === 'mid') return 'h-[50vh]';
+      return 'h-[95vh]';
+  };
   
   const handleMainAiButtonClick = async () => {
     if (isChatOpen) return;
@@ -192,7 +196,7 @@ export const SmartPanel = () => {
     setIsChatOpen(true);
     setThinking(true); 
     setIsAiLoading(true); 
-    if(window.innerWidth < 768) setMobileState('max'); 
+    if(isMobile) setMobileState('max'); 
     
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
@@ -297,194 +301,211 @@ export const SmartPanel = () => {
     <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 pointer-events-auto ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
-      {/* HEADER WITH LOGO AND USER INFO */}
-      <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative cursor-pointer md:cursor-default" onClick={cycleMobileState}>
-        <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-700 rounded-full opacity-50"></div>
+      {/* DRAG HANDLE PARA MOBILE */}
+      <div className="md:hidden w-full flex justify-center pt-2 pb-1 cursor-pointer bg-gray-900 rounded-t-3xl border-b border-gray-800/50" onClick={cycleMobileState}>
+          <div className="w-12 h-1.5 bg-gray-700 rounded-full opacity-60"></div>
+      </div>
 
-        <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
-             <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
-            
-            <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-                <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
-                    <UserIcon className="w-3 h-3 text-indigo-400" />
-                    <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
-                    <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
-                </div>
+      {/* --- HEADER (LOGO, USER, STATS) --- */}
+      {/* LÓGICA DE UX: Se for Mobile e estiver no estado MIN, ESCONDE este bloco inteiro */}
+      {!isMobileMin && (
+          <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
+            <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
+                <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
+                
+                <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
+                        <UserIcon className="w-3 h-3 text-indigo-400" />
+                        <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
+                        <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
+                    </div>
 
-                <div className="relative">
-                    <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
-                        <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
-                    </button>
-                    {isCurrencyMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
-                             <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
-                             {CURRENCY_OPTIONS.map(c => (
-                                <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
-                                    <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
-                                    <span className="text-gray-500 text-[10px]">{c.label}</span>
-                                </button>
-                             ))}
-                        </div>
-                    )}
-                </div>
-                <div className="relative">
-                    <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
-                        <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
-                    </button>
-                    {isLangMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100]">
-                            {['en','pt','es','fr','zh'].map(lang => <button key={lang} onClick={() => changeLanguage(lang)} className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800 last:border-0 uppercase">{lang}</button>)}
-                        </div>
-                    )}
-                </div>
-                <div className="flex gap-1">
-                    <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
-                    <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
+                    {/* MOEDAS */}
+                    <div className="relative">
+                        <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
+                            <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
+                        </button>
+                        {isCurrencyMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
+                                <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
+                                {CURRENCY_OPTIONS.map(c => (
+                                    <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
+                                        <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
+                                        <span className="text-gray-500 text-[10px]">{c.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* IDIOMA */}
+                    <div className="relative">
+                        <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
+                            <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
+                        </button>
+                        {isLangMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100]">
+                                {['en','pt','es','fr','zh'].map(lang => <button key={lang} onClick={() => changeLanguage(lang)} className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800 last:border-0 uppercase">{lang}</button>)}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* SAVE/LOAD */}
+                    <div className="flex gap-1">
+                        <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
+                        <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        {activeTab !== 'settings' && (
-            <>
-                <div className="flex justify-between items-start mb-3">
-                    <div>
-                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
-                        <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
+            
+            {activeTab !== 'settings' && (
+                <>
+                    <div className="flex justify-between items-start mb-3">
+                        <div>
+                            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
+                            <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
+                            <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
-                        <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+                    <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+                        <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
                     </div>
-                </div>
-                <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-                    <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-                </div>
-            </>
-        )}
-      </div>
+                </>
+            )}
+          </div>
+      )}
 
+      {/* --- CONTENT AREA (Também esconde no Min) --- */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
-          {activeTab === 'editor' && (
-            <>
-                {blocks.length > 0 ? (
+          {!isMobileMin && (
+              <>
+                {activeTab === 'editor' && (
                     <>
-                        <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
-                            <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
-                                    {metrics.isFarValid && metrics.isOccupancyValid ? <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> {t('compliance.legal')}</span> : <span className="text-[10px] text-red-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {t('compliance.violation')}</span>}
+                        {blocks.length > 0 ? (
+                            <>
+                                <div className="px-4 py-3 bg-[#0f111a] border-b border-gray-800 shrink-0 shadow-md z-10">
+                                    <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><Scale className="w-3 h-3" /> {t('compliance.title')}</h3>
+                                            {metrics.isFarValid && metrics.isOccupancyValid ? <span className="text-[10px] text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> {t('compliance.legal')}</span> : <span className="text-[10px] text-red-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {t('compliance.violation')}</span>}
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.far')}</span><span className={metrics.isFarValid ? 'text-white' : 'text-red-400 font-bold'}>{dec(metrics.far)} / {dec(land.maxFar)}</span></div>
+                                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isFarValid ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.far / land.maxFar) * 100, 100)}%` }} /></div>
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.occ')}</span><span className={metrics.isOccupancyValid ? 'text-white' : 'text-red-400 font-bold'}>{num(metrics.occupancy)}% / {num(land.maxOccupancy)}%</span></div>
+                                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isOccupancyValid ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.occupancy / land.maxOccupancy) * 100, 100)}%` }} /></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.far')}</span><span className={metrics.isFarValid ? 'text-white' : 'text-red-400 font-bold'}>{dec(metrics.far)} / {dec(land.maxFar)}</span></div>
-                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isFarValid ? 'bg-blue-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.far / land.maxFar) * 100, 100)}%` }} /></div>
+
+                                <div className="p-4 space-y-3 pb-24 md:pb-4">
+                                    {blocks.map((block) => (
+                                        <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
+                                            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
+                                                <div className="flex items-center gap-2 w-full group/name relative mr-2">
+                                                    <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
+                                                    <input className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" value={block.name} onChange={(e) => updateBlock(block.id, { name: e.target.value })} />
+                                                    <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
+                                                </div>
+                                                <div className="flex gap-1 shrink-0">
+                                                    <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3 pl-1">
+                                                    <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
+                                                        {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                                    </select>
+                                                    <div>
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
+                                                            <input 
+                                                                type="number" 
+                                                                step="0.01" 
+                                                                value={block.height} 
+                                                                onChange={(e) => updateBlock(block.id, { height: parseFloat(e.target.value) })}
+                                                                className="text-[10px] text-blue-300 bg-transparent border-b border-gray-700 w-12 text-right focus:border-blue-500 outline-none"
+                                                            />
+                                                        </div>
+                                                        <input type="range" min="3" max="150" step="0.1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
+                                                    </div>
+                                                    {block.isCustom && (
+                                                        <div className="p-2 bg-black/20 rounded border border-gray-700/50">
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
+                                                                <input 
+                                                                    type="number" 
+                                                                    step="0.01" 
+                                                                    value={block.setback} 
+                                                                    onChange={(e) => handleSetbackChange(block.id, parseFloat(e.target.value))}
+                                                                    className="text-[10px] text-yellow-400 bg-transparent border-b border-gray-700 w-12 text-right focus:border-yellow-500 outline-none"
+                                                                />
+                                                            </div>
+                                                            <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div>
-                                    <div className="flex justify-between text-[10px] mb-1"><span className="text-gray-400">{t('compliance.occ')}</span><span className={metrics.isOccupancyValid ? 'text-white' : 'text-red-400 font-bold'}>{num(metrics.occupancy)}% / {num(land.maxOccupancy)}%</span></div>
-                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full ${metrics.isOccupancyValid ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min((metrics.occupancy / land.maxOccupancy) * 100, 100)}%` }} /></div>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
+                                <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]"><MapPin className="w-8 h-8 text-indigo-400" /></div>
+                                <div className="space-y-2 max-w-[240px]">
+                                    <h3 className="text-sm font-bold text-white tracking-wide">{t('onboarding.title')}</h3>
+                                    <p className="text-[11px] text-gray-400 leading-relaxed"><Trans i18nKey="onboarding.text" components={{ 1: <span className="text-indigo-400 font-bold" /> }} /></p>
+                                </div>
+                                <div className="pt-2 animate-bounce opacity-50"><ChevronUp className="w-4 h-4 text-gray-600" /></div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {activeTab === 'financial' && (
+                    <div className="p-4 space-y-6 pb-24 md:pb-4">
+                        <div className="space-y-2">
+                            <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
+                            <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                                    <div>
+                                        <label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.onerousGrant')}</label>
+                                        <input 
+                                            type="number" 
+                                            value={land.additionalCosts || 0}
+                                            onChange={(e) => updateLand({ additionalCosts: Number(e.target.value) })} 
+                                            className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" 
+                                        />
+                                    </div>
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
+                                    <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.build')}</label><input type="number" value={land.buildCost} onChange={(e) => updateLand({ buildCost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
                                 </div>
                             </div>
                         </div>
-
-                        <div className="p-4 space-y-3 pb-24 md:pb-4">
-                            {blocks.map((block) => (
-                                <div key={block.id} className={`p-3 rounded-xl border transition-all ${block.type === 'podium' ? 'bg-indigo-900/10 border-indigo-500/30' : 'bg-gray-800/40 border-gray-700'}`}>
-                                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/30">
-                                        <div className="flex items-center gap-2 w-full group/name relative mr-2">
-                                            <Layers className={`w-3.5 h-3.5 shrink-0 ${block.type === 'podium' ? 'text-indigo-400' : 'text-blue-400'}`} />
-                                            <input className="bg-transparent text-white font-medium text-xs w-full outline-none pr-6 focus:bg-gray-800/50 rounded px-1 transition-colors" value={block.name} onChange={(e) => updateBlock(block.id, { name: e.target.value })} />
-                                            <Edit2 className="w-2.5 h-2.5 text-gray-500 absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/name:opacity-100 pointer-events-none" />
-                                        </div>
-                                        <div className="flex gap-1 shrink-0">
-                                            <button onClick={() => duplicateBlock(block.id)} className="text-gray-500 hover:text-white p-1"><Copy className="w-3.5 h-3.5" /></button>
-                                            <button onClick={() => removeBlock(block.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 pl-1">
-                                            <select value={block.usage} onChange={(e) => updateBlock(block.id, { usage: e.target.value as BlockUsage })} className="w-full bg-gray-900/80 border border-gray-700 text-[10px] text-gray-300 rounded p-1.5 outline-none">
-                                                {USAGE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                            </select>
-                                            <div>
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-[10px] text-gray-500">{t('blocks.height')} ({Math.floor(block.height/3)} fl)</span>
-                                                    <input 
-                                                        type="number" 
-                                                        step="0.01" 
-                                                        value={block.height} 
-                                                        onChange={(e) => updateBlock(block.id, { height: parseFloat(e.target.value) })}
-                                                        className="text-[10px] text-blue-300 bg-transparent border-b border-gray-700 w-12 text-right focus:border-blue-500 outline-none"
-                                                    />
-                                                </div>
-                                                <input type="range" min="3" max="150" step="0.1" value={block.height} onChange={(e) => updateBlock(block.id, { height: Number(e.target.value) })} className="w-full h-1 bg-gray-700 rounded appearance-none accent-blue-500" />
-                                            </div>
-                                            {block.isCustom && (
-                                                <div className="p-2 bg-black/20 rounded border border-gray-700/50">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <span className="flex items-center gap-1 text-[10px] text-gray-400"><ArrowRightFromLine className="w-3 h-3"/> {t('blocks.setback')}</span>
-                                                        <input 
-                                                            type="number" 
-                                                            step="0.01" 
-                                                            value={block.setback} 
-                                                            onChange={(e) => handleSetbackChange(block.id, parseFloat(e.target.value))}
-                                                            className="text-[10px] text-yellow-400 bg-transparent border-b border-gray-700 w-12 text-right focus:border-yellow-500 outline-none"
-                                                        />
-                                                    </div>
-                                                    <input type="range" min="0" max="20" step="0.1" value={block.setback} onChange={(e) => handleSetbackChange(block.id, Number(e.target.value))} className="w-full h-1 bg-gray-700 rounded appearance-none accent-yellow-500" />
-                                                </div>
-                                            )}
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="p-4 bg-black/20 rounded-xl space-y-2">
+                            <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.nsa')}</span><span className="text-white">{fmtArea(metrics.nsa)}</span></div>
+                            <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.revenue')}</span><span className="text-white">{money(metrics.revenue)}</span></div>
+                            <div className="flex justify-between text-[10px] text-red-400/70"><span>{t('results.totalCost')}</span><span>{money(metrics.totalCost)}</span></div>
+                            <div className="h-px bg-gray-800 my-2"></div>
+                            <div className="flex justify-between text-xs font-bold text-white"><span>{t('results.netProfit')}</span><span className="text-green-400">{money(metrics.grossProfit)}</span></div>
                         </div>
-                    </>
-                ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 opacity-70 min-h-[300px]">
-                         <div className="p-4 bg-gray-800/30 rounded-full border border-gray-700/50 shadow-[0_0_20px_rgba(0,0,0,0.2)]"><MapPin className="w-8 h-8 text-indigo-400" /></div>
-                         <div className="space-y-2 max-w-[240px]">
-                            <h3 className="text-sm font-bold text-white tracking-wide">{t('onboarding.title')}</h3>
-                            <p className="text-[11px] text-gray-400 leading-relaxed"><Trans i18nKey="onboarding.text" components={{ 1: <span className="text-indigo-400 font-bold" /> }} /></p>
-                         </div>
-                         <div className="pt-2 animate-bounce opacity-50"><ChevronDown className="w-4 h-4 text-gray-600" /></div>
                     </div>
                 )}
-            </>
-          )}
-
-          {activeTab === 'financial' && (
-             <div className="p-4 space-y-6 pb-24 md:pb-4">
-                <div className="space-y-2">
-                    <h3 className="text-[10px] uppercase font-bold text-gray-500">{t('assumptions.title')}</h3>
-                    <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-700 space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxFar')}</label><input type="number" step="0.1" value={land.maxFar} onChange={(e) => updateLand({ maxFar: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.maxOcc')}</label><input type="number" value={land.maxOccupancy} onChange={(e) => updateLand({ maxOccupancy: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landArea')}</label><input type="number" value={land.area} onChange={(e) => updateLand({ area: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.landCost')}</label><input type="number" value={land.cost} onChange={(e) => updateLand({ cost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            <div>
-                                <label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.onerousGrant')}</label>
-                                <input 
-                                    type="number" 
-                                    value={land.additionalCosts || 0}
-                                    onChange={(e) => updateLand({ additionalCosts: Number(e.target.value) })} 
-                                    className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" 
-                                />
-                            </div>
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.sales')}</label><input type="number" value={land.sellPrice} onChange={(e) => updateLand({ sellPrice: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                            <div><label className="text-[9px] text-gray-400 block mb-1">{t('assumptions.build')}</label><input type="number" value={land.buildCost} onChange={(e) => updateLand({ buildCost: Number(e.target.value) })} className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-white" /></div>
-                        </div>
-                    </div>
-                </div>
-                <div className="p-4 bg-black/20 rounded-xl space-y-2">
-                    <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.nsa')}</span><span className="text-white">{fmtArea(metrics.nsa)}</span></div>
-                    <div className="flex justify-between text-[10px] text-gray-400"><span>{t('results.revenue')}</span><span className="text-white">{money(metrics.revenue)}</span></div>
-                    <div className="flex justify-between text-[10px] text-red-400/70"><span>{t('results.totalCost')}</span><span>{money(metrics.totalCost)}</span></div>
-                    <div className="h-px bg-gray-800 my-2"></div>
-                    <div className="flex justify-between text-xs font-bold text-white"><span>{t('results.netProfit')}</span><span className="text-green-400">{money(metrics.grossProfit)}</span></div>
-                </div>
-             </div>
+              </>
           )}
       </div>
 
+      {/* --- BARRA INFERIOR (SEMPRE VISIVEL) --- */}
       <div className={`border-t border-gray-800 bg-gray-900 transition-all duration-300 ease-in-out ${isChatOpen ? 'h-96' : 'h-16'}`}>
         {!isChatOpen && (
              <div className="p-3 flex gap-2 h-full items-center">
@@ -493,10 +514,10 @@ export const SmartPanel = () => {
                     <span className={`text-[8px] font-bold uppercase ${!urbanContext ? 'text-indigo-300' : 'text-gray-500 group-hover:text-white'}`}>{t('header.zoning')}</span>
                 </button>
 
-                {/* BOTÃO PRINCIPAL IA (Com Notificação) */}
+                {/* BOTÃO PRINCIPAL IA */}
                 <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="relative flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
-                    {/* BOLINHA VERMELHA DE NOTIFICAÇÃO */}
+                    {/* BOLINHA VERMELHA NOTIFICAÇÃO */}
                     {hasUnreadAi && (
                         <span className="absolute -top-1 -right-1 flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -505,7 +526,7 @@ export const SmartPanel = () => {
                     )}
                 </button>
                 
-                {/* BOTÃO DOWNLOAD (Com Loading) */}
+                {/* BOTÃO DOWNLOAD */}
                 <button 
                     onClick={handleExportPDF} 
                     disabled={isPdfLoading}
@@ -519,19 +540,17 @@ export const SmartPanel = () => {
 
         {isChatOpen && (
             <div className="flex flex-col h-full">
+                {/* Cabeçalho Chat */}
                 <div className="px-3 py-2 bg-gray-800/50 border-b border-gray-700 flex justify-between items-center shrink-0">
                     <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1"><Bot className="w-3 h-3" /> {t('ai.insight')}</span>
                     <div className="flex gap-2">
                         <button onClick={() => setZoningModalOpen(true)} className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-colors border ${!urbanContext ? 'bg-indigo-900/30 border-indigo-500/50 text-indigo-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-700'}`}><FileText className="w-3 h-3" /> {t('header.zoning')}</button>
-                        
-                        {/* BOTÃO MINIMIZAR */}
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Minimize"><Minus className="w-3 h-3" /></button>
-                        
-                        {/* BOTÃO FECHAR */}
                         <button onClick={() => setIsChatOpen(false)} className="text-gray-500 hover:text-white p-1" title="Close"><X className="w-3 h-3" /></button>
                     </div>
                 </div>
                 
+                {/* Corpo Chat */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-gray-900/50">
                     {chatMessages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
