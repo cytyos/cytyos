@@ -17,7 +17,7 @@ const resources = {
       usage: { residential: "Residential", corporate: "Corporate Office", retail: "Retail / Mall", hotel: "Hotel", parking: "Parking Garage", amenities: "Amenities" },
       currency: { main: "Major", latam: "Latam (Pesos)", global: "Global" },
       
-      // FOOTER EN
+      // FOOTER
       footer: { disclaimer: "Cytyos is a decision support tool. AI results may vary. Always consult a technical professional." },
       
       map: { search_placeholder: "Search location...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
@@ -54,7 +54,7 @@ const resources = {
       usage: { residential: "Residencial", corporate: "Corporativo", retail: "Varejo / Lojas", hotel: "Hotel", parking: "Edifício Garagem", amenities: "Áreas Comuns" },
       currency: { main: "Principais", latam: "Latam (Pesos)", global: "Global" },
       
-      // FOOTER PT
+      // FOOTER
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
       
       map: { search_placeholder: "Buscar local...", search_provider: "Busca via Mapbox", sat: "Sat", streets: "Mapa", draw: "Desenhar", clear: "Limpar", delete_confirm_title: "Apagar desenho?", confirm: "Confirmar", cancel: "Cancelar" },
@@ -82,7 +82,7 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
       
-      // NEW FOOTER ES
+      // FOOTER
       footer: { disclaimer: "Cytyos es una herramienta de apoyo a la decisión. Los resultados de la IA pueden variar. Consulte siempre a un profesional técnico." },
 
       landing: {
@@ -106,7 +106,7 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
 
-      // NEW FOOTER FR
+      // FOOTER
       footer: { disclaimer: "Cytyos est un outil d'aide à la décision. Les résultats de l'IA peuvent varier. Consultez toujours un professionnel technique." },
 
       landing: {
@@ -130,7 +130,7 @@ const resources = {
     translation: {
       app: { title: "Cytyos Beta" },
       
-      // NEW FOOTER ZH
+      // FOOTER
       footer: { disclaimer: "Cytyos 是一个决策支持工具。AI 结果可能会有所不同。请务必咨询专业技术人员。" },
 
       landing: {
