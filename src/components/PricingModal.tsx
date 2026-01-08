@@ -3,19 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2 } from 'lucide-react';
 import { couponService } from '../services/couponService';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useAuth } from '../contexts/AuthContext'; // <--- CORREÇÃO: Importamos o Auth
+import { useAuth } from '../contexts/AuthContext';
 
 // ==============================================================================
-// 1. SEUS LINKS DO STRIPE
+// 1. SEUS LINKS DO STRIPE (OFICIAIS - NUMEROLOGIA 8)
 // ==============================================================================
 const STRIPE_LINKS = {
-  monthly: "https://buy.stripe.com/test_cNidR8aeT7blduM3qLdjO02", 
-  yearly: "https://buy.stripe.com/test_8x28wO3QvgLV62kf9tdjO01", // Link de $297
-  pdfOnly: "https://buy.stripe.com/test_28E6oGfzdcvFbmE2mHdjO03"
+  monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04", // $29.60
+  yearly: "https://buy.stripe.com/test_4gMeVc3QveDN3Ucf9tdjO05", // $296.00
+  pdfOnly: "https://buy.stripe.com/test_cNicN4aeTanx8as2mHdjO06"  // $17.00
 };
 
 // 2. CONFIGURAÇÃO DE CHAVES HARDCODED (FALLBACK)
-// Mantemos essas caso o banco falhe ou para chaves especiais offline (Master Keys)
 const OFFLINE_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; label?: string }> = {
   'CYTYOS-MASTER-2025': { type: 'UNLIMITED', label: 'Founder Access' },
 };
@@ -27,8 +26,8 @@ interface PricingModalProps {
 
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const navigate = useNavigate();
-  const { setPaywallOpen } = useSettingsStore(); // Para fechar o modal globalmente
-  const { user } = useAuth(); // <--- CORREÇÃO: Pegamos o usuário para rastrear o uso
+  const { setPaywallOpen } = useSettingsStore();
+  const { user } = useAuth(); // Importante para rastrear quem usou o cupom
   
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
@@ -49,7 +48,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     if (url && url.startsWith('http')) {
       window.open(url, '_blank');
     } else {
-      alert("Payment link error.");
+      alert("Payment link error. Check console.");
     }
   };
 
@@ -62,12 +61,12 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     const code = accessKey.toUpperCase().trim();
 
     try {
-        // 1. Verifica Chaves Offline Primeiro (Master Keys)
+        // 1. Verifica Chaves Offline
         if (OFFLINE_KEYS[code]) {
             const keyData = OFFLINE_KEYS[code];
             if (keyData.type === 'UNLIMITED') {
                 localStorage.setItem('cytyos_license_type', 'VIP');
-                localStorage.removeItem('cytyos_trial_end'); // Limpa qualquer trial
+                localStorage.removeItem('cytyos_trial_end');
                 setSuccessMsg(`Welcome Founder! Unlocked forever.`);
                 setTimeout(() => { 
                     setPaywallOpen(false); 
@@ -77,26 +76,20 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             }
         }
 
-        // 2. Verifica Cupons do Banco de Dados (Supabase)
+        // 2. Verifica Cupons do Banco (Influencers)
         try {
-            // CORREÇÃO: Usamos validateAndTrack passando o email do usuário
             const coupon = await couponService.validateAndTrack(code, user?.email);
-            
-            // Calcula Expiração
             const trialEndsAt = Date.now() + (coupon.duration_minutes * 60 * 1000);
             
-            // Salva no LocalStorage
             localStorage.setItem('cytyos_trial_end', trialEndsAt.toString());
             
             setSuccessMsg(`Trial Activated! ${coupon.duration_minutes}min access granted.`);
             
             setTimeout(() => { 
-                setPaywallOpen(false); // Fecha o Paywall Global
+                setPaywallOpen(false);
                 onClose(); 
             }, 1500);
-            
         } catch (dbError: any) {
-            // Mostra o erro vindo do serviço (ex: "Cupom inválido" ou "Já utilizado")
             setError(dbError.message || 'Invalid or Expired Coupon');
         }
 
@@ -138,7 +131,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
 
             <div className="space-y-5 mt-6">
               <Feature text="Unlimited AI Feasibility Studies" highlighted />
-              <Feature text="Lock in $297/yr forever" highlighted />
+              <Feature text="Lock in $296/yr forever" highlighted />
               <Feature text="Grandfathered into v1.0 features" />
               <Feature text="Priority Founder Support" />
             </div>
@@ -178,7 +171,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               <div className="text-center md:text-left">
                 <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? 'Standard Access' : 'Founder Annual'}</h4>
                 <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? 'Cancel anytime.' : 'Secure v1.0 access today.'}</p>
-                {billingCycle === 'yearly' && (<div className="mt-2 inline-block bg-green-500/10 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-500/20">SAVE $998 vs Future Price</div>)}
+                {/* SAVE CALCULATION: $1295 - $296 = $999 */}
+                {billingCycle === 'yearly' && (<div className="mt-2 inline-block bg-green-500/10 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-500/20">SAVE $999 vs Future Price</div>)}
               </div>
 
               <div className="text-center md:text-right">
@@ -191,14 +185,14 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                      </div>
                 )}
                 <div className="flex items-baseline gap-1 justify-center md:justify-end">
-                    <span className="text-4xl font-extrabold text-white tracking-tight">${billingCycle === 'monthly' ? '27' : '297'}</span>
+                    <span className="text-4xl font-extrabold text-white tracking-tight">${billingCycle === 'monthly' ? '29.60' : '296'}</span>
                     <span className="text-gray-500 text-sm font-medium">{billingCycle === 'monthly' ? '/mo' : '/year'}</span>
                 </div>
               </div>
             </div>
 
             <div className={`mt-6 w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${billingCycle === 'yearly' ? 'bg-white text-indigo-900 hover:bg-gray-100 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}>
-                {billingCycle === 'yearly' ? 'Lock in Founder Price ($297)' : 'Subscribe Monthly'}
+                {billingCycle === 'yearly' ? 'Lock in Founder Price ($296)' : 'Subscribe Monthly'}
                 <Zap className={`w-4 h-4 ${billingCycle === 'yearly' ? 'fill-indigo-900' : 'fill-white'}`} />
             </div>
           </div>
