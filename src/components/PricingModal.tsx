@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle } from 'lucide-react';
+import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2 } from 'lucide-react';
+import { couponService } from '../services/couponService'; // <--- NEW IMPORT
+import { useSettingsStore } from '../stores/settingsStore'; // <--- NEW IMPORT
 
 // ==============================================================================
 // 1. SEUS LINKS DO STRIPE
@@ -11,12 +13,10 @@ const STRIPE_LINKS = {
   pdfOnly: "https://buy.stripe.com/test_28E6oGfzdcvFbmE2mHdjO03"
 };
 
-// 2. CONFIGURAÇÃO DE CHAVES
-const ACCESS_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; refId?: string; label?: string }> = {
+// 2. CONFIGURAÇÃO DE CHAVES HARDCODED (FALLBACK)
+// Mantemos essas caso o banco falhe ou para chaves especiais offline
+const OFFLINE_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; label?: string }> = {
   'CYTYOS-MASTER-2025': { type: 'UNLIMITED', label: 'Founder Access' },
-  'REDDIT-BETA': { type: 'TRIAL', durationHours: 1, label: 'Reddit Community' },
-  'LAUNCH-DAY': { type: 'TRIAL', durationHours: 1, label: 'Launch Event' },
-  'BETA': { type: 'TRIAL', durationHours: 1, label: 'Tester' },
 };
 
 interface PricingModalProps {
@@ -26,9 +26,12 @@ interface PricingModalProps {
 
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const navigate = useNavigate();
+  const { setPaywallOpen } = useSettingsStore(); // Need this to close modal globally
+  
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isValidating, setIsValidating] = useState(false); // Loading state
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   if (!isOpen) return null;
@@ -48,29 +51,56 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     }
   };
 
-  const handleValidateKey = () => {
+  const handleValidateKey = async () => {
     setError('');
     setSuccessMsg('');
     if (!accessKey) return;
-
+    
+    setIsValidating(true);
     const code = accessKey.toUpperCase().trim();
-    const keyData = ACCESS_KEYS[code];
 
-    if (!keyData) {
-      setError('Invalid Access Key');
-      return;
+    try {
+        // 1. Check Offline Keys First (Master Keys)
+        if (OFFLINE_KEYS[code]) {
+            const keyData = OFFLINE_KEYS[code];
+            if (keyData.type === 'UNLIMITED') {
+                localStorage.setItem('cytyos_license_type', 'VIP');
+                localStorage.removeItem('cytyos_trial_end'); // Clear any trial
+                setSuccessMsg(`Welcome Founder! Unlocked forever.`);
+                setTimeout(() => { 
+                    setPaywallOpen(false); 
+                    onClose(); 
+                }, 1500);
+                return;
+            }
+        }
+
+        // 2. Check Database Coupons (Supabase)
+        try {
+            const coupon = await couponService.validate(code);
+            
+            // Calculate Expiration
+            const trialEndsAt = Date.now() + (coupon.duration_minutes * 60 * 1000);
+            
+            // Save to LocalStorage
+            localStorage.setItem('cytyos_trial_end', trialEndsAt.toString());
+            
+            setSuccessMsg(`Trial Activated! ${coupon.duration_minutes}min access granted.`);
+            
+            setTimeout(() => { 
+                setPaywallOpen(false); // Close Global Paywall
+                onClose(); 
+            }, 1500);
+            
+        } catch (dbError) {
+            setError('Invalid or Expired Coupon');
+        }
+
+    } catch (err) {
+        setError('Validation Error');
+    } finally {
+        setIsValidating(false);
     }
-
-    if (keyData.type === 'UNLIMITED') {
-      localStorage.setItem('cytyos_license_type', 'VIP');
-      localStorage.removeItem('cytyos_trial_start');
-      setSuccessMsg(`Welcome Founder! Unlocked forever.`);
-    } else {
-      localStorage.setItem('cytyos_trial_start', Date.now().toString());
-      setSuccessMsg(`Trial Activated: ${keyData.durationHours}h access granted.`);
-    }
-
-    setTimeout(() => { onClose(); }, 1500);
   };
 
   return (
@@ -93,7 +123,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               Secure the <br/> <span className="text-indigo-400">Beta Price</span>
             </h3>
             
-            {/* CORREÇÃO 1: Texto do Alerta alinhado */}
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 my-4">
                 <p className="text-yellow-200/90 text-xs flex items-start gap-2 leading-relaxed">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -152,7 +181,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                 {billingCycle === 'yearly' && (
                      <div className="flex flex-col items-end">
                         <span className="text-xs text-gray-500 font-medium">v1.0 Price</span>
-                        {/* CORREÇÃO 2: Preço riscado maior */}
                         <div className="text-gray-400 text-lg line-through font-medium decoration-red-500/50 mb-1">
                             $1,295
                         </div>
@@ -171,17 +199,30 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             </div>
           </div>
 
+          {/* --- COUPON SECTION --- */}
           <div className="mt-auto bg-black/40 rounded-xl p-4 border border-white/5 flex flex-col gap-3">
              <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-400 font-medium flex items-center gap-2"><Lock className="w-3 h-3 text-emerald-500"/> Have an access key?</p>
                 <span className="text-[9px] text-gray-600 uppercase tracking-widest">Enterprise / Beta</span>
              </div>
              <div className="flex gap-2">
-                <input value={accessKey} onChange={(e) => setAccessKey(e.target.value)} placeholder="ENTER KEY" className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 uppercase transition-all placeholder:text-gray-700" />
-                <button onClick={handleValidateKey} className="px-4 py-2 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white font-bold rounded-lg text-xs transition-colors">Validate</button>
+                <input 
+                    value={accessKey} 
+                    onChange={(e) => setAccessKey(e.target.value)} 
+                    placeholder="ENTER COUPON CODE" 
+                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 uppercase transition-all placeholder:text-gray-700" 
+                    onKeyDown={(e) => e.key === 'Enter' && handleValidateKey()}
+                />
+                <button 
+                    onClick={handleValidateKey} 
+                    disabled={isValidating || !accessKey}
+                    className="px-4 py-2 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white font-bold rounded-lg text-xs transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                    {isValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Validate'}
+                </button>
              </div>
-             {error && <p className="text-red-400 text-[10px] flex items-center gap-1"><Shield className="w-3 h-3"/> {error}</p>}
-             {successMsg && <p className="text-emerald-400 text-[10px] flex items-center gap-1"><Check className="w-3 h-3"/> {successMsg}</p>}
+             {error && <p className="text-red-400 text-[10px] flex items-center gap-1 animate-in fade-in slide-in-from-top-1"><Shield className="w-3 h-3"/> {error}</p>}
+             {successMsg && <p className="text-emerald-400 text-[10px] flex items-center gap-1 animate-in fade-in slide-in-from-top-1"><Check className="w-3 h-3"/> {successMsg}</p>}
           </div>
         </div>
       </div>
