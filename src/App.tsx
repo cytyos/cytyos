@@ -17,10 +17,8 @@ const MapControls = React.lazy(() => import('./components/MapControls').then(mod
 const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 
-// 1. IMPORTANDO A PÁGINA DE PRIVACIDADE
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-// --- CONSTANTES ---
 const FREE_USAGE_MS = 3 * 60 * 1000; // 3 MINUTOS
 
 // --- LOADING SCREEN ---
@@ -51,62 +49,54 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL (CORRIGIDO) ---
+// --- PAYWALL CONTROL ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Inicializa timer na primeira visita
-    if (!localStorage.getItem('cytyos_first_visit')) {
-        localStorage.setItem('cytyos_first_visit', Date.now().toString());
+    // USA SESSION STORAGE: Reseta ao fechar o navegador
+    if (!sessionStorage.getItem('cytyos_first_visit')) {
+        sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
     }
 
     const checkAccess = () => {
-        // VIP ou Trial Ativo? Libera.
         if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
         const trialEnd = localStorage.getItem('cytyos_trial_end');
         if (trialEnd && Date.now() < Number(trialEnd)) return;
         
-        // Timer de 3 min
-        const firstVisit = localStorage.getItem('cytyos_first_visit');
+        // Verifica Sessão
+        const firstVisit = sessionStorage.getItem('cytyos_first_visit');
         if (firstVisit) {
             const elapsed = Date.now() - Number(firstVisit);
-            if (elapsed < FREE_USAGE_MS) return; // Ainda tem tempo
+            if (elapsed < FREE_USAGE_MS) return; 
         }
 
-        // Se chegou aqui, bloqueia.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
     };
 
     const interval = setInterval(checkAccess, 2000); 
-    checkAccess(); // Checa ao montar
-    
+    checkAccess(); 
     return () => clearInterval(interval);
-  }, [setPaywallOpen, isPaywallOpen]); // Dependências corrigidas
+  }, [setPaywallOpen, isPaywallOpen]); 
 
-  // --- LÓGICA DE FECHAMENTO CORRIGIDA ---
+  // --- LÓGICA DE FECHAMENTO SEGURA ---
   const handleCloseAttempt = () => {
-      // 1. Verifica status ANTES de fechar
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
       const hasActiveCoupon = trialEnd && Date.now() < Number(trialEnd);
       
-      const firstVisit = localStorage.getItem('cytyos_first_visit');
+      const firstVisit = sessionStorage.getItem('cytyos_first_visit');
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      // 2. Se o usuário NÃO tem permissão para continuar...
+      // Se estourou o tempo e não pagou
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
-          // IMPORTANTE: NÃO fechamos o modal visualmente (setPaywallOpen(false)).
-          // Nós forçamos a saída imediata para a Home.
-          // Isso evita que o modal feche e reabra (efeito duplo/piscar).
-          navigate('/'); 
+          navigate('/'); // Manda para Home (dá de cara com a Landing Page)
       } else {
-          // 3. Se ele tem permissão (está nos 3 min ou pagou), fecha o modal normal.
-          setPaywallOpen(false);
+          setPaywallOpen(false); // Fecha o modal normal
       }
   };
 
@@ -120,7 +110,6 @@ const PaywallGlobal = () => {
   );
 };
 
-// --- GUARDS ---
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   if (loading) return <LoadingScreen />;
