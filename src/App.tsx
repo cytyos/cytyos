@@ -21,7 +21,7 @@ const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 // --- CONSTANTES ---
-const FREE_USAGE_MS = 3 * 60 * 1000; // 3 MINUTOS em milissegundos
+const FREE_USAGE_MS = 3 * 60 * 1000; // 3 MINUTOS
 
 // --- LOADING SCREEN ---
 const LoadingScreen = () => (
@@ -51,62 +51,46 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL (LÓGICA DOS 3 MINUTOS) ---
+// --- PAYWALL CONTROL (CORRIGIDO) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Inicializa o cronômetro na primeira visita (se não existir)
-    const initTimer = () => {
-        if (!localStorage.getItem('cytyos_first_visit')) {
-            localStorage.setItem('cytyos_first_visit', Date.now().toString());
-        }
-    };
-    initTimer();
+    // Inicializa timer na primeira visita
+    if (!localStorage.getItem('cytyos_first_visit')) {
+        localStorage.setItem('cytyos_first_visit', Date.now().toString());
+    }
 
     const checkAccess = () => {
-        // A. Se for VIP (Founder), libera tudo
+        // VIP ou Trial Ativo? Libera.
         if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
-
-        // B. Se tiver um Cupom de Trial ATIVO, libera tudo
         const trialEnd = localStorage.getItem('cytyos_trial_end');
-        if (trialEnd && Date.now() < Number(trialEnd)) {
-            return; 
-        }
+        if (trialEnd && Date.now() < Number(trialEnd)) return;
         
-        // C. Checa o "Free Tier" de 3 minutos
+        // Timer de 3 min
         const firstVisit = localStorage.getItem('cytyos_first_visit');
         if (firstVisit) {
             const elapsed = Date.now() - Number(firstVisit);
-            // Se ainda não passou 3 minutos, deixa usar (return)
-            if (elapsed < FREE_USAGE_MS) {
-                return;
-            }
+            if (elapsed < FREE_USAGE_MS) return; // Ainda tem tempo
         }
 
-        // D. Se chegou aqui: Não é VIP, Não tem Trial e Acabou os 3 min.
-        // Abre o Paywall (se já não estiver aberto)
+        // Se chegou aqui, bloqueia.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
     };
 
-    // Checa a cada 2 segundos para não pesar
     const interval = setInterval(checkAccess, 2000); 
-    checkAccess(); // Checa imediatamente também
+    checkAccess(); // Checa ao montar
     
     return () => clearInterval(interval);
-  }, [setPaywallOpen, isPaywallOpen]);
+  }, [setPaywallOpen, isPaywallOpen]); // Dependências corrigidas
 
-
-  // Lógica "Blindada" ao fechar o modal
+  // --- LÓGICA DE FECHAMENTO CORRIGIDA ---
   const handleCloseAttempt = () => {
-      setPaywallOpen(false); // Tenta fechar visualmente...
-
-      // Mas verificamos se pode continuar navegando
+      // 1. Verifica status ANTES de fechar
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
-      
       const trialEnd = localStorage.getItem('cytyos_trial_end');
       const hasActiveCoupon = trialEnd && Date.now() < Number(trialEnd);
       
@@ -114,12 +98,16 @@ const PaywallGlobal = () => {
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      // Se NÃO for VIP, NEM tiver Cupom, E já estourou os 3 min...
+      // 2. Se o usuário NÃO tem permissão para continuar...
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
-          // Redireciona para a Home (acabou a festa)
+          // IMPORTANTE: NÃO fechamos o modal visualmente (setPaywallOpen(false)).
+          // Nós forçamos a saída imediata para a Home.
+          // Isso evita que o modal feche e reabra (efeito duplo/piscar).
           navigate('/'); 
+      } else {
+          // 3. Se ele tem permissão (está nos 3 min ou pagou), fecha o modal normal.
+          setPaywallOpen(false);
       }
-      // Se ainda estiver nos 3 min (ou pagou), o modal fecha e a vida segue.
   };
 
   return (
@@ -153,7 +141,6 @@ function App() {
         <PaywallGlobal />
         
         <Routes>
-            {/* ROTAS PÚBLICAS */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             
@@ -163,7 +150,6 @@ function App() {
                 </Suspense>
             } />
             
-            {/* ADMIN */}
             <Route path="/admin" element={
                 <ProtectedRoute>
                     <Suspense fallback={<LoadingScreen />}>
@@ -174,7 +160,6 @@ function App() {
                 </ProtectedRoute>
             } />
             
-            {/* APP */}
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative">
