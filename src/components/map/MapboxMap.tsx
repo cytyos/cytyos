@@ -25,7 +25,7 @@ export const MapboxMap = () => {
   const [pulseState, setPulseState] = useState<'high' | 'low'>('low');
 
   const { blocks, updateLand, addBlock } = useProjectStore();
-  const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
+  const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D, setMapInstance } = useMapStore(); // <--- setMapInstance
   const { setThinking, setMessage } = useAIStore();
 
   useEffect(() => {
@@ -61,10 +61,7 @@ export const MapboxMap = () => {
       attributionControl: false 
     });
     map.current = m;
-
-    // --- POSIÇÃO DO ZOOM: BOTTOM-RIGHT ---
-    // Isso evita conflitos com o painel de endereço (topo) e menus laterais
-    m.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    setMapInstance(m); // <--- Salva o mapa para o controle de zoom externo
 
     const draw = new MapboxDraw({
       displayControlsDefault: false,
@@ -126,12 +123,10 @@ export const MapboxMap = () => {
         }
 
         updateLand({ area: area, geometry: feature.geometry });
-        
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
-        
         useMapStore.getState().setIs3D(true); 
 
         try {
@@ -159,7 +154,6 @@ export const MapboxMap = () => {
 
   useEffect(() => {
       if (!drawRef.current || !map.current) return;
-      
       if (drawMode === 'draw_polygon') {
           drawRef.current.changeMode('draw_polygon');
           map.current.getCanvas().style.cursor = 'crosshair';
