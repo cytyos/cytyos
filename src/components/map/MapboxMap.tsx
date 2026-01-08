@@ -28,6 +28,7 @@ export const MapboxMap = () => {
   const { mapStyle, drawMode, setDrawMode, flyToCoords, is3D } = useMapStore();
   const { setThinking, setMessage } = useAIStore();
 
+  // Glow Animation Effect
   useEffect(() => {
     const interval = setInterval(() => {
         setPulseState(prev => prev === 'low' ? 'high' : 'low');
@@ -55,7 +56,7 @@ export const MapboxMap = () => {
       style: mapStyle === 'satellite' ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/dark-v11',
       center: DEFAULT_CENTER,
       zoom: 15.5,
-      pitch: 0, // <--- CORREÇÃO: INICIA EM 2D (FLAT)
+      pitch: 0, // Starts flat (2D)
       bearing: 0,
       antialias: true,
       attributionControl: false 
@@ -74,6 +75,7 @@ export const MapboxMap = () => {
 
     m.on('load', () => loadAllLayers(m));
 
+    // Tooltip for measurement while drawing
     m.on('mousemove', (e) => {
         if (!drawRef.current || !tooltipRef.current) return;
         const mode = drawRef.current.getMode();
@@ -103,6 +105,7 @@ export const MapboxMap = () => {
     
     m.on('mouseout', () => { if (tooltipRef.current) tooltipRef.current.style.display = 'none'; });
 
+    // --- TRIGGER: WHEN POLYGON IS CLOSED ---
     m.on('draw.create', async (e) => {
         const feature = e.features?.[0];
         if (!feature) return;
@@ -123,21 +126,25 @@ export const MapboxMap = () => {
 
         updateLand({ area: area, geometry: feature.geometry });
         
+        // Add a default base block
         addBlock({
             name: 'Podium Base', type: 'podium', usage: 'residential', isCustom: true,
             coordinates: feature.geometry.coordinates, setback: 0, baseArea: area, height: 12, color: '#00f3ff' 
         });
         
-        // Ativa 3D automaticamente APÓS desenhar, para visualizar o prédio
+        // Auto-activate 3D mode
         useMapStore.getState().setIs3D(true); 
 
-        // AI CALL
-        setThinking(true);
+        // --- AI AUTO-START ---
+        setThinking(true); // Shows spinner
         try {
+            // Calls the new 'Scout' function with location data
             const aiResponse = await scoutLocation(centerCoords, area, i18n.language);
             setMessage(aiResponse);
         } catch (err) {
             setMessage("AI Service Unavailable.");
+        } finally {
+            setThinking(false); // Hides spinner
         }
     });
   }, []);
@@ -156,7 +163,7 @@ export const MapboxMap = () => {
       map.current.once('style.load', () => loadAllLayers(map.current!));
   }, [mapStyle]);
 
-  // Sync Draw Mode (THIS IS CRITICAL FOR BUTTONS TO WORK)
+  // Sync Draw Mode
   useEffect(() => {
       if (!drawRef.current || !map.current) return;
       
@@ -170,6 +177,7 @@ export const MapboxMap = () => {
       }
   }, [drawMode]);
 
+  // Sync FlyTo
   useEffect(() => {
       if (flyToCoords && map.current) {
           map.current.flyTo({ center: flyToCoords, zoom: 17, pitch: 45, duration: 2000 });
@@ -177,6 +185,7 @@ export const MapboxMap = () => {
       }
   }, [flyToCoords]);
 
+  // Redraw blocks when store changes
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
     redrawBlocks(map.current, blocks);
