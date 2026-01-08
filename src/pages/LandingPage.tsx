@@ -41,15 +41,16 @@ export const LandingPage = () => {
       <nav className="fixed top-0 w-full z-50 bg-[#050608]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-             <img src={logoFull} alt="Cytyos" className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+             <img src={logoFull} alt="Cytyos" className="h-6 md:h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {/* Seletor de Idioma */}
             <div className="relative">
                 <button onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider transition-colors py-2">
                     <Globe className="w-3 h-3" />
-                    {i18n.language ? i18n.language.substring(0,2) : 'EN'}
+                    <span className="hidden md:inline">{i18n.language ? i18n.language.substring(0,2) : 'EN'}</span>
+                    <span className="md:hidden">{i18n.language ? i18n.language.substring(0,2).toUpperCase() : 'EN'}</span>
                     <ChevronDown className="w-3 h-3" />
                 </button>
                 {isLangMenuOpen && (
@@ -65,13 +66,13 @@ export const LandingPage = () => {
 
             <div className="h-4 w-px bg-white/10 mx-1"></div>
 
-            {/* BOTÃO LOGIN (Atualizado para ir para a rota /login) */}
+            {/* BOTÃO LOGIN */}
             <button onClick={handleLogin} className="text-gray-300 hover:text-white text-xs font-bold transition-colors">
               {t('landing.login')}
             </button>
             
-            {/* CTA NAVBAR */}
-            <button onClick={() => setPaywallOpen(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105">
+            {/* CTA NAVBAR - Oculto em telas muito pequenas para dar espaço */}
+            <button onClick={() => setPaywallOpen(true)} className="hidden sm:block bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105">
               {t('roadmap.cta')}
             </button>
           </div>
@@ -79,7 +80,8 @@ export const LandingPage = () => {
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+      {/* Padding ajustado para mobile: pt-28 em vez de pt-36 */}
+      <section className="relative pt-28 md:pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-8 animate-fade-in-up">
@@ -87,7 +89,8 @@ export const LandingPage = () => {
           {t('landing.hero.badge')}
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white max-w-5xl leading-[1.1]">
+        {/* AJUSTE DE FONTE: text-4xl no mobile, text-7xl no desktop */}
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white max-w-5xl leading-[1.1]">
           {t('landing.hero.title_prefix')} <br className="hidden md:block" />
           {t('landing.hero.title_main')} <br />
           <span className="group relative inline-block cursor-pointer">
@@ -98,7 +101,7 @@ export const LandingPage = () => {
           </span>
         </h1>
         
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed">
+        <p className="text-base md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed px-2">
           {t('landing.hero.subtitle')}
         </p>
 
