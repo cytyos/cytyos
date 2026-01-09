@@ -30,7 +30,6 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   }
 
   try {
-    // URL Direta para garantir conexão estável
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -38,39 +37,31 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
       body: JSON.stringify({ 
-        // --- UPGRADE: Voltamos para o modelo mais inteligente ---
-        model: "gpt-4-turbo-preview", 
+        model: "gpt-4-turbo-preview", // O modelo mais inteligente para saber leis
         messages, 
-        temperature: 0.2, // Mantemos temperatura baixa para precisão técnica
+        temperature: 0.3, // Temperatura baixa para ser factual, mas não robótica
         max_tokens 
       })
     });
 
-    // --- TRATAMENTO DE ERRO ---
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `API Error ${response.status}`;
-      
       try {
         const errorJson = JSON.parse(errorText);
-        if (errorJson.error?.message) {
-          errorMessage = errorJson.error.message;
-        }
+        if (errorJson.error?.message) errorMessage = errorJson.error.message;
       } catch (e) {
         console.error("Non-JSON error response:", errorText);
       }
-      
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    
     if (!data.choices || data.choices.length === 0) {
       throw new Error("Empty response from AI Provider");
     }
 
     return data;
-
   } catch (error) {
     console.error("AI Service Failure:", error);
     throw error;
@@ -111,21 +102,17 @@ export const analyzeProject = async (
     const systemPrompt = `You are a Chief Investment Officer (CIO) for a Global Real Estate Fund. 
     Analyze the following project manifest using high-complexity auditing standards.
     
-    CRITICAL FORMATTING RULES (STRICT):
-    1. NEVER output long floating-point numbers (e.g., do NOT write 2.6999566).
-    2. ALWAYS round Currency to 2 decimal places (e.g., $1,250.00).
-    3. ALWAYS round Areas and Ratios to 1 or 2 decimal places.
-    4. Use thousands separators (e.g., 10,000).
-    5. Structure the response clearly with Markdown headers.
+    CRITICAL INSTRUCTIONS:
+    1. Act as if you are referencing local master plans and zoning codes.
+    2. If the user provided a location, try to cite specific local laws (e.g., "According to NYC Zoning Resolution...").
+    3. ALWAYS round Currency to 2 decimal places.
+    4. Structure the response clearly with Markdown headers.
     
-    Tasks:
-    1. RESIDUAL LAND VALUE AUDIT: Does the land cost (${curr} ${context.land.cost}) align with a ${context.metrics.margin.toFixed(2)}% margin?
-    2. ARCHITECTURAL RATIOS: Evaluate GFA vs NSA efficiency. Current NSA: ${context.metrics.nsa.toFixed(0)}m².
-    3. ZONING COMPLIANCE: Contrast achieved FAR (${context.metrics.far.toFixed(2)}) vs Max FAR (${context.land.maxFar}).
-    4. OPTIMIZATION: Suggest specific block adjustments to maximize IRR.
+    MANDATORY ENDING (CALL TO ACTION):
+    At the very end, strictly output a bold Call to Action asking the user to upload the official PDF to validate these assumptions.
+    Example: "**Action Required:** To validate these zoning assumptions, please upload the City Master Plan PDF in the 'Context' tab."
     
-    Output must be a structured executive summary in **${targetLang}**. 
-    Use MARKDOWN syntax. Use bold for key numbers.`;
+    Output Language: **${targetLang}**.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -139,14 +126,11 @@ export const analyzeProject = async (
   } catch (error: any) {
     const cleanError = error.message || "Unknown Error";
     if (language === 'pt') return `⚠️ Erro na Análise: ${cleanError}`;
-    if (language === 'es') return `⚠️ Error en Análisis: ${cleanError}`;
-    if (language === 'fr') return `⚠️ Erreur d'analyse: ${cleanError}`;
-    if (language === 'zh') return `⚠️ 分析错误: ${cleanError}`;
     return `⚠️ Analysis Error: ${cleanError}`;
   }
 };
 
-// --- LOCATION SCOUT ---
+// --- LOCATION SCOUT (O "Buscador" Simulado) ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
@@ -156,20 +140,23 @@ export const scoutLocation = async (
   const targetLang = getTargetLanguage(language);
 
   try {
-    const systemPrompt = `You are an Urban AI Scout and Town Planner. 
-    The user has defined a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with an area of ${area.toFixed(0)}m².
+    // AQUI ESTÁ A MÁGICA DO PROMPT
+    const systemPrompt = `You are an expert Urban Planner and Land Scout. 
+    The user is looking at a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with ${area.toFixed(0)}m².
 
-    Your Task:
-    1. Identify the Neighborhood/City.
-    2. ESTIMATE the likely Zoning Parameters (FAR, Occupancy) based on location.
-    3. Analyze Market Potential.
-    
-    CRITICAL DISCLAIMER:
-    Explicitly state that parameters are estimates. Advise uploading official Zoning Law.
+    YOUR MISSION:
+    1. **Identify the Location:** Determine the Neighborhood, City, and likely Zoning District (e.g., "Zone R-3", "Mixed Use").
+    2. **Simulate Research:** Explicitly mention you are cross-referencing with local municipal databases and Master Plans known up to 2023.
+    3. **Provide Data:** Estimate max FAR (Floor Area Ratio), Occupancy Rate, and Height Limits based on typical laws for this specific neighborhood.
+    4. **Be Honest but Helpful:** If precise data is unavailable, provide the standard parameters for that city's density zone.
+
+    MANDATORY CALL TO ACTION (CTA):
+    End the message with a persuasive CTA.
+    "To confirm if this specific lot has [Specific Exception/Incentive], upload the Zoning Law PDF now."
 
     Output format:
     - Markdown.
-    - Concise (Max 300 words).
+    - Professional and Insightful.
     - Language: **${targetLang}**.`;
 
     const messages = [{ role: "system", content: systemPrompt }];
@@ -179,7 +166,6 @@ export const scoutLocation = async (
   } catch (error: any) {
     const cleanError = error.message || "Unknown Error";
     if (language === 'pt') return `Erro na Geolocalização: ${cleanError}`;
-    if (language === 'zh') return `地理定位错误: ${cleanError}`;
     return `Geospatial Error: ${cleanError}`;
   }
 };
