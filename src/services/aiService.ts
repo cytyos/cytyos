@@ -12,7 +12,6 @@ interface ProjectContext {
 }
 
 // --- LANGUAGE MAPPER ---
-// Garante que a IA saiba exatamente em qual idioma escrever
 const getTargetLanguage = (code: string): string => {
   const map: Record<string, string> = {
     'pt': 'Portuguese',
@@ -25,13 +24,13 @@ const getTargetLanguage = (code: string): string => {
 };
 
 // --- HELPER: ROBUST PROXY FETCH ---
-// UPDATED: Default max_tokens increased to 3000 to prevent cut-off sentences
 const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   if (!DIRECT_API_KEY) {
-    throw new Error("Missing OpenAI API Key");
+    throw new Error("Missing OpenAI API Key. Check Vercel Environment Variables.");
   }
 
   try {
+    // Usamos o caminho relativo /api-openai para ativar o Rewrite do vercel.json
     const response = await fetch("/api-openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -41,21 +40,35 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
       body: JSON.stringify({ 
         model: "gpt-4-turbo-preview", 
         messages, 
-        temperature: 0.2, // Low temperature for technical precision
+        temperature: 0.2, 
         max_tokens 
       })
     });
 
-    const responseText = await response.text();
-    
+    // --- TRATAMENTO DE ERRO APRIMORADO ---
     if (!response.ok) {
-      const errorDetail = responseText ? JSON.parse(responseText).error?.message : "Unknown API Error";
-      throw new Error(errorDetail);
+      // Verifica se a resposta é JSON (Erro da OpenAI) ou HTML (Erro da Vercel/Rota)
+      const contentType = response.headers.get("content-type");
+      
+      if (contentType && contentType.includes("application/json")) {
+        const errorJson = await response.json();
+        throw new Error(errorJson.error?.message || "Unknown OpenAI Error");
+      } else {
+        // Se recebermos HTML ou texto puro, geralmente é erro 404 ou 500 da Vercel
+        const errorText = await response.text();
+        // Cortamos o texto para não sujar o console com HTML gigante
+        throw new Error(`Infrastructure Error (${response.status}): ${errorText.slice(0, 100)}...`);
+      }
     }
 
-    if (!responseText) throw new Error("Empty response from server");
+    const data = await response.json();
+    
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("Empty response from AI Provider");
+    }
 
-    return JSON.parse(responseText);
+    return data;
+
   } catch (error) {
     console.error("AI Service Failure:", error);
     throw error;
@@ -118,16 +131,17 @@ export const analyzeProject = async (
       ...history
     ];
 
-    const data = await fetchAI(messages, 3000); // 3000 tokens for analysis
-    return data.choices?.[0]?.message?.content || "Analysis could not be generated.";
+    const data = await fetchAI(messages, 3000);
+    return data.choices[0].message.content;
 
   } catch (error: any) {
-    // Tratamento de erro multilíngue básico
-    if (language === 'pt') return `⚠️ Erro Crítico: ${error.message}`;
-    if (language === 'es') return `⚠️ Error Crítico: ${error.message}`;
-    if (language === 'fr') return `⚠️ Erreur Critique: ${error.message}`;
-    if (language === 'zh') return `⚠️ 严重错误: ${error.message}`;
-    return `⚠️ Critical Error: ${error.message}`;
+    // Tratamento de erro multilíngue
+    const cleanError = error.message || "Unknown Error";
+    if (language === 'pt') return `⚠️ Erro na Análise: ${cleanError}`;
+    if (language === 'es') return `⚠️ Error en Análisis: ${cleanError}`;
+    if (language === 'fr') return `⚠️ Erreur d'analyse: ${cleanError}`;
+    if (language === 'zh') return `⚠️ 分析错误: ${cleanError}`;
+    return `⚠️ Analysis Error: ${cleanError}`;
   }
 };
 
@@ -158,11 +172,13 @@ export const scoutLocation = async (
     - Language: **${targetLang}**.`;
 
     const messages = [{ role: "system", content: systemPrompt }];
-    const data = await fetchAI(messages, 1000); // Increased slightly for safety
-    return data.choices?.[0]?.message?.content || "Scout data unavailable.";
+    const data = await fetchAI(messages, 1000);
+    return data.choices[0].message.content;
+
   } catch (error: any) {
-    if (language === 'pt') return `Erro na Geolocalização: ${error.message}`;
-    if (language === 'zh') return `地理定位错误: ${error.message}`;
-    return `Geospatial Error: ${error.message}`;
+    const cleanError = error.message || "Unknown Error";
+    if (language === 'pt') return `Erro na Geolocalização: ${cleanError}`;
+    if (language === 'zh') return `地理定位错误: ${cleanError}`;
+    return `Geospatial Error: ${cleanError}`;
   }
 };
