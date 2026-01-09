@@ -41,20 +41,20 @@ export const LoginPage = () => {
   };
 
   // Login with Google
-  // --- CORREÇÃO APLICADA AQUI ---
+  // --- FIXED: Uses dynamic URL instead of hardcoded Bolt URL ---
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       setError('');
       
-      // Definição explícita da URL do Bolt para evitar erro de localhost
-      const boltUrl = 'https://zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--5173--365214aa.local-credentialless.webcontainer-api.io';
+      // Dynamically gets the current origin (e.g., https://cytyos.com or localhost)
+      const origin = window.location.origin;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // Força o redirecionamento para o endereço correto + /app
-          redirectTo: `${boltUrl}/app`,
+          // Redirects correctly to the current domain + /app
+          redirectTo: `${origin}/app`,
         },
       });
 
