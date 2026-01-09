@@ -2,6 +2,9 @@ import React, { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; 
 import { X, Monitor } from 'lucide-react'; 
 
+// --- NOVO: Speed Insights (Versão Correta para React) ---
+import { SpeedInsights } from "@vercel/speed-insights/react"
+
 // --- EAGER IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -16,7 +19,6 @@ const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(modul
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
 const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
-
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 const FREE_USAGE_MS = 3 * 60 * 1000; 
@@ -32,7 +34,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-// --- MOBILE WARNING (Mantido, mas menos intrusivo se desejar) ---
+// --- MOBILE WARNING ---
 const MobileOptimizationWarning = () => {
   const [isVisible, setIsVisible] = useState(true);
   if (!isVisible) return null;
@@ -94,7 +96,7 @@ const PaywallGlobal = () => {
 
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
           setPaywallOpen(false); 
-          navigate('/');         
+          navigate('/');          
       } else {
           setPaywallOpen(false); 
       }
@@ -127,6 +129,9 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 function App() {
   return (
     <AuthProvider>
+        {/* --- NOVO: Componente de Métricas de Velocidade --- */}
+        <SpeedInsights />
+
         <BrowserRouter>
         <PaywallGlobal />
         
@@ -160,18 +165,18 @@ function App() {
                             {/* --- CAMADA DE UI --- */}
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
                                 
-                                {/* CONTROLES DE MAPA (Agora no TOPO no Mobile para não conflitar com painel) */}
+                                {/* CONTROLES DE MAPA */}
                                 <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
                                     <div className="pointer-events-auto w-full max-w-md">
                                         <MapControls />
                                     </div>
                                 </div>
 
-                                {/* Espaço vazio para garantir que o centro do mapa fique livre */}
+                                {/* Espaço vazio */}
                                 <div className="flex-1"></div>
                             </div>
                             
-                            {/* SMART PANEL (Fica na base) */}
+                            {/* SMART PANEL */}
                             <SmartPanel />
                         </Suspense>
                         <Footer />
