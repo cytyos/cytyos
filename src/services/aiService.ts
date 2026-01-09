@@ -23,42 +23,44 @@ const getTargetLanguage = (code: string): string => {
   return map[code] || 'English';
 };
 
-// --- HELPER: ROBUST PROXY FETCH ---
+// --- HELPER: DIRECT FETCH (Fixed: No Proxy) ---
 const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   if (!DIRECT_API_KEY) {
     throw new Error("Missing OpenAI API Key. Check Vercel Environment Variables.");
   }
 
   try {
-    // Usamos o caminho relativo /api-openai para ativar o Rewrite do vercel.json
-    const response = await fetch("/api-openai/v1/chat/completions", {
+    // CORREÇÃO: Usando a URL completa da OpenAI para garantir conexão direta
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
-   body: JSON.stringify({ 
-  model: "gpt-4o-mini",
+      body: JSON.stringify({ 
+        // Mantendo o modelo econômico e rápido
+        model: "gpt-4o-mini", 
         messages, 
         temperature: 0.2, 
         max_tokens 
       })
     });
 
-    // --- TRATAMENTO DE ERRO APRIMORADO ---
+    // --- TRATAMENTO DE ERRO ---
     if (!response.ok) {
-      // Verifica se a resposta é JSON (Erro da OpenAI) ou HTML (Erro da Vercel/Rota)
-      const contentType = response.headers.get("content-type");
+      const errorText = await response.text();
+      let errorMessage = `API Error ${response.status}`;
       
-      if (contentType && contentType.includes("application/json")) {
-        const errorJson = await response.json();
-        throw new Error(errorJson.error?.message || "Unknown OpenAI Error");
-      } else {
-        // Se recebermos HTML ou texto puro, geralmente é erro 404 ou 500 da Vercel
-        const errorText = await response.text();
-        // Cortamos o texto para não sujar o console com HTML gigante
-        throw new Error(`Infrastructure Error (${response.status}): ${errorText.slice(0, 100)}...`);
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+          errorMessage = errorJson.error.message;
+        }
+      } catch (e) {
+        console.error("Non-JSON error response:", errorText);
       }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -135,7 +137,6 @@ export const analyzeProject = async (
     return data.choices[0].message.content;
 
   } catch (error: any) {
-    // Tratamento de erro multilíngue
     const cleanError = error.message || "Unknown Error";
     if (language === 'pt') return `⚠️ Erro na Análise: ${cleanError}`;
     if (language === 'es') return `⚠️ Error en Análisis: ${cleanError}`;
