@@ -37,8 +37,8 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
-      body: JSON.stringify({ 
-        model: "gpt-4-turbo-preview", 
+   body: JSON.stringify({ 
+  model: "gpt-4o-mini",
         messages, 
         temperature: 0.2, 
         max_tokens 
