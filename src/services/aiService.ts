@@ -23,14 +23,14 @@ const getTargetLanguage = (code: string): string => {
   return map[code] || 'English';
 };
 
-// --- HELPER: DIRECT FETCH (Fixed: No Proxy) ---
+// --- HELPER: DIRECT FETCH (High Precision Mode) ---
 const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   if (!DIRECT_API_KEY) {
     throw new Error("Missing OpenAI API Key. Check Vercel Environment Variables.");
   }
 
   try {
-    // CORREÇÃO: Usando a URL completa da OpenAI para garantir conexão direta
+    // URL Direta para garantir conexão estável
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -38,10 +38,10 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
       body: JSON.stringify({ 
-        // Mantendo o modelo econômico e rápido
-        model: "gpt-4o-mini", 
+        // --- UPGRADE: Voltamos para o modelo mais inteligente ---
+        model: "gpt-4-turbo-preview", 
         messages, 
-        temperature: 0.2, 
+        temperature: 0.2, // Mantemos temperatura baixa para precisão técnica
         max_tokens 
       })
     });
