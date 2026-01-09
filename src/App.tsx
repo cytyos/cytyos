@@ -2,8 +2,9 @@ import React, { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; 
 import { X, Monitor } from 'lucide-react'; 
 
-// --- NOVO: Speed Insights (Versão Correta para React) ---
+// --- MÉTRICAS VERCEL (Velocidade + Visitas) ---
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react"
 
 // --- EAGER IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
@@ -129,8 +130,9 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 function App() {
   return (
     <AuthProvider>
-        {/* --- NOVO: Componente de Métricas de Velocidade --- */}
+        {/* --- MONITORAMENTO VERCEL (Velocidade e Visitas) --- */}
         <SpeedInsights />
+        <Analytics />
 
         <BrowserRouter>
         <PaywallGlobal />
