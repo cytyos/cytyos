@@ -75,7 +75,7 @@ export const SmartPanel = () => {
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // DETECÇÃO MOBILE
+  // MOBILE DETECTION
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
       const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -89,10 +89,10 @@ export const SmartPanel = () => {
   
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, isChatOpen, thinking]);
 
-  // --- SINCRONIZAÇÃO DA IA (AUTO-OPEN RESTAURADO) ---
+  // --- AI SYNC (AUTO-OPEN RESTORED) ---
   useEffect(() => {
     if (message) {
-        setIsChatOpen(true); // <--- Força abertura ao receber mensagem
+        setIsChatOpen(true); // <--- Forces open on receive
         setIsAiLoading(false);
         setHasUnreadAi(false);
 
@@ -103,7 +103,7 @@ export const SmartPanel = () => {
     }
     
     if (thinking) {
-        setIsChatOpen(true); // <--- Força abertura ao pensar
+        setIsChatOpen(true); // <--- Forces open when thinking
         setIsAiLoading(true);
     }
   }, [message, thinking]);
@@ -172,13 +172,13 @@ export const SmartPanel = () => {
       setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
   };
   
+  // UPDATED: Use dvh (dynamic viewport height) and set max to 85dvh to allow space for browser bar
   const getMobileHeightClass = () => {
       if (mobileState === 'min') return 'h-[85px]'; 
-      if (mobileState === 'mid') return 'h-[50vh]';
-      return 'h-[95vh]';
+      if (mobileState === 'mid') return 'h-[50dvh]';
+      return 'h-[85dvh]'; // Leaves ~15% at the top + bottom offset
   };
   
-  // Botão IA (ainda existe, mas a abertura automática cuida do fluxo principal)
   const handleMainAiButtonClick = async () => {
     if (isChatOpen) return;
     if (chatMessages.length > 0) { setIsChatOpen(true); return; }
@@ -280,6 +280,7 @@ export const SmartPanel = () => {
         </div>
     )}
 
+    {/* MAIN PANEL CONTAINER */}
     <div className={`fixed md:absolute left-0 md:left-4 bottom-[40px] md:bottom-12 md:top-4 w-full md:w-96 flex flex-col shadow-2xl overflow-hidden rounded-t-3xl md:rounded-2xl border-t md:border border-gray-800 bg-[#0f111a]/95 backdrop-blur-md z-[60] transition-all duration-500 pointer-events-auto ${getMobileHeightClass()} md:h-auto md:max-h-[95vh]`}>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
 
@@ -288,7 +289,7 @@ export const SmartPanel = () => {
           <div className="w-12 h-1.5 bg-gray-700 rounded-full opacity-60"></div>
       </div>
 
-      {/* --- HEADER (ESCONDIDO QUANDO MINIMIZADO NO MOBILE) --- */}
+      {/* --- HEADER --- */}
       {!shouldHideHeader && (
           <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
             <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
@@ -357,8 +358,8 @@ export const SmartPanel = () => {
           </div>
       )}
 
-      {/* --- CONTENT AREA --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col">
+      {/* --- CONTENT AREA (Added overscroll-contain) --- */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f111a] flex flex-col overscroll-contain">
           {!shouldHideHeader && (
               <>
                 {activeTab === 'editor' && (
@@ -493,7 +494,6 @@ export const SmartPanel = () => {
 
                 <button onClick={handleMainAiButtonClick} disabled={isAiLoading} className="relative flex-1 h-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-50">
                     {isAiLoading ? <span className="animate-pulse">{t('ai.thinking')}</span> : <><Bot className="w-4 h-4" /> {t('ai.btn')}</>}
-                    {/* Mantive a notificação visual, pois é um bom padrão, mesmo abrindo automático */}
                     {hasUnreadAi && (
                         <span className="absolute -top-1 -right-1 flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
