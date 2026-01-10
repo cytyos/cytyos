@@ -42,7 +42,7 @@ export const MapControls = () => {
       }
   };
 
-  // --- CONTROLE DE ZOOM ---
+  // --- ZOOM CONTROL ---
   const handleZoomIn = () => mapInstance?.zoomIn();
   const handleZoomOut = () => mapInstance?.zoomOut();
 
@@ -81,10 +81,10 @@ export const MapControls = () => {
   return (
     <div className="w-full h-full pointer-events-none flex flex-col justify-between">
       
-      {/* 1. BARRA DE FERRAMENTAS E BUSCA (TOPO - Restaurado) */}
+      {/* 1. TOOLBAR AND SEARCH (TOP) */}
       <div className="pointer-events-auto w-full max-w-md mx-auto relative z-50 p-2 flex flex-col gap-2" ref={searchContainerRef}>
         
-        {/* Busca e Unidade */}
+        {/* Search and Unit */}
         <div className="flex gap-2">
             <div className="flex-1 relative group shadow-xl">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -125,7 +125,7 @@ export const MapControls = () => {
             </div>
         </div>
 
-        {/* Botões de Ferramentas (Sempre visíveis no topo) */}
+        {/* Tools Buttons (Always visible at top) */}
         <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl relative z-40">
             <ControlButton active={mapStyle === 'satellite'} onClick={() => setMapStyle('satellite')} icon={<MapIcon className="w-4 h-4" />} label={t('map.sat')} />
             <ControlButton active={mapStyle === 'streets'} onClick={() => setMapStyle('streets')} icon={<Layers className="w-4 h-4" />} label={t('map.streets')} />
@@ -155,7 +155,7 @@ export const MapControls = () => {
         </div>
       </div>
 
-      {/* 2. BOTÕES DE ZOOM (MEIO DA TELA, DIREITA) */}
+      {/* 2. ZOOM BUTTONS (MIDDLE RIGHT) */}
       <div className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1 z-40 bg-black/60 backdrop-blur-md rounded-xl p-1 border border-white/10 shadow-lg">
           <button onClick={handleZoomIn} className="w-9 h-9 flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors"><Plus className="w-5 h-5" /></button>
           <div className="h-px w-full bg-white/10"></div>
