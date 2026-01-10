@@ -2,7 +2,7 @@ import React, { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; 
 import { X, Monitor } from 'lucide-react'; 
 
-// --- MÉTRICAS VERCEL (Velocidade + Visitas) ---
+// --- VERCEL METRICS ---
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -97,7 +97,7 @@ const PaywallGlobal = () => {
 
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
           setPaywallOpen(false); 
-          navigate('/');          
+          navigate('/');           
       } else {
           setPaywallOpen(false); 
       }
@@ -130,7 +130,7 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 function App() {
   return (
     <AuthProvider>
-        {/* --- MONITORAMENTO VERCEL (Velocidade e Visitas) --- */}
+        {/* --- VERCEL MONITORING --- */}
         <SpeedInsights />
         <Analytics />
 
@@ -159,22 +159,23 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative">
+                    {/* UPDATED: Added overscroll-none and touch-none to prevent body scroll on mobile */}
+                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
                         <MobileOptimizationWarning />
                         <Suspense fallback={<LoadingScreen />}>
                             <MapboxMap />
                             
-                            {/* --- CAMADA DE UI --- */}
+                            {/* --- UI LAYER --- */}
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
                                 
-                                {/* CONTROLES DE MAPA */}
+                                {/* MAP CONTROLS */}
                                 <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
                                     <div className="pointer-events-auto w-full max-w-md">
                                         <MapControls />
                                     </div>
                                 </div>
 
-                                {/* Espaço vazio */}
+                                {/* Empty Space */}
                                 <div className="flex-1"></div>
                             </div>
                             
