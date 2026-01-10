@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 export const couponService = {
-  // --- ADMIN: Listar Cupons ---
+  // --- ADMIN: List Coupons ---
   async getAll() {
     const { data, error } = await supabase
       .from('coupons')
@@ -11,7 +11,7 @@ export const couponService = {
     return data;
   },
 
-  // --- ADMIN: Listar Quem Usou (Leads) ---
+  // --- ADMIN: List Usage (Leads) ---
   async getLeads(couponCode: string) {
     const { data, error } = await supabase
       .from('coupon_usages')
@@ -23,7 +23,7 @@ export const couponService = {
     return data;
   },
 
-  // --- ADMIN: Criar com Duração Personalizada ---
+  // --- ADMIN: Create Custom Coupon ---
   async create(code: string, minutes: number) {
     const { data, error } = await supabase
       .from('coupons')
@@ -33,17 +33,17 @@ export const couponService = {
     return data[0];
   },
 
-  // --- ADMIN: Deletar ---
+  // --- ADMIN: Delete Coupon ---
   async delete(id: string) {
     const { error } = await supabase.from('coupons').delete().match({ id });
     if (error) throw error;
   },
 
-  // --- USUÁRIO: Validar e Registrar Uso ---
+  // --- USER: Validate and Track Usage ---
   async validateAndTrack(code: string, userEmail: string | undefined) {
-    if (!userEmail) throw new Error("Você precisa estar logado.");
+    if (!userEmail) throw new Error("You must be logged in.");
 
-    // 1. Busca o cupom
+    // 1. Find coupon and check if active
     const { data: coupon, error } = await supabase
       .from('coupons')
       .select('*')
@@ -51,9 +51,9 @@ export const couponService = {
       .eq('active', true)
       .single();
     
-    if (error || !coupon) throw new Error("Cupom inválido ou expirado.");
+    if (error || !coupon) throw new Error("Invalid or expired coupon.");
 
-    // 2. Verifica se já usou (Opcional: Impede reuso do mesmo cupom pelo mesmo user)
+    // 2. Check if user already used this specific coupon
     const { data: usage } = await supabase
       .from('coupon_usages')
       .select('id')
@@ -61,12 +61,12 @@ export const couponService = {
       .eq('user_email', userEmail)
       .single();
       
+    // --- SECURITY FIX: Block reuse ---
     if (usage) {
-        // Se quiser bloquear reuso, descomente a linha abaixo:
-        // throw new Error("Você já utilizou este cupom.");
+        throw new Error("You have already used this coupon.");
     }
 
-    // 3. Registra o uso (Rastreamento do Lead)
+    // 3. Record usage (Tracking Lead)
     await supabase
       .from('coupon_usages')
       .insert([{ coupon_code: coupon.code, user_email: userEmail }]);
