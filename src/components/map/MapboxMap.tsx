@@ -61,9 +61,7 @@ export const MapboxMap = () => {
       attributionControl: false 
     });
     map.current = m;
-    setMapInstance(m); // IMPORTANTE: Salva mapa na store para zoom funcionar
-
-    // NÃO ADICIONAR NavigationControl AQUI (usamos o customizado)
+    setMapInstance(m); // IMPORTANT: Save map instance to store
 
     const draw = new MapboxDraw({
       displayControlsDefault: false,
