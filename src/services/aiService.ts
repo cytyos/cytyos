@@ -174,14 +174,14 @@ export const scoutLocation = async (
     const data = await fetchAI(messages, 1000);
     return data.choices[0].message.content;
 
-  } catch (error: any) {
-    if (error.message === "TRIAL_LIMIT_REACHED") {
-      if (language === 'pt') return "🔒 Limite Atingido. Assine o plano PRO.";
-      return "🔒 Free Limit Reached. Upgrade to PRO.";
-    }
+  } catch (limitError: any) {
+    console.warn("AI Limit Reached:", limitError);
     
-    const cleanError = error.message || "Unknown Error";
-    if (language === 'pt') return `Erro na Geolocalização: ${cleanError}`;
-    return `Geospatial Error: ${cleanError}`;
+    // --- ADICIONE ESTA LINHA ---
+    // Marca no navegador que o limite foi atingido
+    localStorage.setItem('cytyos_limit_reached', 'true'); 
+    
+    useSettingsStore.getState().setPaywallOpen(true);
+    throw new Error("TRIAL_LIMIT_REACHED");
   }
 };
