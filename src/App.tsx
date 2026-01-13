@@ -99,14 +99,20 @@ const PaywallGlobal = () => {
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
+      // --- NOVO: Verifica se estourou a IA ---
+      const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
+
+      // LÓGICA DE EXPULSÃO:
+      // Se NÃO é VIP
+      // E NÃO tem cupom
+      // E (Acabou o tempo OU Estourou a IA)
+      if (!isVip && !hasActiveCoupon && (!stillInFreeTier || aiLimitReached)) {
           setPaywallOpen(false); 
-          navigate('/');            
+          navigate('/'); // Chuta para a Home Page (Landing Page)
       } else {
-          setPaywallOpen(false); 
+          setPaywallOpen(false); // Só fecha o modal e deixa usar
       }
   };
-
   return (
     <Suspense fallback={null}>
       <PricingModal 
