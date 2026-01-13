@@ -30,6 +30,7 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   }
 
   try {
+    // CORREÇÃO: Usando a URL completa da OpenAI para garantir conexão direta e evitar erros de proxy
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -37,31 +38,40 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
       body: JSON.stringify({ 
-        model: "gpt-4-turbo-preview", // O modelo mais inteligente para saber leis
+        // --- MODELO PREMIUM ---
+        // Usamos o Turbo para garantir inteligência máxima na análise imobiliária
+        model: "gpt-4-turbo-preview", 
         messages, 
-        temperature: 0.3, // Temperatura baixa para ser factual, mas não robótica
+        temperature: 0.3, // Temperatura baixa para ser factual e técnico
         max_tokens 
       })
     });
 
+    // --- TRATAMENTO DE ERRO ---
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `API Error ${response.status}`;
+      
       try {
         const errorJson = JSON.parse(errorText);
-        if (errorJson.error?.message) errorMessage = errorJson.error.message;
+        if (errorJson.error?.message) {
+          errorMessage = errorJson.error.message;
+        }
       } catch (e) {
         console.error("Non-JSON error response:", errorText);
       }
+      
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
+    
     if (!data.choices || data.choices.length === 0) {
       throw new Error("Empty response from AI Provider");
     }
 
     return data;
+
   } catch (error) {
     console.error("AI Service Failure:", error);
     throw error;
