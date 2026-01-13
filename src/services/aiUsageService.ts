@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 // Defina aqui o limite para usuários TRIAL
-const TRIAL_LIMIT = 10; 
+const TRIAL_LIMIT = 3; 
 
 export const aiUsageService = {
   /**
