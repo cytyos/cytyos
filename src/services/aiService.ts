@@ -1,5 +1,6 @@
 import { Metrics, Land, Block } from '../stores/useProjectStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { aiUsageService } from './aiUsageService'; // Certifique-se que este arquivo existe
 
 // Access environment variable safely
 const DIRECT_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -23,14 +24,27 @@ const getTargetLanguage = (code: string): string => {
   return map[code] || 'English';
 };
 
-// --- HELPER: DIRECT FETCH (High Precision Mode) ---
+// --- HELPER: DIRECT FETCH (With Security Check) ---
 const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
   if (!DIRECT_API_KEY) {
     throw new Error("Missing OpenAI API Key. Check Vercel Environment Variables.");
   }
 
+  // 1. SECURITY CHECK (The "Doorman")
   try {
-    // CORREÇÃO: Usando a URL completa da OpenAI para garantir conexão direta e evitar erros de proxy
+    // Tenta consumir 1 crédito. Se falhar, lança erro e para tudo.
+    await aiUsageService.checkAndSpendCredit();
+  } catch (limitError: any) {
+    console.warn("AI Limit Reached:", limitError);
+    
+    // FORÇA A ABERTURA DO PAYWALL NO APP.TSX
+    useSettingsStore.getState().setPaywallOpen(true);
+    
+    throw new Error("TRIAL_LIMIT_REACHED");
+  }
+
+  // 2. API CALL (Only happens if Security Check passes)
+  try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -38,47 +52,38 @@ const fetchAI = async (messages: any[], max_tokens: number = 3000) => {
         "Authorization": `Bearer ${DIRECT_API_KEY}`
       },
       body: JSON.stringify({ 
-        // --- MODELO PREMIUM ---
-        // Usamos o Turbo para garantir inteligência máxima na análise imobiliária
-        model: "gpt-4-turbo-preview", 
+        model: "gpt-4-turbo-preview", // Modelo Inteligente
         messages, 
-        temperature: 0.3, // Temperatura baixa para ser factual e técnico
+        temperature: 0.3,
         max_tokens 
       })
     });
 
-    // --- TRATAMENTO DE ERRO ---
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `API Error ${response.status}`;
-      
       try {
         const errorJson = JSON.parse(errorText);
-        if (errorJson.error?.message) {
-          errorMessage = errorJson.error.message;
-        }
+        if (errorJson.error?.message) errorMessage = errorJson.error.message;
       } catch (e) {
         console.error("Non-JSON error response:", errorText);
       }
-      
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    
     if (!data.choices || data.choices.length === 0) {
       throw new Error("Empty response from AI Provider");
     }
 
     return data;
-
   } catch (error) {
     console.error("AI Service Failure:", error);
     throw error;
   }
 };
 
-// --- FULL ANALYSIS (Structural Intelligence) ---
+// --- FULL ANALYSIS ---
 export const analyzeProject = async (
   history: { role: 'user' | 'assistant'; content: string }[],
   context: ProjectContext,
@@ -86,7 +91,6 @@ export const analyzeProject = async (
 ): Promise<string> => {
   
   const { urbanContext } = useSettingsStore.getState();
-  const curr = context.currency || 'USD';
   const targetLang = getTargetLanguage(language);
 
   const projectManifest = {
@@ -114,13 +118,12 @@ export const analyzeProject = async (
     
     CRITICAL INSTRUCTIONS:
     1. Act as if you are referencing local master plans and zoning codes.
-    2. If the user provided a location, try to cite specific local laws (e.g., "According to NYC Zoning Resolution...").
+    2. If the user provided a location, try to cite specific local laws.
     3. ALWAYS round Currency to 2 decimal places.
     4. Structure the response clearly with Markdown headers.
     
-    MANDATORY ENDING (CALL TO ACTION):
-    At the very end, strictly output a bold Call to Action asking the user to upload the official PDF to validate these assumptions.
-    Example: "**Action Required:** To validate these zoning assumptions, please upload the City Master Plan PDF in the 'Context' tab."
+    MANDATORY ENDING:
+    End with a bold Call to Action asking to upload the Master Plan PDF.
     
     Output Language: **${targetLang}**.`;
 
@@ -134,13 +137,19 @@ export const analyzeProject = async (
     return data.choices[0].message.content;
 
   } catch (error: any) {
+    // Se o erro for de limite, repassa a mensagem limpa
+    if (error.message === "TRIAL_LIMIT_REACHED") {
+      if (language === 'pt') return "🔒 Limite Gratuito Atingido. Assine para continuar.";
+      return "🔒 Free Limit Reached. Please upgrade to continue.";
+    }
+
     const cleanError = error.message || "Unknown Error";
     if (language === 'pt') return `⚠️ Erro na Análise: ${cleanError}`;
     return `⚠️ Analysis Error: ${cleanError}`;
   }
 };
 
-// --- LOCATION SCOUT (O "Buscador" Simulado) ---
+// --- LOCATION SCOUT ---
 export const scoutLocation = async (
   coordinates: number[], 
   area: number, 
@@ -150,30 +159,27 @@ export const scoutLocation = async (
   const targetLang = getTargetLanguage(language);
 
   try {
-    // AQUI ESTÁ A MÁGICA DO PROMPT
     const systemPrompt = `You are an expert Urban Planner and Land Scout. 
     The user is looking at a site at [Lat: ${coordinates[1]}, Lng: ${coordinates[0]}] with ${area.toFixed(0)}m².
 
     YOUR MISSION:
-    1. **Identify the Location:** Determine the Neighborhood, City, and likely Zoning District (e.g., "Zone R-3", "Mixed Use").
-    2. **Simulate Research:** Explicitly mention you are cross-referencing with local municipal databases and Master Plans known up to 2023.
-    3. **Provide Data:** Estimate max FAR (Floor Area Ratio), Occupancy Rate, and Height Limits based on typical laws for this specific neighborhood.
-    4. **Be Honest but Helpful:** If precise data is unavailable, provide the standard parameters for that city's density zone.
+    1. Identify the Location (City/Neighborhood).
+    2. Simulate Research in local databases.
+    3. Estimate max FAR and Height Limits.
+    4. Be Honest but Helpful.
 
-    MANDATORY CALL TO ACTION (CTA):
-    End the message with a persuasive CTA.
-    "To confirm if this specific lot has [Specific Exception/Incentive], upload the Zoning Law PDF now."
-
-    Output format:
-    - Markdown.
-    - Professional and Insightful.
-    - Language: **${targetLang}**.`;
+    Output Language: **${targetLang}**.`;
 
     const messages = [{ role: "system", content: systemPrompt }];
     const data = await fetchAI(messages, 1000);
     return data.choices[0].message.content;
 
   } catch (error: any) {
+    if (error.message === "TRIAL_LIMIT_REACHED") {
+      if (language === 'pt') return "🔒 Limite Atingido. Assine o plano PRO.";
+      return "🔒 Free Limit Reached. Upgrade to PRO.";
+    }
+    
     const cleanError = error.message || "Unknown Error";
     if (language === 'pt') return `Erro na Geolocalização: ${cleanError}`;
     return `Geospatial Error: ${cleanError}`;
