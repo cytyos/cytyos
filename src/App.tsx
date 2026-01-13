@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'; 
-import { X, Monitor } from 'lucide-react'; 
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { X, Monitor } from 'lucide-react';
 
 // --- VERCEL METRICS ---
 import { SpeedInsights } from "@vercel/speed-insights/react"
@@ -9,7 +9,7 @@ import { Analytics } from "@vercel/analytics/react"
 // --- EAGER IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
-import { Footer } from './components/Footer'; 
+import { Footer } from './components/Footer';
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './i18n';
@@ -22,7 +22,7 @@ const PricingModal = React.lazy(() => import('./components/PricingModal').then(m
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-const FREE_USAGE_MS = 3 * 60 * 1000; 
+const FREE_USAGE_MS = 3 * 60 * 1000;
 
 // --- LOADING SCREEN ---
 const LoadingScreen = () => (
@@ -53,10 +53,12 @@ const MobileOptimizationWarning = () => {
 };
 
 // --- PAYWALL CONTROL ---
+// This component listens to the global store. If aiService triggers setPaywallOpen(true),
+// this component will re-render and show the PricingModal.
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
 
   useEffect(() => {
     if (!sessionStorage.getItem('cytyos_first_visit')) {
@@ -76,6 +78,8 @@ const PaywallGlobal = () => {
             if (elapsed < FREE_USAGE_MS) return; 
         }
 
+        // Logic for time-based trigger is here.
+        // Logic for AI-quota trigger happens in aiService.ts, which updates the same Store variable.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
@@ -97,7 +101,7 @@ const PaywallGlobal = () => {
 
       if (!isVip && !hasActiveCoupon && !stillInFreeTier) {
           setPaywallOpen(false); 
-          navigate('/');           
+          navigate('/');            
       } else {
           setPaywallOpen(false); 
       }
@@ -135,6 +139,7 @@ function App() {
         <Analytics />
 
         <BrowserRouter>
+        {/* Global Paywall Controller */}
         <PaywallGlobal />
         
         <Routes>
@@ -159,7 +164,6 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    {/* UPDATED: Added overscroll-none and touch-none to prevent body scroll on mobile */}
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
                         <MobileOptimizationWarning />
                         <Suspense fallback={<LoadingScreen />}>
