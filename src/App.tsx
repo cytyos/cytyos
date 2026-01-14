@@ -19,8 +19,10 @@ const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(mod
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
 const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
-const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
+
+// --- ALTERADO AQUI: IMPORTAÇÃO LIMPA PARA DEFAULT EXPORT ---
+const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 
 const FREE_USAGE_MS = 3 * 60 * 1000;
 
@@ -53,8 +55,6 @@ const MobileOptimizationWarning = () => {
 };
 
 // --- PAYWALL CONTROL ---
-// This component listens to the global store. If aiService triggers setPaywallOpen(true),
-// this component will re-render and show the PricingModal.
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
@@ -78,8 +78,6 @@ const PaywallGlobal = () => {
             if (elapsed < FREE_USAGE_MS) return; 
         }
 
-        // Logic for time-based trigger is here.
-        // Logic for AI-quota trigger happens in aiService.ts, which updates the same Store variable.
         if (!isPaywallOpen) {
             setPaywallOpen(true);
         }
@@ -99,20 +97,16 @@ const PaywallGlobal = () => {
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       const stillInFreeTier = timeUsed < FREE_USAGE_MS;
 
-      // --- NOVO: Verifica se estourou a IA ---
       const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
 
-      // LÓGICA DE EXPULSÃO:
-      // Se NÃO é VIP
-      // E NÃO tem cupom
-      // E (Acabou o tempo OU Estourou a IA)
       if (!isVip && !hasActiveCoupon && (!stillInFreeTier || aiLimitReached)) {
           setPaywallOpen(false); 
-          navigate('/'); // Chuta para a Home Page (Landing Page)
+          navigate('/'); 
       } else {
-          setPaywallOpen(false); // Só fecha o modal e deixa usar
+          setPaywallOpen(false); 
       }
   };
+
   return (
     <Suspense fallback={null}>
       <PricingModal 
@@ -140,12 +134,10 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 function App() {
   return (
     <AuthProvider>
-        {/* --- VERCEL MONITORING --- */}
         <SpeedInsights />
         <Analytics />
 
         <BrowserRouter>
-        {/* Global Paywall Controller */}
         <PaywallGlobal />
         
         <Routes>
@@ -174,22 +166,14 @@ function App() {
                         <MobileOptimizationWarning />
                         <Suspense fallback={<LoadingScreen />}>
                             <MapboxMap />
-                            
-                            {/* --- UI LAYER --- */}
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                                
-                                {/* MAP CONTROLS */}
                                 <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
                                     <div className="pointer-events-auto w-full max-w-md">
                                         <MapControls />
                                     </div>
                                 </div>
-
-                                {/* Empty Space */}
                                 <div className="flex-1"></div>
                             </div>
-                            
-                            {/* SMART PANEL */}
                             <SmartPanel />
                         </Suspense>
                         <Footer />
