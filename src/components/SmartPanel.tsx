@@ -8,6 +8,7 @@ import { useAIStore } from '../stores/aiStore';
 import { analyzeProject } from '../services/aiService';
 import { generateReport } from '../services/pdfGenerator'; 
 import { useAuth } from '../contexts/AuthContext';
+import { trackEvent } from '../services/analyticsService'; // <--- IMPORT HERE
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
@@ -16,6 +17,8 @@ import {
   Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
   Minus, Loader2, ChevronUp
 } from 'lucide-react';
+
+// ... (interfaces and constants remain same) ...
 
 interface ChatMessage { role: 'user' | 'assistant'; content: string; }
 type MobileState = 'min' | 'mid' | 'max';
@@ -44,6 +47,7 @@ const CURRENCY_OPTIONS = [
 ];
 
 export const SmartPanel = () => {
+  // ... (hooks remain same) ...
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { blocks, land, metrics, currency, setCurrency, updateBlock, removeBlock, duplicateBlock, updateLand, calculateMetrics, loadProject } = useProjectStore();
@@ -92,7 +96,7 @@ export const SmartPanel = () => {
   // --- AI SYNC (AUTO-OPEN RESTORED) ---
   useEffect(() => {
     if (message) {
-        setIsChatOpen(true); // <--- Forces open on receive
+        setIsChatOpen(true); 
         setIsAiLoading(false);
         setHasUnreadAi(false);
 
@@ -103,7 +107,7 @@ export const SmartPanel = () => {
     }
     
     if (thinking) {
-        setIsChatOpen(true); // <--- Forces open when thinking
+        setIsChatOpen(true); 
         setIsAiLoading(true);
     }
   }, [message, thinking]);
@@ -111,6 +115,10 @@ export const SmartPanel = () => {
   const handleExportPDF = async () => {
       if (isPdfLoading) return;
       setIsPdfLoading(true);
+
+      // --- TRACKING ADDED ---
+      trackEvent('pdf_export_start', { currency, language: i18n.language });
+
       try {
           const projectDataForPdf = {
               terrainArea: land.area,
@@ -143,6 +151,10 @@ export const SmartPanel = () => {
               executiveSummary = t('pdf_fallback_summary');
           }
           await generateReport(null, projectDataForPdf, i18n.language as any, executiveSummary as any);
+          
+          // --- TRACKING SUCCESS ---
+          trackEvent('pdf_export_success');
+
       } catch (error) {
           console.error("PDF Error:", error);
           alert("Could not generate report. Please try again.");
@@ -155,6 +167,10 @@ export const SmartPanel = () => {
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
+
+      // --- TRACKING ---
+      trackEvent('zoning_analysis_manual', { context_length: urbanContext.length });
+
       setTimeout(() => {
           const successMsg = t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy });
           setChatMessages(prev => [...prev, { role: 'assistant', content: successMsg }]);
@@ -162,6 +178,7 @@ export const SmartPanel = () => {
       }, 1500);
   };
 
+  // ... (helpers remain same) ...
   const isImperial = measurementSystem === 'imperial';
   const fmtArea = (val: number) => isImperial ? (val * 10.7639).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ft²' : val.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' m²';
   const changeLanguage = (lng: string) => { i18n.changeLanguage(lng); setIsLangMenuOpen(false); };
@@ -172,11 +189,10 @@ export const SmartPanel = () => {
       setMobileState(prev => prev === 'min' ? 'mid' : prev === 'mid' ? 'max' : 'min'); 
   };
   
-  // UPDATED: Use dvh (dynamic viewport height) and set max to 85dvh to allow space for browser bar
   const getMobileHeightClass = () => {
       if (mobileState === 'min') return 'h-[85px]'; 
       if (mobileState === 'mid') return 'h-[50dvh]';
-      return 'h-[85dvh]'; // Leaves ~15% at the top + bottom offset
+      return 'h-[85dvh]'; 
   };
   
   const handleMainAiButtonClick = async () => {
@@ -190,6 +206,10 @@ export const SmartPanel = () => {
     setThinking(true); 
     setIsAiLoading(true); 
     if(isMobile) setMobileState('max'); 
+    
+    // --- TRACKING ---
+    trackEvent('ai_analysis_start_button');
+
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
         setMessage(report); 
@@ -202,25 +222,31 @@ export const SmartPanel = () => {
     setChatMessages([...chatMessages, newMsg]);
     setUserQuery('');
     setIsAiLoading(true);
+
+    // --- TRACKING ---
+    trackEvent('ai_chat_message', { length: userQuery.length });
+
     try {
         const reply = await analyzeProject([...chatMessages, newMsg], { metrics, land, blocks, currency }, i18n.language);
         setChatMessages(prev => [...prev, { role: 'assistant', content: reply || "Error." }]);
     } catch (e) { setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); } finally { setIsAiLoading(false); }
   };
 
+  // ... (save/load handlers remain same) ...
   const handleSaveProject = () => {
     const data = JSON.stringify({ version: '1.0', date: new Date().toISOString(), blocks, land, currency }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `cytyos-project.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    trackEvent('project_saved_local'); // Added tracking
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => { try { loadProject(JSON.parse(ev.target?.result as string)); } catch (err) { alert("Error loading file"); } };
+    reader.onload = (ev) => { try { loadProject(JSON.parse(ev.target?.result as string)); trackEvent('project_loaded_local'); } catch (err) { alert("Error loading file"); } };
     reader.readAsText(file);
     e.target.value = '';
   };
@@ -248,6 +274,10 @@ export const SmartPanel = () => {
   const money = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(val);
   const num = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 1 }).format(val);
   const dec = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 2 }).format(val);
+
+  // ... (JSX remains exactly the same, only tracking calls were inserted in handlers) ...
+  // To keep this response clean, I am not re-pasting the 500 lines of JSX since they are identical to your input.
+  // The logic changes above are what matters.
 
   return (
     <>
