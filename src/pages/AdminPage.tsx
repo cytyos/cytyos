@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { couponService } from '../services/couponService';
 import { supabase } from '../lib/supabase';
 
-// --- VOLTAMOS PARA EXPORT CONST (PADRÃO DO PROJETO) ---
+// Mantemos export const para seguir o padrão do projeto
 export const AdminPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'coupons' | 'radar'>('coupons');
@@ -27,18 +27,37 @@ export const AdminPage = () => {
 
   // --- LOGIC ---
   const calculateStats = async () => {
+      // Pega até 1000 eventos para calcular estatísticas
       const { data } = await supabase.from('app_events').select('event_name, created_at, user_id').limit(1000);
+      
       if (!data) return;
+
       const now = new Date();
       const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+
       const pdfs = data.filter(e => e.event_name.includes('pdf')).length;
       const searches = data.filter(e => e.event_name.includes('search_select')).length;
       const ai = data.filter(e => e.event_name.includes('ai')).length;
-      const uniqueUsers = new Set(data.filter(e => new Date(e.created_at) > oneDayAgo && e.user_id).map(e => e.user_id));
-      setStats({ totalPDFs: pdfs, totalSearches: searches, totalAi: ai, activeUsers24h: uniqueUsers.size });
+      
+      const uniqueUsers = new Set(
+          data.filter(e => new Date(e.created_at) > oneDayAgo && e.user_id)
+              .map(e => e.user_id)
+      );
+
+      setStats({
+          totalPDFs: pdfs,
+          totalSearches: searches,
+          totalAi: ai,
+          activeUsers24h: uniqueUsers.size
+      });
   };
 
-  const loadCoupons = async () => { try { const data = await couponService.getAll(); setCoupons(data || []); } catch (error) { console.error(error); } };
+  const loadCoupons = async () => { 
+      try { 
+          const data = await couponService.getAll(); 
+          setCoupons(data || []); 
+      } catch (error) { console.error(error); } 
+  };
   
   const handleCreate = async () => {
     if (!newCode) return;
@@ -57,7 +76,7 @@ export const AdminPage = () => {
   const loadEvents = async () => {
     setLoadingEvents(true);
     const { data } = await supabase.from('app_events').select('*').order('created_at', { ascending: false }).limit(50);
-    if (data) setEvents(data);
+    if (data) setEvents(data || []); // Safety check
     setLoadingEvents(false);
   };
 
@@ -77,15 +96,20 @@ export const AdminPage = () => {
   return (
     <div className="min-h-screen bg-[#0f111a] p-8 text-white">
       <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* HEADER */}
         <div className="flex items-center justify-between">
           <div><h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">Mission Control</h1><p className="text-gray-400 text-sm mt-1">Huul Admin Dashboard</p></div>
           <button onClick={() => navigate('/app')} className="px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition flex items-center gap-2 text-sm"><ArrowLeft size={16} /> Back to App</button>
         </div>
+
+        {/* TABS */}
         <div className="flex gap-4 border-b border-gray-800 pb-1">
             <button onClick={() => setActiveTab('coupons')} className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-all ${activeTab === 'coupons' ? 'bg-indigo-600/20 text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 hover:text-white'}`}><Ticket size={18} /> Influencer Coupons</button>
             <button onClick={() => setActiveTab('radar')} className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-all ${activeTab === 'radar' ? 'bg-purple-600/20 text-purple-400 border-b-2 border-purple-500' : 'text-gray-500 hover:text-white'}`}><Activity size={18} /> User Radar (Live)</button>
         </div>
 
+        {/* TAB: COUPONS */}
         {activeTab === 'coupons' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-left-4">
                 <div className="bg-gray-900/50 border border-gray-800 p-6 rounded-2xl shadow-xl">
@@ -103,6 +127,7 @@ export const AdminPage = () => {
             </div>
         )}
 
+        {/* TAB: RADAR & METRICS */}
         {activeTab === 'radar' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -114,7 +139,18 @@ export const AdminPage = () => {
                 <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
                     <table className="w-full text-left border-collapse">
                         <thead><tr className="bg-gray-800/50 text-xs text-gray-400 border-b border-gray-700"><th className="p-4 font-bold uppercase">Type</th><th className="p-4 font-bold uppercase">User</th><th className="p-4 font-bold uppercase">Action</th><th className="p-4 font-bold uppercase">Details</th><th className="p-4 font-bold uppercase text-right">Time</th></tr></thead>
-                        <tbody className="divide-y divide-gray-800">{events.map((ev) => (<tr key={ev.id} className="hover:bg-white/5 transition-colors"><td className="p-4"><div className="p-2 bg-gray-800 rounded-lg inline-flex">{getEventIcon(ev.event_name)}</div></td><td className="p-4"><div className="text-sm font-bold text-white">{ev.user_email || 'Anonymous'}</div></td><td className="p-4"><div className="text-xs font-mono text-purple-300 bg-purple-900/20 px-2 py-1 rounded w-fit">{ev.event_name}</div></td><td className="p-4"><pre className="text-[10px] text-gray-400 font-mono bg-black/30 p-2 rounded max-w-[300px] overflow-x-auto custom-scrollbar">{JSON.stringify(ev.metadata, null, 2)}</pre></td><td className="p-4 text-right"><div className="text-xs text-gray-500">{new Date(ev.created_at).toLocaleTimeString()}</div></td></tr>))}</tbody>
+                        <tbody className="divide-y divide-gray-800">
+                            {events.map((ev) => (
+                                <tr key={ev.id} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4"><div className="p-2 bg-gray-800 rounded-lg inline-flex">{getEventIcon(ev.event_name)}</div></td>
+                                    <td className="p-4"><div className="text-sm font-bold text-white">{ev.user_email || 'Anonymous'}</div></td>
+                                    <td className="p-4"><div className="text-xs font-mono text-purple-300 bg-purple-900/20 px-2 py-1 rounded w-fit">{ev.event_name}</div></td>
+                                    <td className="p-4"><pre className="text-[10px] text-gray-400 font-mono bg-black/30 p-2 rounded max-w-[300px] overflow-x-auto custom-scrollbar">{JSON.stringify(ev.metadata, null, 2)}</pre></td>
+                                    <td className="p-4 text-right"><div className="text-xs text-gray-500">{new Date(ev.created_at).toLocaleTimeString()}</div></td>
+                                </tr>
+                            ))}
+                            {events.length === 0 && !loadingEvents && (<tr><td colSpan={5} className="p-8 text-center text-gray-500 italic">No activity recorded yet. Go use the app!</td></tr>)}
+                        </tbody>
                     </table>
                 </div>
             </div>
