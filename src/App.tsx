@@ -4,22 +4,21 @@ import { X, Monitor } from 'lucide-react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
-// --- EAGER IMPORTS (IMPORTAÇÃO DIRETA) ---
-// Carregamos direto para evitar o erro #306 do React.lazy
+// --- EAGER IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { Footer } from './components/Footer';
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AdminPage } from './pages/AdminPage';     // <--- CARREGANDO DIRETO
-import { MapControls } from './components/MapControls'; // <--- CARREGANDO DIRETO
 import './i18n';
 
-// --- LAZY IMPORTS (APENAS PARA COMPONENTES PESADOS QUE NÃO DERAM ERRO) ---
-// Mantemos o mapa e o painel como Lazy pois são muito grandes
+// --- LAZY IMPORTS (FIXED FOR NAMED EXPORTS) ---
+// O ".then" é obrigatório quando usamos "export const" com React.lazy
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
+const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
 const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
+const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage }))); // <--- FIXED
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 const FREE_USAGE_MS = 3 * 60 * 1000;
@@ -113,16 +112,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/privacy" element={<Suspense fallback={<LoadingScreen />}><PrivacyPage /></Suspense>} />
-            
-            {/* Rota Admin - Agora carregada diretamente (sem suspense) */}
-            <Route path="/admin" element={
-                <ProtectedRoute>
-                    <AdminGuard allowedEmail="cytyosapp@gmail.com">
-                        <AdminPage />
-                    </AdminGuard>
-                </ProtectedRoute>
-            } />
-            
+            <Route path="/admin" element={<ProtectedRoute><Suspense fallback={<LoadingScreen />}><AdminGuard allowedEmail="cytyosapp@gmail.com"><AdminPage /></AdminGuard></Suspense></ProtectedRoute>} />
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
@@ -131,10 +121,7 @@ function App() {
                             <MapboxMap />
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
                                 <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
-                                    <div className="pointer-events-auto w-full max-w-md">
-                                        {/* MapControls carregado diretamente */}
-                                        <MapControls />
-                                    </div>
+                                    <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
                                 </div>
                                 <div className="flex-1"></div>
                             </div>
