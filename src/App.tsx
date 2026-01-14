@@ -4,7 +4,7 @@ import { X, Monitor } from 'lucide-react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
-// --- EAGER IMPORTS ---
+// --- EAGER IMPORTS (IMPORTAÇÕES DIRETAS) ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { Footer } from './components/Footer';
@@ -12,13 +12,18 @@ import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './i18n';
 
-// --- LAZY IMPORTS (FIXED FOR NAMED EXPORTS) ---
-// O ".then" é obrigatório quando usamos "export const" com React.lazy
+// --- AQUI ESTÁ A CORREÇÃO: IMPORTAMOS O ADMIN DIRETO ---
+// Isso elimina o erro #306 pois o React não precisa adivinhar como carregar
+import { AdminPage } from './pages/AdminPage'; 
+
+// --- LAZY IMPORTS (Para coisas pesadas que funcionam bem) ---
+// O MapControls e SmartPanel podem causar erro se não existirem ou tiverem erro interno
+// Por segurança, vamos carregar o MapControls direto também se ele estiver dando problema,
+// mas vamos tentar manter o Lazy no Mapa que é muito pesado.
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
 const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
-const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage }))); // <--- FIXED
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 const FREE_USAGE_MS = 3 * 60 * 1000;
@@ -76,6 +81,7 @@ const PaywallGlobal = () => {
       const trialEnd = localStorage.getItem('cytyos_trial_end');
       const firstVisit = sessionStorage.getItem('cytyos_first_visit');
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
+      const stillInFreeTier = timeUsed < FREE_USAGE_MS;
       const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
 
       if (!isVip && (!trialEnd || Date.now() >= Number(trialEnd)) && (timeUsed > FREE_USAGE_MS || aiLimitReached)) {
@@ -98,6 +104,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, allowedEmail: string }) => {
     const { user } = useAuth();
+    // Se o usuário não for o admin, manda de volta pro app
     if (user?.email !== allowedEmail) return <Navigate to="/app" replace />;
     return <>{children}</>;
 };
@@ -111,8 +118,22 @@ function App() {
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/privacy" element={<Suspense fallback={<LoadingScreen />}><PrivacyPage /></Suspense>} />
-            <Route path="/admin" element={<ProtectedRoute><Suspense fallback={<LoadingScreen />}><AdminGuard allowedEmail="cytyosapp@gmail.com"><AdminPage /></AdminGuard></Suspense></ProtectedRoute>} />
+            
+            <Route path="/privacy" element={
+                <Suspense fallback={<LoadingScreen />}>
+                    <PrivacyPage />
+                </Suspense>
+            } />
+            
+            {/* ROTA ADMIN AGORA É DIRETA (SEM SUSPENSE) */}
+            <Route path="/admin" element={
+                <ProtectedRoute>
+                    <AdminGuard allowedEmail="cytyosapp@gmail.com">
+                        <AdminPage />
+                    </AdminGuard>
+                </ProtectedRoute>
+            } />
+            
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
