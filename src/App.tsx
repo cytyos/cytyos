@@ -4,8 +4,7 @@ import { X, Monitor } from 'lucide-react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
-// --- EAGER IMPORTS (TODOS OS COMPONENTES CARREGADOS DIRETAMENTE) ---
-// Isso elimina 100% a chance do erro #306 de Lazy Loading
+// --- EAGER IMPORTS ---
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { Footer } from './components/Footer';
@@ -13,14 +12,13 @@ import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './i18n';
 
-// Importações diretas dos componentes principais
-// Se der erro aqui (linha vermelha), sabemos exatamente qual arquivo está com problema
-import { MapboxMap } from './components/map/MapboxMap';
-import { SmartPanel } from './components/SmartPanel';
-import { MapControls } from './components/MapControls';
-import { PricingModal } from './components/PricingModal';
-import { AdminPage } from './pages/AdminPage';
-import { PrivacyPage } from './pages/PrivacyPage';
+// --- LAZY IMPORTS (SAFE MODE) ---
+const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
+const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
+const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
+const PricingModal = React.lazy(() => import('./components/PricingModal').then(module => ({ default: module.PricingModal })));
+const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
 const FREE_USAGE_MS = 3 * 60 * 1000;
 
@@ -77,6 +75,7 @@ const PaywallGlobal = () => {
       const trialEnd = localStorage.getItem('cytyos_trial_end');
       const firstVisit = sessionStorage.getItem('cytyos_first_visit');
       const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
+      const stillInFreeTier = timeUsed < FREE_USAGE_MS;
       const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
 
       if (!isVip && (!trialEnd || Date.now() >= Number(trialEnd)) && (timeUsed > FREE_USAGE_MS || aiLimitReached)) {
@@ -86,7 +85,7 @@ const PaywallGlobal = () => {
       }
   };
 
-  return <PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} />;
+  return <Suspense fallback={null}><PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} /></Suspense>;
 };
 
 // --- GUARDS ---
@@ -109,43 +108,29 @@ function App() {
         <SpeedInsights /> <Analytics />
         <BrowserRouter>
         <PaywallGlobal />
-        
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            
-            <Route path="/admin" element={
-                <ProtectedRoute>
-                    <AdminGuard allowedEmail="cytyosapp@gmail.com">
-                        <AdminPage />
-                    </AdminGuard>
-                </ProtectedRoute>
-            } />
-            
+            <Route path="/privacy" element={<Suspense fallback={<LoadingScreen />}><PrivacyPage /></Suspense>} />
+            <Route path="/admin" element={<ProtectedRoute><Suspense fallback={<LoadingScreen />}><AdminGuard allowedEmail="cytyosapp@gmail.com"><AdminPage /></AdminGuard></Suspense></ProtectedRoute>} />
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
                         <MobileOptimizationWarning />
-                        
-                        <MapboxMap />
-                        
-                        <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                            <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
-                                <div className="pointer-events-auto w-full max-w-md">
-                                    <MapControls />
+                        <Suspense fallback={<LoadingScreen />}>
+                            <MapboxMap />
+                            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
+                                <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
+                                    <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
                                 </div>
+                                <div className="flex-1"></div>
                             </div>
-                            <div className="flex-1"></div>
-                        </div>
-                        
-                        <SmartPanel />
-                        
+                            <SmartPanel />
+                        </Suspense>
                         <Footer />
                     </div>
                 </ProtectedRoute>
             } />
-
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </BrowserRouter>
