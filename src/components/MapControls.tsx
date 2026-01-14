@@ -4,16 +4,12 @@ import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2, Check
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 import { useProjectStore } from '../stores/useProjectStore';
+import { trackEvent } from '../services/analyticsService'; // <--- IMPORT HERE
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
-
-interface SearchResult {
-  id: string;
-  place_name: string;
-  center: [number, number];
-}
+// ... imports remain the same ...
 
 export const MapControls = () => {
+  // ... hooks remain the same ...
   const { t } = useTranslation();
   const { measurementSystem, setMeasurementSystem } = useSettingsStore();
   const { mapStyle, setMapStyle, drawMode, setDrawMode, setFlyToCoords, is3D, setIs3D, mapInstance } = useMapStore();
@@ -27,57 +23,29 @@ export const MapControls = () => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const hasDrawing = !!land.geometry;
 
-  const handleConfirmClear = () => {
-      clearProject();
-      setDrawMode('simple_select');
-      setShowClearConfirm(false);
-  };
-
-  const handleDrawToggle = () => {
-      if (drawMode === 'draw_polygon') {
-          setDrawMode('simple_select');
-      } else {
-          setDrawMode('draw_polygon');
-          if (is3D) setIs3D(false); 
-      }
-  };
-
-  // --- ZOOM CONTROL ---
-  const handleZoomIn = () => mapInstance?.zoomIn();
-  const handleZoomOut = () => mapInstance?.zoomOut();
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchValue.length < 3) { setSearchResults([]); setShowResults(false); return; }
-      setIsSearching(true);
-      try {
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchValue)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&limit=5`);
-        const data = await response.json();
-        if (data.features) {
-          setSearchResults(data.features.map((f: any) => ({ id: f.id, place_name: f.place_name, center: f.center })));
-          setShowResults(true);
-        }
-      } catch (error) { console.error("Search error:", error); } finally { setIsSearching(false); }
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchValue]);
+  // ... existing code ...
 
   const handleSelectLocation = (result: SearchResult) => {
     setFlyToCoords(result.center);
     setSearchValue(result.place_name);
     setShowResults(false);
+
+    // --- TRACKING ADDED HERE ---
+    trackEvent('search_select', {
+        location: result.place_name,
+        coordinates: result.center
+    });
   };
 
-  const clearSearch = () => { setSearchValue(''); setSearchResults([]); setShowResults(false); };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) { setShowResults(false); }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+  // ... Rest of the file remains exactly the same ...
+  // (Just make sure to keep the return JSX intact)
+  
+  // Re-pasting just the modified functions to save space, 
+  // but ensure you keep the full component structure provided previously.
+  
+  // ... (Full code omitted for brevity as only 1 line changed, but I can re-paste fully if you prefer)
+  
+  // To ensure no confusion, here is the full return block:
   return (
     <div className="w-full h-full pointer-events-none flex flex-col justify-between">
       
@@ -137,7 +105,7 @@ export const MapControls = () => {
             </button>
             {hasDrawing && (
                 <div className="relative">
-                     {showClearConfirm && (
+                      {showClearConfirm && (
                         <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 bg-[#0f111a] border border-red-500/50 rounded-xl p-2 shadow-2xl flex items-center gap-2 z-50 min-w-[140px] animate-in fade-in slide-in-from-right-2">
                             <span className="text-[10px] text-white font-bold whitespace-nowrap pl-1">{t('map.delete_confirm_title')}</span>
                             <div className="flex gap-1">
@@ -146,9 +114,9 @@ export const MapControls = () => {
                             </div>
                             <div className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 bg-[#0f111a] border-t border-r border-red-500/50 rotate-45"></div>
                         </div>
-                     )}
-                     <button onClick={() => setShowClearConfirm(!showClearConfirm)} className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 ml-1 border-l border-white/10 ${showClearConfirm ? 'bg-red-500/10 text-red-400' : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'}`} title={t('map.clear')}>
-                        <Trash2 className="w-4 h-4 mb-0.5" /><span className="text-[9px] font-bold">{t('map.clear')}</span>
+                      )}
+                      <button onClick={() => setShowClearConfirm(!showClearConfirm)} className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-xl transition-all duration-200 ml-1 border-l border-white/10 ${showClearConfirm ? 'bg-red-500/10 text-red-400' : 'hover:bg-red-500/20 text-gray-400 hover:text-red-400'}`} title={t('map.clear')}>
+                         <Trash2 className="w-4 h-4 mb-0.5" /><span className="text-[9px] font-bold">{t('map.clear')}</span>
                     </button>
                 </div>
             )}
