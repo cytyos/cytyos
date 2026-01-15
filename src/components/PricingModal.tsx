@@ -6,9 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 
 // LINKS DO STRIPE (Mantenha seus links originais aqui)
 const STRIPE_LINKS = {
-  monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04",
-  yearly: "https://buy.stripe.com/test_4gMeVc3QveDN3Ucf9tdjO05",
-  pdfOnly: "https://buy.stripe.com/test_cNicN4aeTanx8as2mHdjO06"
+  monthly: "https://buy.stripe.com/8x24gyexDdyS4bQ6WmgMw06",
+  yearly: "https://buy.stripe.com/dRm00idtzeCWbEi3KagMw05",
+  pdfOnly: "https://buy.stripe.com/aFa3cu61766qeQugwWgMw03"
 };
 
 const OFFLINE_KEYS: Record<string, { type: 'UNLIMITED' | 'TRIAL'; durationHours?: number; label?: string }> = {
