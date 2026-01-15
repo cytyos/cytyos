@@ -4,7 +4,7 @@ import { Search, Layers, Box, PenTool, Map as MapIcon, Loader2, X, Trash2, Check
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMapStore } from '../stores/mapStore';
 import { useProjectStore } from '../stores/useProjectStore';
-import { trackEvent } from '../services/analyticsService'; // <--- IMPORTANTE
+import { trackEvent } from '../services/analyticsService';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -36,7 +36,7 @@ export const MapControls = () => {
       clearProject();
       setDrawMode('simple_select');
       setShowClearConfirm(false);
-      trackEvent('project_cleared'); // <--- Analytics
+      trackEvent('project_cleared');
   };
 
   useEffect(() => {
@@ -60,7 +60,6 @@ export const MapControls = () => {
     setSearchValue(result.place_name);
     setShowResults(false);
     
-    // <--- RASTREAMENTO DO DASHBOARD ---
     trackEvent('search_select', {
         location: result.place_name,
         coordinates: result.center
