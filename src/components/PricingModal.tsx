@@ -5,7 +5,7 @@ import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2, X, Ro
 import { couponService } from '../services/couponService';
 import { useAuth } from '../contexts/AuthContext';
 
-// 1. SEUS LINKS DO STRIPE (ORIGINAIS)
+// 1. SEUS LINKS DO STRIPE
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04",
   yearly: "https://buy.stripe.com/test_4gMeVc3QveDN3Ucf9tdjO05",
@@ -23,17 +23,19 @@ interface PricingModalProps {
 
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const { t } = useTranslation();
-  const { user } = useAuth(); // <--- IMPORTANTE: Pegamos o usuário logado
+  const { user } = useAuth(); // Pega o usuário para o ID
 
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  
+  // Começa no Anual para mostrar todas as vantagens de cara
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   if (!isOpen) return null;
 
-  // --- LÓGICA DE CHECKOUT AUTOMATIZADO ---
+  // --- LÓGICA DE CHECKOUT (LINK + ID) ---
   const handleCheckout = (type: 'subscription' | 'pdf') => {
     let baseUrl = '';
     
@@ -44,14 +46,14 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     }
 
     if (baseUrl) {
-        // TRUQUE: Adiciona o ID do usuário ao link para o Webhook identificar depois
+        // Adiciona o ID ao link
         const checkoutUrl = user?.id 
             ? `${baseUrl}?client_reference_id=${user.id}` 
             : baseUrl;
             
         window.open(checkoutUrl, '_blank');
     } else {
-        alert("Payment link error.");
+        alert("Erro no link de pagamento.");
     }
   };
 
@@ -67,7 +69,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         if (OFFLINE_KEYS[code].type === 'UNLIMITED') {
           localStorage.setItem('cytyos_license_type', 'VIP');
           localStorage.removeItem('cytyos_trial_end');
-          setSuccessMsg(`Welcome Founder! Unlocked.`);
+          setSuccessMsg(`Founder Access Unlocked!`);
           setTimeout(() => onClose(), 1000);
           return;
         }
@@ -79,10 +81,10 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         setSuccessMsg(`Trial Activated!`);
         setTimeout(() => onClose(), 1000);
       } catch (dbError: any) {
-        setError(dbError.message || 'Invalid Coupon');
+        setError(dbError.message || 'Cupom Inválido');
       }
     } catch (err) {
-      setError('Validation Error');
+      setError('Erro na validação');
     } finally {
       setIsValidating(false);
     }
@@ -97,20 +99,30 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           <X size={24} />
         </button>
 
-        {/* Lado Esquerdo (Features) */}
+        {/* Lado Esquerdo (Features Dinâmicas) */}
         <div className="w-full md:w-5/12 bg-gradient-to-b from-[#0a0c10] to-black p-6 md:p-8 flex flex-col border-b md:border-b-0 md:border-r border-white/5 relative shrink-0">
+          
           <div className="mb-6 relative z-10 pt-8 md:pt-0">
-            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-              <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
-              <span className="text-[10px] font-bold text-indigo-300 tracking-wider uppercase">{t('pricing.badge')}</span>
-            </div>
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">{t('pricing.title')}</h3>
-            <p className="text-xs text-gray-400 mt-3 border-l-2 border-yellow-500/50 pl-3 leading-relaxed">{t('pricing.warning')}</p>
+            {billingCycle === 'yearly' && (
+                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full animate-in fade-in slide-in-from-left-2">
+                <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
+                <span className="text-[10px] font-bold text-indigo-300 tracking-wider uppercase">{t('pricing.badge')}</span>
+                </div>
+            )}
+            <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
+                {billingCycle === 'yearly' ? t('pricing.title') : 'Plano Mensal'}
+            </h3>
+            <p className="text-xs text-gray-400 mt-3 border-l-2 border-yellow-500/50 pl-3 leading-relaxed">
+                {billingCycle === 'yearly' ? t('pricing.warning') : 'Acesso básico à plataforma.'}
+            </p>
           </div>
           
-          <div className="space-y-3 flex-1">
-             {/* Blocos de Features (Simplificado para o código caber, mantenha o seu conteúdo visual aqui se quiser, ou use este padrão limpo) */}
-             <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden">
+          <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+             
+             {/* V1 Block (Sempre visível) */}
+             <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors">
+                <div className="absolute top-0 right-0 p-2 opacity-10"><Rocket className="w-12 h-12 text-indigo-500" /></div>
+                <div className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('pricing.v1_tag')}</div>
                 <h4 className="text-sm font-bold text-white mb-3">{t('pricing.v1_title')}</h4>
                 <ul className="space-y-2">
                     {[1,2,3,4].map(n => (
@@ -120,6 +132,46 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                     ))}
                 </ul>
              </div>
+
+             {/* BLOCOS EXCLUSIVOS DO ANUAL (Só aparecem se billingCycle === 'yearly') */}
+             {billingCycle === 'yearly' && (
+                 <>
+                    {/* Beta Block */}
+                    <div className="rounded-xl bg-[#0f111a] border border-green-500/20 p-4 relative overflow-hidden group hover:border-green-500/40 transition-colors animate-in fade-in slide-in-from-bottom-4">
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
+                        <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-1">{t('pricing.beta_tag')}</div>
+                        <h4 className="text-sm font-bold text-white mb-3">{t('pricing.beta_title')}</h4>
+                        <ul className="space-y-2">
+                            {[1,2,3,4].map(n => (
+                                <li key={n} className="flex items-start gap-2 text-[10px] text-gray-400">
+                                    <Check className="w-3 h-3 text-green-500 shrink-0 mt-0.5" /> <span>{t(`pricing.beta_f${n}`)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* V2 Block */}
+                    <div className="rounded-xl bg-[#0f111a] border border-purple-500/20 p-4 relative overflow-hidden group hover:border-purple-500/40 transition-colors animate-in fade-in slide-in-from-bottom-8">
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles className="w-12 h-12 text-purple-500" /></div>
+                        <div className="text-[9px] font-bold text-purple-300 uppercase tracking-widest mb-1">{t('pricing.v2_tag')}</div>
+                        <h4 className="text-sm font-bold text-white mb-3">{t('pricing.v2_title')}</h4>
+                        <ul className="space-y-2">
+                            {[1,2,3,4].map(n => (
+                                <li key={n} className="flex items-start gap-2 text-[10px] text-gray-400">
+                                    <Sparkles className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" /> <span>{t(`pricing.v2_f${n}`)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                 </>
+             )}
+
+             {/* Aviso quando está no mensal */}
+             {billingCycle === 'monthly' && (
+                 <div className="p-4 border border-dashed border-gray-700 rounded-xl text-center">
+                     <p className="text-xs text-gray-500">Recursos Beta e V2.0 são exclusivos para <br/><span className="text-white font-bold">Membros Fundadores (Anual)</span></p>
+                 </div>
+             )}
           </div>
 
           <div className="mt-6 pt-6 border-t border-white/10">
@@ -135,7 +187,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           </div>
         </div>
 
-        {/* Lado Direito (Selector & Payment) */}
+        {/* Lado Direito (Seletor & Pagamento) */}
         <div className="w-full md:w-7/12 p-6 md:p-8 flex flex-col bg-[#0f111a] relative justify-center shrink-0">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">{t('pricing.select_plan')}</h2>
