@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, Lock, Shield, FileText, Zap, Star, AlertTriangle, Loader2, X, Rocket, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Check, Lock, Shield, Zap, Star, Loader2, X, Rocket, Sparkles, CheckCircle2, Construction } from 'lucide-react';
 import { couponService } from '../services/couponService';
 import { useAuth } from '../contexts/AuthContext';
 
-// 1. SEUS LINKS DO STRIPE
+// LINKS DO STRIPE
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04",
   yearly: "https://buy.stripe.com/test_4gMeVc3QveDN3Ucf9tdjO05",
@@ -23,22 +22,18 @@ interface PricingModalProps {
 
 export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const { t } = useTranslation();
-  const { user } = useAuth(); // Pega o usuário para o ID
+  const { user } = useAuth();
 
   const [accessKey, setAccessKey] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  
-  // Começa no Anual para mostrar todas as vantagens de cara
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   if (!isOpen) return null;
 
-  // --- LÓGICA DE CHECKOUT (LINK + ID) ---
   const handleCheckout = (type: 'subscription' | 'pdf') => {
     let baseUrl = '';
-    
     if (type === 'pdf') {
         baseUrl = STRIPE_LINKS.pdfOnly;
     } else {
@@ -46,14 +41,12 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
     }
 
     if (baseUrl) {
-        // Adiciona o ID ao link
         const checkoutUrl = user?.id 
             ? `${baseUrl}?client_reference_id=${user.id}` 
             : baseUrl;
-            
         window.open(checkoutUrl, '_blank');
     } else {
-        alert("Erro no link de pagamento.");
+        alert("Payment link error.");
     }
   };
 
@@ -103,54 +96,60 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         <div className="w-full md:w-5/12 bg-gradient-to-b from-[#0a0c10] to-black p-6 md:p-8 flex flex-col border-b md:border-b-0 md:border-r border-white/5 relative shrink-0">
           
           <div className="mb-6 relative z-10 pt-8 md:pt-0">
-            {billingCycle === 'yearly' && (
+            {billingCycle === 'yearly' ? (
                 <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full animate-in fade-in slide-in-from-left-2">
-                <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
-                <span className="text-[10px] font-bold text-indigo-300 tracking-wider uppercase">{t('pricing.badge')}</span>
+                    <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
+                    <span className="text-[10px] font-bold text-indigo-300 tracking-wider uppercase">{t('pricing.badge')}</span>
+                </div>
+            ) : (
+                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-gray-500/10 border border-gray-500/20 rounded-full animate-in fade-in slide-in-from-left-2">
+                    <Construction className="w-3 h-3 text-gray-400" />
+                    <span className="text-[10px] font-bold text-gray-300 tracking-wider uppercase">Beta Access</span>
                 </div>
             )}
+            
             <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
-                {billingCycle === 'yearly' ? t('pricing.title') : 'Plano Mensal'}
+                {billingCycle === 'yearly' ? t('pricing.title') : 'Acesso Beta'}
             </h3>
             <p className="text-xs text-gray-400 mt-3 border-l-2 border-yellow-500/50 pl-3 leading-relaxed">
-                {billingCycle === 'yearly' ? t('pricing.warning') : 'Acesso básico à plataforma.'}
+                {billingCycle === 'yearly' ? t('pricing.warning') : 'Você está contratando a versão atual da plataforma.'}
             </p>
           </div>
           
           <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
              
-             {/* V1 Block (Sempre visível) */}
-             <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors">
-                <div className="absolute top-0 right-0 p-2 opacity-10"><Rocket className="w-12 h-12 text-indigo-500" /></div>
-                <div className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('pricing.v1_tag')}</div>
-                <h4 className="text-sm font-bold text-white mb-3">{t('pricing.v1_title')}</h4>
+             {/* BLOCK 1: CURRENT BETA (Sempre visível) */}
+             <div className="rounded-xl bg-gradient-to-br from-gray-900/40 to-[#0f111a] border border-gray-700/50 p-4 relative overflow-hidden group hover:border-gray-500 transition-colors">
+                <div className="absolute top-0 right-0 p-2 opacity-10"><Construction className="w-12 h-12 text-white" /></div>
+                <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">DISPONÍVEL AGORA</div>
+                <h4 className="text-sm font-bold text-white mb-3">Recursos Beta</h4>
                 <ul className="space-y-2">
                     {[1,2,3,4].map(n => (
                         <li key={n} className="flex items-start gap-2 text-[10px] text-gray-300">
-                            <Rocket className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" /> <span>{t(`pricing.v1_f${n}`)}</span>
+                            <Check className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" /> <span>{t(`pricing.v1_f${n}`)}</span>
                         </li>
                     ))}
                 </ul>
              </div>
 
-             {/* BLOCOS EXCLUSIVOS DO ANUAL (Só aparecem se billingCycle === 'yearly') */}
+             {/* BLOCOS EXCLUSIVOS DO ANUAL (Hidden on Monthly) */}
              {billingCycle === 'yearly' && (
                  <>
-                    {/* Beta Block */}
-                    <div className="rounded-xl bg-[#0f111a] border border-green-500/20 p-4 relative overflow-hidden group hover:border-green-500/40 transition-colors animate-in fade-in slide-in-from-bottom-4">
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
-                        <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-1">{t('pricing.beta_tag')}</div>
-                        <h4 className="text-sm font-bold text-white mb-3">{t('pricing.beta_title')}</h4>
+                    {/* Block 2: V1.0 Launch */}
+                    <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors animate-in fade-in slide-in-from-bottom-4">
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><Rocket className="w-12 h-12 text-indigo-500" /></div>
+                        <div className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('pricing.v1_tag')}</div>
+                        <h4 className="text-sm font-bold text-white mb-3">{t('pricing.v1_title')}</h4>
                         <ul className="space-y-2">
                             {[1,2,3,4].map(n => (
-                                <li key={n} className="flex items-start gap-2 text-[10px] text-gray-400">
-                                    <Check className="w-3 h-3 text-green-500 shrink-0 mt-0.5" /> <span>{t(`pricing.beta_f${n}`)}</span>
+                                <li key={n} className="flex items-start gap-2 text-[10px] text-gray-300">
+                                    <Rocket className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" /> <span>{t(`pricing.beta_f${n}`)}</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    {/* V2 Block */}
+                    {/* Block 3: V2.0 Future */}
                     <div className="rounded-xl bg-[#0f111a] border border-purple-500/20 p-4 relative overflow-hidden group hover:border-purple-500/40 transition-colors animate-in fade-in slide-in-from-bottom-8">
                         <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles className="w-12 h-12 text-purple-500" /></div>
                         <div className="text-[9px] font-bold text-purple-300 uppercase tracking-widest mb-1">{t('pricing.v2_tag')}</div>
@@ -168,8 +167,11 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
 
              {/* Aviso quando está no mensal */}
              {billingCycle === 'monthly' && (
-                 <div className="p-4 border border-dashed border-gray-700 rounded-xl text-center">
-                     <p className="text-xs text-gray-500">Recursos Beta e V2.0 são exclusivos para <br/><span className="text-white font-bold">Membros Fundadores (Anual)</span></p>
+                 <div className="p-4 border border-dashed border-gray-700 rounded-xl text-center bg-gray-900/20">
+                     <p className="text-xs text-gray-500 leading-relaxed">
+                        Ao selecionar o plano mensal, você tem acesso apenas ao que está pronto hoje.<br/>
+                        <span className="text-indigo-400 font-bold block mt-1">Mude para Anual para garantir V1.0 e V2.0</span>
+                     </p>
                  </div>
              )}
           </div>
@@ -203,7 +205,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           <div className={`group border-2 rounded-2xl p-6 transition-all mb-8 relative overflow-hidden ${billingCycle === 'yearly' ? 'border-indigo-500 bg-indigo-900/10' : 'border-white/10'}`}>
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
               <div className="text-center md:text-left">
-                <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? t('pricing.plan_monthly') : t('pricing.plan_annual')}</h4>
+                <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? 'Plano Mensal (Beta)' : t('pricing.plan_annual')}</h4>
                 <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? t('pricing.sub_monthly') : t('pricing.sub_annual')}</p>
               </div>
               <div className="text-center md:text-right">
