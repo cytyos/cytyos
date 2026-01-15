@@ -10,11 +10,10 @@ import { LoginPage } from './pages/LoginPage';
 import { Footer } from './components/Footer';
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { subscriptionService } from './services/subscriptionService'; // <--- NOVO: Serviço de Assinatura
+import { subscriptionService } from './services/subscriptionService';
 import './i18n';
 
-// --- LAZY IMPORTS (SAFE MODE) ---
-// Mantendo o padrão .then que evita o erro #306
+// --- LAZY IMPORTS (SAFE MODE - Mantendo o padrão .then para evitar erro #306) ---
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
@@ -52,63 +51,53 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL (SECURE VERSION) ---
+// --- PAYWALL CONTROL (INTEGRADO AO SUPABASE) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useAuth(); // Precisamos da sessão para verificar o banco
+  const { session } = useAuth(); 
 
   useEffect(() => {
-    // Inicializa timer de primeira visita
+    // Timer inicial para usuários free
     if (!sessionStorage.getItem('cytyos_first_visit')) {
         sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
     }
 
     const verifySubscription = async () => {
-        // Só verifica se estiver dentro do app
         if (!location.pathname.startsWith('/app')) return;
 
-        // 1. CHECAGEM REAL (BANCO DE DADOS)
-        // Pergunta ao Supabase se o usuário tem assinatura ativa
+        // 1. Verifica Assinatura Real (Stripe/Supabase)
         const hasPremiumAccess = await subscriptionService.checkAccess();
         
         if (hasPremiumAccess) {
-            setPaywallOpen(false); // Libera o acesso
-            return;
+            setPaywallOpen(false);
+            return; 
         }
 
-        // 2. CHECAGEM LOCAL (FREEMIUM / TRIAL)
-        // Se não tem premium, verificamos se ainda pode usar grátis
-
-        // a) Cupom de Influencer
+        // 2. Lógica Freemium / Trial
         const trialEnd = localStorage.getItem('cytyos_trial_end');
-        if (trialEnd && Date.now() < Number(trialEnd)) return; 
+        if (trialEnd && Date.now() < Number(trialEnd)) return; // Tem cupom ativo
 
-        // b) Tempo Grátis (3 min)
         const firstVisit = sessionStorage.getItem('cytyos_first_visit');
         const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
         const stillInFreeTier = timeUsed < FREE_USAGE_MS;
-        
-        // c) Limite de IA
         const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
 
-        // BLOQUEIO: Se não é Free e não tem Premium
+        // Bloqueia se acabou o free e não tem premium
         if (!stillInFreeTier || aiLimitReached) {
             if (!isPaywallOpen) setPaywallOpen(true);
         }
     };
 
-    // Verifica a cada 5 segundos
     const interval = setInterval(verifySubscription, 5000); 
-    verifySubscription(); // Executa imediatamente ao montar
+    verifySubscription(); 
 
     return () => clearInterval(interval);
   }, [setPaywallOpen, isPaywallOpen, location.pathname, session]); 
 
   const handleCloseAttempt = () => {
-      // Se tentar fechar o modal sem pagar, manda para a home
-      navigate('/'); 
+      navigate('/'); // Se tentar fechar sem pagar, vai pra home
   };
 
   return <Suspense fallback={null}><PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} /></Suspense>;
