@@ -4,6 +4,7 @@ import { Check, Lock, Shield, Zap, Star, Loader2, X, Rocket, Sparkles, CheckCirc
 import { couponService } from '../services/couponService';
 import { useAuth } from '../contexts/AuthContext';
 
+// LINKS DO STRIPE (Mantenha seus links originais aqui)
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/test_eVqcN4gDh3Z9fCUe5pdjO04",
   yearly: "https://buy.stripe.com/test_4gMeVc3QveDN3Ucf9tdjO05",
@@ -78,7 +79,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           </div>
           
           <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-             {/* BLOCK 1: BETA (ALWAYS VISIBLE) */}
+             {/* BLOCK 1: BETA */}
              <div className="rounded-xl bg-gradient-to-br from-emerald-900/10 to-[#0f111a] border border-emerald-500/30 p-4 relative overflow-hidden group hover:border-emerald-400 transition-colors">
                 <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="w-12 h-12 text-emerald-500" /></div>
                 <div className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest mb-1">{t('pricing.beta_tag')}</div>
@@ -86,17 +87,15 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                 <ul className="space-y-2">{[1,2,3,4].map(n => (<li key={n} className="flex items-start gap-2 text-[10px] text-gray-300"><Check className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" /> <span>{t(`pricing.beta_f${n}`)}</span></li>))}</ul>
              </div>
 
-             {/* BLOCKS FOR YEARLY ONLY */}
+             {/* YEARLY BLOCKS */}
              {billingCycle === 'yearly' && (
                  <>
-                    {/* Block 2: V1.0 */}
                     <div className="rounded-xl bg-gradient-to-br from-indigo-900/10 to-[#0f111a] border border-indigo-500/30 p-4 relative overflow-hidden group hover:border-indigo-400 transition-colors animate-in fade-in slide-in-from-bottom-4">
                         <div className="absolute top-0 right-0 p-2 opacity-10"><Rocket className="w-12 h-12 text-indigo-500" /></div>
                         <div className="text-[9px] font-bold text-indigo-300 uppercase tracking-widest mb-1">{t('pricing.v1_tag')}</div>
                         <h4 className="text-sm font-bold text-white mb-3">{t('pricing.v1_title')}</h4>
                         <ul className="space-y-2">{[1,2,3,4].map(n => (<li key={n} className="flex items-start gap-2 text-[10px] text-gray-300"><Rocket className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" /> <span>{t(`pricing.v1_f${n}`)}</span></li>))}</ul>
                     </div>
-                    {/* Block 3: V2.0 */}
                     <div className="rounded-xl bg-[#0f111a] border border-purple-500/20 p-4 relative overflow-hidden group hover:border-purple-500/40 transition-colors animate-in fade-in slide-in-from-bottom-8">
                         <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles className="w-12 h-12 text-purple-500" /></div>
                         <div className="text-[9px] font-bold text-purple-300 uppercase tracking-widest mb-1">{t('pricing.v2_tag')}</div>
@@ -138,6 +137,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               <div className="text-center md:text-left">
                 <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? t('pricing.plan_monthly') : t('pricing.plan_annual')}</h4>
                 <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? t('pricing.sub_monthly') : t('pricing.sub_annual')}</p>
+                {/* --- CORREÇÃO DO BADGE AQUI --- */}
                 {billingCycle === 'yearly' && (<div className="mt-2 inline-flex items-center gap-1 bg-green-500/10 border border-green-500/20 text-green-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"><Zap className="w-3 h-3" /> {t('pricing.save_amount_badge')}</div>)}
               </div>
               <div className="text-center md:text-right">
