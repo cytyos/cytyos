@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Lock, Shield, Zap, Star, Loader2, X, Rocket, Sparkles, CheckCircle2, Construction } from 'lucide-react';
+import { Check, Lock, Shield, Zap, Star, Loader2, X, Rocket, Sparkles, CheckCircle2 } from 'lucide-react';
 import { couponService } from '../services/couponService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -102,9 +102,9 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                     <span className="text-[10px] font-bold text-indigo-300 tracking-wider uppercase">{t('pricing.badge')}</span>
                 </div>
             ) : (
-                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-gray-500/10 border border-gray-500/20 rounded-full animate-in fade-in slide-in-from-left-2">
-                    <Construction className="w-3 h-3 text-gray-400" />
-                    <span className="text-[10px] font-bold text-gray-300 tracking-wider uppercase">Beta Access</span>
+                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-in fade-in slide-in-from-left-2">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[10px] font-bold text-emerald-300 tracking-wider uppercase">Beta Access</span>
                 </div>
             )}
             
@@ -118,15 +118,15 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           
           <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
              
-             {/* BLOCK 1: CURRENT BETA (Sempre visível) */}
-             <div className="rounded-xl bg-gradient-to-br from-gray-900/40 to-[#0f111a] border border-gray-700/50 p-4 relative overflow-hidden group hover:border-gray-500 transition-colors">
-                <div className="absolute top-0 right-0 p-2 opacity-10"><Construction className="w-12 h-12 text-white" /></div>
-                <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">DISPONÍVEL AGORA</div>
+             {/* BLOCK 1: CURRENT BETA (Visual VERDE restaurado) */}
+             <div className="rounded-xl bg-gradient-to-br from-emerald-900/10 to-[#0f111a] border border-emerald-500/30 p-4 relative overflow-hidden group hover:border-emerald-400 transition-colors">
+                <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="w-12 h-12 text-emerald-500" /></div>
+                <div className="text-[9px] font-bold text-emerald-300 uppercase tracking-widest mb-1">DISPONÍVEL AGORA</div>
                 <h4 className="text-sm font-bold text-white mb-3">Recursos Beta</h4>
                 <ul className="space-y-2">
                     {[1,2,3,4].map(n => (
                         <li key={n} className="flex items-start gap-2 text-[10px] text-gray-300">
-                            <Check className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" /> <span>{t(`pricing.v1_f${n}`)}</span>
+                            <Check className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" /> <span>{t(`pricing.v1_f${n}`)}</span>
                         </li>
                     ))}
                 </ul>
@@ -207,6 +207,13 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               <div className="text-center md:text-left">
                 <h4 className="font-bold text-white text-xl mb-1">{billingCycle === 'monthly' ? 'Plano Mensal (Beta)' : t('pricing.plan_annual')}</h4>
                 <p className="text-gray-400 text-xs">{billingCycle === 'monthly' ? t('pricing.sub_monthly') : t('pricing.sub_annual')}</p>
+                
+                {/* --- AQUI ESTÁ O BADGE QUE VOCÊ PEDIU --- */}
+                {billingCycle === 'yearly' && (
+                    <div className="mt-2 inline-flex items-center gap-1 bg-green-500/10 border border-green-500/20 text-green-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                        <Zap className="w-3 h-3" /> Save $999
+                    </div>
+                )}
               </div>
               <div className="text-center md:text-right">
                 <div className="flex flex-col items-end w-full md:w-auto items-center md:items-end">
