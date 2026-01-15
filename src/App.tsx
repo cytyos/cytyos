@@ -10,9 +10,11 @@ import { LoginPage } from './pages/LoginPage';
 import { Footer } from './components/Footer';
 import { useSettingsStore } from './stores/settingsStore';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { subscriptionService } from './services/subscriptionService'; // <--- NOVO: Serviço de Assinatura
 import './i18n';
 
 // --- LAZY IMPORTS (SAFE MODE) ---
+// Mantendo o padrão .then que evita o erro #306
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
@@ -50,39 +52,63 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL ---
+// --- PAYWALL CONTROL (SECURE VERSION) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const { session } = useAuth(); // Precisamos da sessão para verificar o banco
 
   useEffect(() => {
-    if (!sessionStorage.getItem('cytyos_first_visit')) sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
-    const checkAccess = () => {
+    // Inicializa timer de primeira visita
+    if (!sessionStorage.getItem('cytyos_first_visit')) {
+        sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
+    }
+
+    const verifySubscription = async () => {
+        // Só verifica se estiver dentro do app
         if (!location.pathname.startsWith('/app')) return;
-        if (localStorage.getItem('cytyos_license_type') === 'VIP') return;
+
+        // 1. CHECAGEM REAL (BANCO DE DADOS)
+        // Pergunta ao Supabase se o usuário tem assinatura ativa
+        const hasPremiumAccess = await subscriptionService.checkAccess();
+        
+        if (hasPremiumAccess) {
+            setPaywallOpen(false); // Libera o acesso
+            return;
+        }
+
+        // 2. CHECAGEM LOCAL (FREEMIUM / TRIAL)
+        // Se não tem premium, verificamos se ainda pode usar grátis
+
+        // a) Cupom de Influencer
         const trialEnd = localStorage.getItem('cytyos_trial_end');
-        if (trialEnd && Date.now() < Number(trialEnd)) return;
+        if (trialEnd && Date.now() < Number(trialEnd)) return; 
+
+        // b) Tempo Grátis (3 min)
         const firstVisit = sessionStorage.getItem('cytyos_first_visit');
-        if (firstVisit && Date.now() - Number(firstVisit) < FREE_USAGE_MS) return;
-        if (!isPaywallOpen) setPaywallOpen(true);
+        const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
+        const stillInFreeTier = timeUsed < FREE_USAGE_MS;
+        
+        // c) Limite de IA
+        const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
+
+        // BLOQUEIO: Se não é Free e não tem Premium
+        if (!stillInFreeTier || aiLimitReached) {
+            if (!isPaywallOpen) setPaywallOpen(true);
+        }
     };
-    const interval = setInterval(checkAccess, 2000); checkAccess(); return () => clearInterval(interval);
-  }, [setPaywallOpen, isPaywallOpen, location.pathname]); 
+
+    // Verifica a cada 5 segundos
+    const interval = setInterval(verifySubscription, 5000); 
+    verifySubscription(); // Executa imediatamente ao montar
+
+    return () => clearInterval(interval);
+  }, [setPaywallOpen, isPaywallOpen, location.pathname, session]); 
 
   const handleCloseAttempt = () => {
-      const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
-      const trialEnd = localStorage.getItem('cytyos_trial_end');
-      const firstVisit = sessionStorage.getItem('cytyos_first_visit');
-      const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
-      const stillInFreeTier = timeUsed < FREE_USAGE_MS;
-      const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
-
-      if (!isVip && (!trialEnd || Date.now() >= Number(trialEnd)) && (timeUsed > FREE_USAGE_MS || aiLimitReached)) {
-          setPaywallOpen(false); navigate('/'); 
-      } else {
-          setPaywallOpen(false); 
-      }
+      // Se tentar fechar o modal sem pagar, manda para a home
+      navigate('/'); 
   };
 
   return <Suspense fallback={null}><PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} /></Suspense>;
@@ -111,8 +137,23 @@ function App() {
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/privacy" element={<Suspense fallback={<LoadingScreen />}><PrivacyPage /></Suspense>} />
-            <Route path="/admin" element={<ProtectedRoute><Suspense fallback={<LoadingScreen />}><AdminGuard allowedEmail="cytyosapp@gmail.com"><AdminPage /></AdminGuard></Suspense></ProtectedRoute>} />
+            
+            <Route path="/privacy" element={
+                <Suspense fallback={<LoadingScreen />}>
+                    <PrivacyPage />
+                </Suspense>
+            } />
+            
+            <Route path="/admin" element={
+                <ProtectedRoute>
+                    <Suspense fallback={<LoadingScreen />}>
+                        <AdminGuard allowedEmail="cytyosapp@gmail.com">
+                            <AdminPage />
+                        </AdminGuard>
+                    </Suspense>
+                </ProtectedRoute>
+            } />
+            
             <Route path="/app" element={
                 <ProtectedRoute>
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
