@@ -2,15 +2,14 @@ import { supabase } from '../lib/supabase';
 
 export const trackEvent = async (eventName: string, metadata: object = {}) => {
   try {
-    // 1. Tenta pegar o usuário atual
     const { data: { user } } = await supabase.auth.getUser();
     
-    console.log(`📡 Enviando Evento: ${eventName}`, metadata); // Log para debug no F12
+    // Log para você conferir no F12 se está saindo
+    console.log(`📡 Enviando Evento: ${eventName}`, metadata);
 
-    // 2. Envia para o Supabase
     const { error } = await supabase.from('app_events').insert({
-      user_id: user?.id || null, // Se não tiver logado, manda null
-      user_email: user?.email || 'Visitante', // Se não tiver email, manda 'Visitante'
+      user_id: user?.id || null,
+      user_email: user?.email || 'Visitante',
       event_name: eventName,
       metadata: metadata
     });
