@@ -21,7 +21,8 @@ const PricingModal = React.lazy(() => import('./components/PricingModal').then(m
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-const FREE_USAGE_MS = 3 * 60 * 1000;
+// ⚠️ MUDANÇA: Aumentado de 3 para 15 minutos para estratégia de Sessão Diagnóstica
+const FREE_USAGE_MS = 15 * 60 * 1000;
 
 // --- LOADING SCREEN ---
 const LoadingScreen = () => (
@@ -51,7 +52,7 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL (INTEGRADO AO SUPABASE & CORRIGIDO) ---
+// --- PAYWALL CONTROL ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
@@ -96,7 +97,6 @@ const PaywallGlobal = () => {
     return () => clearInterval(interval);
   }, [setPaywallOpen, isPaywallOpen, location.pathname, session]); 
 
-  // --- CORREÇÃO DO FECHAMENTO ---
   const handleCloseAttempt = () => {
       // 1. Se estiver na Landing Page, SEMPRE permite fechar
       if (location.pathname === '/') {
@@ -113,10 +113,8 @@ const PaywallGlobal = () => {
       const hasAccess = isVip || (trialEnd && Date.now() < Number(trialEnd)) || (timeUsed < FREE_USAGE_MS);
 
       if (hasAccess) {
-          // Usuário tem acesso (ex: abriu o modal manualmente para ver preços), apenas fecha
           setPaywallOpen(false);
       } else {
-          // Usuário NÃO tem acesso (tempo acabou), fecha o modal E manda pra Home
           setPaywallOpen(false);
           navigate('/'); 
       }
