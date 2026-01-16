@@ -7,7 +7,10 @@ const resources = {
   en: {
     translation: {
       app: { title: "Cytyos Beta" },
-      header: { revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap" },
+      header: { 
+        revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap",
+        session_title: "Free Diagnostic Session", session_time: "Remaining" // <--- NOVO
+      },
       tabs: { design: "Design", economics: "Economics" },
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
@@ -26,7 +29,10 @@ const resources = {
   pt: {
     translation: {
       app: { title: "Cytyos Beta" },
-      header: { revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap" },
+      header: { 
+        revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap",
+        session_title: "Sessão Diagnóstica Gratuita", session_time: "Restante" // <--- NOVO
+      },
       tabs: { design: "Projeto", economics: "Viabilidade" },
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
@@ -37,7 +43,7 @@ const resources = {
       landing: { login: "Entrar", hero: { badge: "Beta Disponível", title_prefix: "O Sistema Operacional do", title_main: "Desenvolvimento Imobiliário.", title_anim: "Comece a Analisar.", subtitle: "Transforme dados de zoneamento em decisões de investimento em segundos.", btn_try: "Testar Beta Grátis", btn_plans: "Ver Plano Early Bird" }, roadmap_intro: "Estamos construindo o futuro da inteligência territorial.", footer_rights: "© 2026 Cytyos Inc." },
       roadmap: { title: "Visão & Roadmap", cta: "Garantir Acesso Early Bird", col1: { tag: "No Ar (Beta)", title: "Você Leva HOJE (Beta)", f1: "Visualização 3D Instantânea", f2: "Controle Manual de Terreno", f3: "Calculadora de VGV", f4: "Projetos Ilimitados" }, col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" }, col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" } },
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
-      pricing: { badge: "Oportunidade Founder", title: "Desbloqueie a Plataforma", warning: "Aviso: O preço aumentará no lançamento da v1.0.", beta_tag: "NO AR", beta_title: "Você Leva Hoje (Beta)", v1_tag: "GARANTIDO MARÇO", v1_title: "Versão 1.0 (Março)", v2_tag: "FUTURO 2026", v2_title: "Versão 2.0 (Core)", beta_f1: "Visualização 3D Instantânea", beta_f2: "Controle Manual de Terreno", beta_f3: "Calculadora de VGV", beta_f4: "Projetos Ilimitados", v1_f1: "Dados de Zoneamento Automáticos", v1_f2: "Volumetria Totalmente Modelável", v1_f3: "Exportação PDF Profissional", v1_f4: "Comparador de Terrenos", v2_f1: "Upload BIM/DWG para Análise", v2_f2: "Mapas de Calor Preditivos (IA)", v2_f3: "Recomendador 'Highest & Best Use'", v2_f4: "Inteligência Multicamadas", small_title: "Projeto pequeno?", small_desc: "Gere apenas um relatório PDF.", btn_pdf: "Comprar 1 Relatório ($17)", select_plan: "Escolha seu Plano", monthly: "Mensal", yearly: "Anual", save_pct: "ECONOMIZE 77%", save_amount_badge: "ECONOMIZE $999", plan_annual: "Founder Anual", plan_monthly: "Acesso Padrão", sub_annual: "Garante acesso v1.0 & v2.0.", sub_monthly: "Cancele quando quiser.", future_price: "Preço Futuro", btn_annual: "Garantir Preço Founder ($296)", btn_monthly: "Assinar Mensal", coupon_label: "Tem um código de acesso?", coupon_placeholder: "DIGITE SEU CUPOM", validate: "Validar", monthly_warning: "Ao selecionar mensal, você tem acesso apenas ao que está pronto hoje.", monthly_warning_highlight: "Mude para Anual para garantir V1.0 e V2.0" }
+      pricing: { badge: "Oportunidade Founder", title: "Desbloqueie a Plataforma", warning: "Aviso: O preço aumentará no lançamento da v1.0.", beta_tag: "NO AR", beta_title: "Você Leva Hoje (Beta)", v1_tag: "GARANTIDO MARÇO", v1_title: "Versão 1.0 (Março)", v2_tag: "FUTURO 2026", v2_title: "Versão 2.0 (Core)", beta_f1: "Visualização 3D Instantânea", beta_f2: "Controle Manual de Terreno", beta_f3: "Calculadora de VGV", beta_f4: "Projetos Ilimitados", v1_f1: "Dados de Zoneamento Automáticos", v1_f2: "Volumetria Totalmente Modelável", v1_f3: "Exportação PDF Profissional", v1_f4: "Comparador de Terrenos", v2_f1: "Upload BIM/DWG para Análise", v2_f2: "Mapas de Calor Preditivos (IA)", v2_f3: "Recomendador 'Highest & Best Use'", v2_f4: "Inteligência Multicamadas", small_title: "Projeto pequeno?", small_desc: "Gere apenas um relatório PDF.", btn_pdf: "Comprar 1 Relatório ($17)", select_plan: "Escolha seu Plano", monthly: "Mensual", yearly: "Anual", save_pct: "ECONOMIZE 77%", save_amount_badge: "ECONOMIZE $999", plan_annual: "Founder Anual", plan_monthly: "Acesso Padrão", sub_annual: "Garante acesso v1.0 & v2.0.", sub_monthly: "Cancele quando quiser.", future_price: "Preço Futuro", btn_annual: "Garantir Preço Founder ($296)", btn_monthly: "Assinar Mensal", coupon_label: "Tem um código de acesso?", coupon_placeholder: "DIGITE SEU CUPOM", validate: "Validar", monthly_warning: "Ao selecionar mensal, você tem acesso apenas ao que está pronto hoje.", monthly_warning_highlight: "Mude para Anual para garantir V1.0 e V2.0" }
     }
   },
 
@@ -45,7 +51,10 @@ const resources = {
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
-      header: { revenue: "Ingresos (VGV)", margin: "Margen", export: "Exportar PDF", load: "Cargar", save: "Guardar", zoning: "Contexto", roadmap: "Roadmap" },
+      header: { 
+        revenue: "Ingresos (VGV)", margin: "Margen", export: "Exportar PDF", load: "Cargar", save: "Guardar", zoning: "Contexto", roadmap: "Roadmap",
+        session_title: "Sesión de Diagnóstico Gratis", session_time: "Restante" // <--- NOVO
+      },
       tabs: { design: "Diseño", economics: "Viabilidad" },
       compliance: { title: "Normativa", legal: "Legal", violation: "Violación", far: "F.O.S", occ: "F.O.T" },
       results: { nsa: "Área Vendible", revenue: "Ingresos Totales", totalCost: "Costo Total", netProfit: "Ganancia Neta" },
@@ -60,11 +69,14 @@ const resources = {
     }
   },
 
-  // --- FRANCÊS (FR) - NOVO ---
+  // --- FRANCÊS (FR) ---
   fr: {
     translation: {
       app: { title: "Cytyos Bêta" },
-      header: { revenue: "Revenus (VGV)", margin: "Marge", export: "Exporter PDF", load: "Ouvrir", save: "Sauver", zoning: "Contexte", roadmap: "Roadmap" },
+      header: { 
+        revenue: "Revenus (VGV)", margin: "Marge", export: "Exporter PDF", load: "Ouvrir", save: "Sauver", zoning: "Contexte", roadmap: "Roadmap",
+        session_title: "Session Diagnostic Gratuite", session_time: "Restant" // <--- NOVO
+      },
       tabs: { design: "Conception", economics: "Économie" },
       compliance: { title: "Conformité", legal: "Légal", violation: "Violation", far: "COS", occ: "CES" },
       results: { nsa: "Surface Vendable", revenue: "Revenus Totaux", totalCost: "Coût Total", netProfit: "Bénéfice Net" },
@@ -79,11 +91,14 @@ const resources = {
     }
   },
 
-  // --- CHINÊS (ZH) - NOVO ---
+  // --- CHINÊS (ZH) ---
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
-      header: { revenue: "总收入 (GDV)", margin: "利润率", export: "导出 PDF", load: "加载", save: "保存", zoning: "背景", roadmap: "路线图" },
+      header: { 
+        revenue: "总收入 (GDV)", margin: "利润率", export: "导出 PDF", load: "加载", save: "保存", zoning: "背景", roadmap: "路线图",
+        session_title: "免费诊断会话", session_time: "剩余" // <--- NOVO
+      },
       tabs: { design: "设计", economics: "经济" },
       compliance: { title: "合规", legal: "合法", violation: "违规", far: "容积率", occ: "覆盖率" },
       results: { nsa: "可售面积", revenue: "总收入", totalCost: "总成本", netProfit: "净利润" },
