@@ -55,7 +55,7 @@ export const PrivacyPage = () => {
 
           <section>
             <h2 className="text-lg font-bold text-white mb-2">5. Your Rights</h2>
-            <p>Depending on your location, you may have the right to access, correct, or delete your personal data. To exercise these rights, contact us at support@cytyos.com.</p>
+            <p>Depending on your location, you may have the right to access, correct, or delete your personal data. To exercise these rights, contact us at support@cytyos.com/cytyos.app@gmail.com.</p>
           </section>
 
           <div className="pt-8 border-t border-gray-800 text-xs text-gray-500">
