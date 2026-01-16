@@ -15,7 +15,7 @@ import {
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
   Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
-  Minus, Loader2, ChevronUp, Clock // <--- ADICIONEI O CLOCK AQUI
+  Minus, Loader2, ChevronUp, Clock 
 } from 'lucide-react';
 
 // ... (interfaces and constants remain same) ...
@@ -114,6 +114,40 @@ export const SmartPanel = () => {
   }, []);
   // -----------------------------------
 
+  // --- NOVA FUNÇÃO DE VERIFICAÇÃO DE CRÉDITOS DE IA ---
+  const checkAiLimit = (): boolean => {
+    // 1. VIP é sempre liberado
+    if (localStorage.getItem('cytyos_license_type') === 'VIP') return true;
+
+    // 2. Pega os limites salvos pelo cupom
+    const limitStr = localStorage.getItem('cytyos_ai_limit');
+    const usageStr = localStorage.getItem('cytyos_ai_usage');
+
+    // Se não tiver limite definido (usuário free sem cupom), segue a regra do tempo (App.tsx cuida disso)
+    if (!limitStr) return true; 
+
+    const limit = parseInt(limitStr); // Ex: 3 ou -1
+    const usage = parseInt(usageStr || '0');
+
+    // Se for -1, é ilimitado
+    if (limit === -1) return true;
+
+    // Se já usou tudo
+    if (usage >= limit) {
+        alert("Você atingiu o limite de 3 análises de IA deste cupom. Assine o plano Founder para continuar com IA Ilimitada.");
+        setPaywallOpen(true); // Abre o modal de pagamento na cara dele
+        return false;
+    }
+
+    return true;
+  };
+
+  const incrementAiUsage = () => {
+      const current = parseInt(localStorage.getItem('cytyos_ai_usage') || '0');
+      localStorage.setItem('cytyos_ai_usage', (current + 1).toString());
+  };
+  // ----------------------------------------------
+
   // MOBILE DETECTION
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -151,7 +185,6 @@ export const SmartPanel = () => {
       if (isPdfLoading) return;
       setIsPdfLoading(true);
 
-      // --- TRACKING ADDED ---
       trackEvent('pdf_export_start', { currency, language: i18n.language });
 
       try {
@@ -187,7 +220,6 @@ export const SmartPanel = () => {
           }
           await generateReport(null, projectDataForPdf, i18n.language as any, executiveSummary as any);
           
-          // --- TRACKING SUCCESS ---
           trackEvent('pdf_export_success');
 
       } catch (error) {
@@ -199,17 +231,19 @@ export const SmartPanel = () => {
   };
 
   const handleAnalyzeLaw = () => {
+      if (!checkAiLimit()) return; // <--- VERIFICA LIMITE AQUI
+
       setZoningModalOpen(false); 
       setIsChatOpen(true);        
       setIsAiLoading(true);
 
-      // --- TRACKING ---
       trackEvent('zoning_analysis_manual', { context_length: urbanContext.length });
 
       setTimeout(() => {
           const successMsg = t('zoning.ai_success', { text: urbanContext.substring(0, 20) + '...', far: land.maxFar, occ: land.maxOccupancy });
           setChatMessages(prev => [...prev, { role: 'assistant', content: successMsg }]);
           setIsAiLoading(false);
+          incrementAiUsage(); // <--- DESCONTA CRÉDITO AQUI
       }, 1500);
   };
 
@@ -237,33 +271,38 @@ export const SmartPanel = () => {
   };
 
   const handleStartAnalysis = async () => {
+    if (!checkAiLimit()) return; // <--- VERIFICA LIMITE AQUI
+
     setIsChatOpen(true);
     setThinking(true); 
     setIsAiLoading(true); 
     if(isMobile) setMobileState('max'); 
     
-    // --- TRACKING ---
     trackEvent('ai_analysis_start_button');
 
     try {
         const report = await analyzeProject([{ role: 'user', content: "Analyze my project." }], { metrics, land, blocks, currency }, i18n.language);
         setMessage(report); 
+        incrementAiUsage(); // <--- DESCONTA CRÉDITO AQUI
     } catch (e) { setMessage("⚠️ Connection Error."); } finally { setThinking(false); setIsAiLoading(false); }
   };
 
   const handleSendMessage = async () => {
     if (!userQuery.trim()) return;
+    
+    if (!checkAiLimit()) return; // <--- VERIFICA LIMITE AQUI
+
     const newMsg: ChatMessage = { role: 'user', content: userQuery };
     setChatMessages([...chatMessages, newMsg]);
     setUserQuery('');
     setIsAiLoading(true);
 
-    // --- TRACKING ---
     trackEvent('ai_chat_message', { length: userQuery.length });
 
     try {
         const reply = await analyzeProject([...chatMessages, newMsg], { metrics, land, blocks, currency }, i18n.language);
         setChatMessages(prev => [...prev, { role: 'assistant', content: reply || "Error." }]);
+        incrementAiUsage(); // <--- DESCONTA CRÉDITO AQUI
     } catch (e) { setChatMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Error." }]); } finally { setIsAiLoading(false); }
   };
 
