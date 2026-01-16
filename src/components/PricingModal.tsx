@@ -4,7 +4,7 @@ import { Check, Lock, Shield, Zap, Star, Loader2, X, Rocket, Sparkles, CheckCirc
 import { couponService } from '../services/couponService';
 import { useAuth } from '../contexts/AuthContext';
 
-// LINKS DO STRIPE (Mantenha seus links originais aqui)
+// LINKS DO STRIPE (Links de Produção/Live)
 const STRIPE_LINKS = {
   monthly: "https://buy.stripe.com/8x24gyexDdyS4bQ6WmgMw06",
   yearly: "https://buy.stripe.com/dRm00idtzeCWbEi3KagMw05",
@@ -40,24 +40,53 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   };
 
   const handleValidateKey = async () => {
-    setError(''); setSuccessMsg(''); if (!accessKey) return;
+    setError(''); 
+    setSuccessMsg(''); 
+    if (!accessKey) return;
+    
     setIsValidating(true);
     const code = accessKey.toUpperCase().trim();
+    
     try {
+      // 1. Cupom VIP (Master Key) - Ilimitado Total
       if (OFFLINE_KEYS[code]?.type === 'UNLIMITED') {
           localStorage.setItem('cytyos_license_type', 'VIP');
           localStorage.removeItem('cytyos_trial_end');
+          localStorage.setItem('cytyos_ai_limit', '-1'); // -1 = Infinito
           setSuccessMsg(`Founder Access Unlocked!`);
           setTimeout(() => onClose(), 1000);
           return;
       }
+
+      // 2. Validação no Banco de Dados
       const coupon = await couponService.validateAndTrack(code, user?.email);
+      
+      // Define quando o cupom expira
       const trialEndsAt = Date.now() + (coupon.duration_minutes * 60 * 1000);
       localStorage.setItem('cytyos_trial_end', trialEndsAt.toString());
-      setSuccessMsg(`Trial Activated!`);
+
+      // --- NOVA LÓGICA DE LIMITES DE IA ---
+      // Se for cupom de 1 hora (60 min) ou menos -> Limite de 3 análises
+      // Se for cupom de mais de 1 hora (ex: 7 dias) -> Ilimitado (-1)
+      if (coupon.duration_minutes <= 60) {
+          localStorage.setItem('cytyos_ai_limit', '3'); // Define limite de 3
+          setSuccessMsg(`Ativado: 1 Hora + 3 Análises IA`);
+      } else {
+          localStorage.setItem('cytyos_ai_limit', '-1'); // Ilimitado
+          setSuccessMsg(`Trial Estendido Ativado!`);
+      }
+      
+      // Reseta o contador de uso atual
+      localStorage.setItem('cytyos_ai_usage', '0');
+      // -------------------------------------
+
       setTimeout(() => onClose(), 1000);
-    } catch (dbError: any) { setError(dbError.message || 'Invalid Coupon'); } 
-    finally { setIsValidating(false); }
+
+    } catch (dbError: any) { 
+        setError(dbError.message || 'Invalid Coupon'); 
+    } finally { 
+        setIsValidating(false); 
+    }
   };
 
   return (
