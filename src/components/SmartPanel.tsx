@@ -8,14 +8,14 @@ import { useAIStore } from '../stores/aiStore';
 import { analyzeProject } from '../services/aiService';
 import { generateReport } from '../services/pdfGenerator'; 
 import { useAuth } from '../contexts/AuthContext';
-import { trackEvent } from '../services/analyticsService'; // <--- IMPORT HERE
+import { trackEvent } from '../services/analyticsService';
 import logoFull from '../assets/logo-full.png'; 
 import { 
   Download, LayoutGrid, Calculator,
   Copy, Layers, ArrowRightFromLine, AlertTriangle, CheckCircle2,
   Scale, Edit2, Save, Upload, Sparkles, Bot, Send, X, Globe, ChevronDown, 
   Trash2, Coins, FileText, MapPin, Rocket, LogOut, User as UserIcon,
-  Minus, Loader2, ChevronUp
+  Minus, Loader2, ChevronUp, Clock // <--- ADICIONEI O CLOCK AQUI
 } from 'lucide-react';
 
 // ... (interfaces and constants remain same) ...
@@ -78,6 +78,41 @@ export const SmartPanel = () => {
   const [userQuery, setUserQuery] = useState('');
   const [mobileState, setMobileState] = useState<MobileState>('min');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // --- LOGICA DO TIMER DIAGNOSTICO ---
+  const [timeLeft, setTimeLeft] = useState("15:00");
+  const [isUrgent, setIsUrgent] = useState(false);
+  const FREE_MS = 15 * 60 * 1000; // Mesma constante do App.tsx
+
+  useEffect(() => {
+    // Se o usuário já é assinante, não precisa rodar o timer
+    const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
+    if (isVip) {
+        setTimeLeft("PREMIUM");
+        return;
+    }
+
+    const timer = setInterval(() => {
+        // Pega o tempo de início (ou define agora se não existir)
+        const startStr = sessionStorage.getItem('cytyos_first_visit');
+        const start = startStr ? parseInt(startStr) : Date.now();
+        
+        // Calcula quanto tempo passou
+        const elapsed = Date.now() - start;
+        const remaining = Math.max(0, FREE_MS - elapsed);
+        
+        // Formata MM:SS
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        setTimeLeft(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
+
+        // Define urgência (menos de 60 segundos)
+        setIsUrgent(remaining < 60000 && remaining > 0);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+  // -----------------------------------
 
   // MOBILE DETECTION
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -275,10 +310,6 @@ export const SmartPanel = () => {
   const num = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 1 }).format(val);
   const dec = (val: number) => new Intl.NumberFormat(i18n.language === 'pt' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 2 }).format(val);
 
-  // ... (JSX remains exactly the same, only tracking calls were inserted in handlers) ...
-  // To keep this response clean, I am not re-pasting the 500 lines of JSX since they are identical to your input.
-  // The logic changes above are what matters.
-
   return (
     <>
     {isRoadmapOpen && (
@@ -321,70 +352,81 @@ export const SmartPanel = () => {
 
       {/* --- HEADER --- */}
       {!shouldHideHeader && (
-          <div className="p-4 bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
-            <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
-                <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
-                
-                <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
-                    <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
-                        <UserIcon className="w-3 h-3 text-indigo-400" />
-                        <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
-                        <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
-                    </div>
+          <div className="bg-gradient-to-b from-gray-900 to-gray-900/50 border-b border-gray-800 shrink-0 relative animate-fade-in">
+            
+            {/* --- DIAGNOSTIC SESSION BANNER --- */}
+            {timeLeft !== "PREMIUM" && (
+                <div className={`w-full px-4 py-1.5 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider transition-colors duration-500 ${isUrgent ? 'bg-red-500/20 text-red-300 animate-pulse' : 'bg-indigo-600/20 text-indigo-300'}`}>
+                    <span className="flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> {t('header.session_title')}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {timeLeft}</span>
+                </div>
+            )}
+            
+            <div className="p-4">
+                <div className="flex justify-between items-center mb-4 mt-2 md:mt-0">
+                    <img src={logoFull} alt="Cytyos" className="h-8 w-auto object-contain transition-opacity hover:opacity-80" />
+                    
+                    <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="hidden md:flex items-center gap-2 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50 mr-1">
+                            <UserIcon className="w-3 h-3 text-indigo-400" />
+                            <span className="text-[10px] text-gray-300 font-medium max-w-[80px] truncate">{user?.email}</span>
+                            <button onClick={signOut} className="ml-1 text-gray-500 hover:text-red-400 transition-colors" title="Sign Out"><LogOut size={12}/></button>
+                        </div>
 
-                    <div className="relative">
-                        <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
-                            <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
-                        </button>
-                        {isCurrencyMenuOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
-                                <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
-                                {CURRENCY_OPTIONS.map(c => (
-                                    <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
-                                        <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
-                                        <span className="text-gray-500 text-[10px]">{c.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="relative">
-                        <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
-                            <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
-                        </button>
-                        {isLangMenuOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100]">
-                                {['en','pt','es','fr','zh'].map(lang => <button key={lang} onClick={() => changeLanguage(lang)} className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800 last:border-0 uppercase">{lang}</button>)}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="flex gap-1">
-                        <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
-                        <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
+                        <div className="relative">
+                            <button onClick={() => { setIsCurrencyMenuOpen(!isCurrencyMenuOpen); setIsLangMenuOpen(false); }} className={`p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700 ${isCurrencyMenuOpen ? 'bg-gray-700 text-white' : ''}`}>
+                                <Coins className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{currency}</span>
+                            </button>
+                            {isCurrencyMenuOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto custom-scrollbar">
+                                    <div className="px-3 py-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-[#0f111a] border-b border-gray-800">{t('currency.main')}</div>
+                                    {CURRENCY_OPTIONS.map(c => (
+                                        <button key={c.code} onClick={() => changeCurrency(c.code)} className="block w-full text-left px-3 py-2 text-xs text-white hover:bg-gray-800 border-b border-gray-800/50 flex justify-between items-center group">
+                                            <span className="font-bold group-hover:text-indigo-400 transition-colors">{c.code}</span>
+                                            <span className="text-gray-500 text-[10px]">{c.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="relative">
+                            <button onClick={() => { setIsLangMenuOpen(!isLangMenuOpen); setIsCurrencyMenuOpen(false); }} className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg flex items-center gap-1 transition-colors border border-gray-700">
+                                <Globe className="w-4 h-4" /> <span className="text-[10px] uppercase font-bold">{i18n.language.substring(0,2)}</span>
+                            </button>
+                            {isLangMenuOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-32 bg-[#0f111a] border border-gray-700 rounded-lg shadow-xl z-[100]">
+                                    {['en','pt','es','fr','zh'].map(lang => <button key={lang} onClick={() => changeLanguage(lang)} className="block w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800 last:border-0 uppercase">{lang}</button>)}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="flex gap-1">
+                            <button onClick={handleSaveProject} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.save')}><Save className="w-4 h-4" /></button>
+                            <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded" title={t('header.load')}><Upload className="w-4 h-4" /></button>
+                        </div>
                     </div>
                 </div>
+                
+                {activeTab !== 'settings' && (
+                    <>
+                        <div className="flex justify-between items-start mb-3">
+                            <div>
+                                <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
+                                <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
+                                <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
+                            </div>
+                        </div>
+                        <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
+                            <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
+                            <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
+                        </div>
+                    </>
+                )}
             </div>
-            
-            {activeTab !== 'settings' && (
-                <>
-                    <div className="flex justify-between items-start mb-3">
-                        <div>
-                            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.revenue')}</span>
-                            <div className="text-xl font-bold text-white tracking-tight leading-none mt-0.5">{money(metrics.revenue)}</div>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{t('header.margin')}</span>
-                            <div className={`text-lg font-bold leading-none mt-0.5 ${metrics.margin > 15 ? 'text-green-400' : 'text-yellow-400'}`}>{num(metrics.margin)}%</div>
-                        </div>
-                    </div>
-                    <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => setActiveTab('editor')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'editor' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><LayoutGrid className="w-3.5 h-3.5" /> {t('tabs.design')}</button>
-                        <button onClick={() => setActiveTab('financial')} className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wide rounded-lg flex gap-2 justify-center items-center transition-all ${activeTab === 'financial' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}><Calculator className="w-3.5 h-3.5" /> {t('tabs.economics')}</button>
-                    </div>
-                </>
-            )}
           </div>
       )}
 
