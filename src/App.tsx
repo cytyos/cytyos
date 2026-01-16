@@ -21,7 +21,7 @@ const PricingModal = React.lazy(() => import('./components/PricingModal').then(m
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-// ⚠️ MUDANÇA: Aumentado de 3 para 15 minutos para estratégia de Sessão Diagnóstica
+// ⏱️ CONFIGURAÇÃO DE TEMPO: 15 MINUTOS
 const FREE_USAGE_MS = 15 * 60 * 1000;
 
 // --- LOADING SCREEN ---
@@ -52,75 +52,105 @@ const MobileOptimizationWarning = () => {
   );
 };
 
-// --- PAYWALL CONTROL ---
+// --- PAYWALL CONTROL (SISTEMA BLINDADO) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useAuth(); 
+  const { session, user } = useAuth(); // Pegamos o USER para travar pelo ID
 
   useEffect(() => {
-    // Timer inicial para usuários free
-    if (!sessionStorage.getItem('cytyos_first_visit')) {
-        sessionStorage.setItem('cytyos_first_visit', Date.now().toString());
+    // Se não estiver logado ou não estiver no app, não faz nada
+    if (!user || !location.pathname.startsWith('/app')) return;
+
+    // Chave única por usuário para impedir que ele limpe cache de sessão
+    // Se ele trocar de navegador, ele ganha +15min (inevitável sem backend), 
+    // mas no mesmo navegador está travado para sempre.
+    const storageKey = `cytyos_trial_start_${user.id}`;
+
+    // Inicializa o timer se não existir
+    if (!localStorage.getItem(storageKey)) {
+        localStorage.setItem(storageKey, Date.now().toString());
     }
 
+    // Função de verificação
     const verifySubscription = async () => {
-        if (!location.pathname.startsWith('/app')) return;
-
-        // 1. Verifica Assinatura Real (Stripe/Supabase)
+        // 1. Verifica Assinatura Real (VIP)
+        // O checkAccess verifica no banco se ele pagou
         const hasPremiumAccess = await subscriptionService.checkAccess();
-        
         if (hasPremiumAccess) {
+            localStorage.setItem('cytyos_license_type', 'VIP'); // Cache local para evitar request
             setPaywallOpen(false);
             return; 
         }
 
-        // 2. Lógica Freemium / Trial
+        // 2. Verifica Tempo Restante (Lógica Freemium)
+        const startStr = localStorage.getItem(storageKey);
+        const startTime = startStr ? parseInt(startStr) : Date.now();
+        const timeUsed = Date.now() - startTime;
+        
+        // Verifica se tem cupom de trial estendido
         const trialEnd = localStorage.getItem('cytyos_trial_end');
-        if (trialEnd && Date.now() < Number(trialEnd)) return; // Tem cupom ativo
+        const hasActiveCoupon = trialEnd && Date.now() < Number(trialEnd);
 
-        const firstVisit = sessionStorage.getItem('cytyos_first_visit');
-        const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
-        const stillInFreeTier = timeUsed < FREE_USAGE_MS;
-        const aiLimitReached = localStorage.getItem('cytyos_limit_reached') === 'true';
-
-        // Bloqueia se acabou o free e não tem premium
-        if (!stillInFreeTier || aiLimitReached) {
-            if (!isPaywallOpen) setPaywallOpen(true);
+        // A Lógica Final:
+        // Se NÃO é VIP E NÃO tem cupom E o tempo de uso passou de 15min... BLOQUEIA.
+        if (!hasActiveCoupon && timeUsed > FREE_USAGE_MS) {
+            if (!isPaywallOpen) {
+                console.log("Tempo de diagnóstico expirado. Bloqueando...");
+                setPaywallOpen(true);
+            }
         }
     };
 
-    const interval = setInterval(verifySubscription, 5000); 
-    verifySubscription(); 
+    // Verifica a cada 1 segundo para ser preciso no cronômetro
+    const interval = setInterval(verifySubscription, 1000); 
+    verifySubscription(); // Roda imediatamente também
 
     return () => clearInterval(interval);
-  }, [setPaywallOpen, isPaywallOpen, location.pathname, session]); 
+  }, [setPaywallOpen, isPaywallOpen, location.pathname, session, user]); 
 
+  // --- TENTATIVA DE FECHAMENTO ---
   const handleCloseAttempt = () => {
-      // 1. Se estiver na Landing Page, SEMPRE permite fechar
+      // 1. Na Landing Page é livre
       if (location.pathname === '/') {
           setPaywallOpen(false);
           return;
       }
 
-      // 2. Se estiver dentro do App, verificamos se ele tem permissão para continuar
+      // 2. No App, recalculamos tudo para garantir que ele não burlou o HTML
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
-      const firstVisit = sessionStorage.getItem('cytyos_first_visit');
-      const timeUsed = firstVisit ? Date.now() - Number(firstVisit) : 99999999;
       
-      const hasAccess = isVip || (trialEnd && Date.now() < Number(trialEnd)) || (timeUsed < FREE_USAGE_MS);
+      // Recalcula o tempo baseado no ID do usuário
+      const storageKey = user ? `cytyos_trial_start_${user.id}` : 'cytyos_anon';
+      const startStr = localStorage.getItem(storageKey);
+      const startTime = startStr ? parseInt(startStr) : 0;
+      const timeUsed = Date.now() - startTime;
+      
+      const hasTimeLeft = timeUsed < FREE_USAGE_MS;
+      const hasCoupon = trialEnd && Date.now() < Number(trialEnd);
 
-      if (hasAccess) {
+      if (isVip || hasCoupon || hasTimeLeft) {
+          // Se tem direito, fecha o modal
           setPaywallOpen(false);
       } else {
-          setPaywallOpen(false);
-          navigate('/'); 
+          // Se NÃO tem direito e tentou fechar:
+          // Não deixamos fechar e forçamos o usuário a ficar olhando pro modal
+          // Opcional: Redirecionar para Home se quiser ser agressivo
+          // navigate('/'); 
+          alert("Sua sessão de diagnóstico gratuita expirou. Para continuar editando, libere o acesso Founder.");
       }
   };
 
-  return <Suspense fallback={null}><PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} /></Suspense>;
+  return (
+    <Suspense fallback={null}>
+        {/* Adicionei backdrop-blur-sm aqui para dar o efeito de bloqueio visual do conteúdo atrás */}
+        <div className={isPaywallOpen && location.pathname.startsWith('/app') ? "fixed inset-0 z-[9999] backdrop-blur-sm" : ""}>
+            <PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} />
+        </div>
+    </Suspense>
+  );
 };
 
 // --- GUARDS ---
