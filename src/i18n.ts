@@ -12,6 +12,19 @@ const resources = {
         session_title: "Free Diagnostic Session", session_time: "Remaining" 
       },
       tabs: { design: "Design", economics: "Economics" },
+      
+      // --- CORREÇÃO AQUI (O que faltava) ---
+      blocks: { height: "Height", setback: "Setback" },
+      usage: { 
+        residential: "Residential", 
+        corporate: "Corporate", 
+        retail: "Retail", 
+        hotel: "Hotel", 
+        parking: "Parking", 
+        amenities: "Amenities" 
+      },
+      // -------------------------------------
+
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
       assumptions: { title: "Assumptions", maxFar: "Max FAR", maxOcc: "Max Occ %", landArea: "Land Area", landCost: "Land Cost", onerousGrant: "Impact Fees", sales: "Sales $/m²", build: "Build Cost $/m²" },
@@ -22,7 +35,7 @@ const resources = {
         close: "Close", 
         insight: "AI Strategic Insight", 
         placeholder: "Ask about efficiency...",
-        limit_reached: "AI limit reached for this coupon. Upgrade to Founder for unlimited access." // <--- ADICIONADO
+        limit_reached: "AI limit reached for this coupon. Upgrade to Founder for unlimited access."
       },
 
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the Draw tool." },
@@ -43,6 +56,19 @@ const resources = {
         session_title: "Sessão Diagnóstica Gratuita", session_time: "Restante"
       },
       tabs: { design: "Projeto", economics: "Viabilidade" },
+      
+      // --- CORREÇÃO AQUI ---
+      blocks: { height: "Altura", setback: "Recuo" },
+      usage: { 
+        residential: "Residencial", 
+        corporate: "Corporativo", 
+        retail: "Comércio/Varejo", 
+        hotel: "Hotel", 
+        parking: "Estacionamento", 
+        amenities: "Áreas Comuns" 
+      },
+      // ---------------------
+
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
       assumptions: { title: "Premissas", maxFar: "C.A. Máximo", maxOcc: "T.O. Máxima %", landArea: "Área Terreno", landCost: "Custo Terreno", onerousGrant: "Outorga/Taxas", sales: "Venda R$/m²", build: "Obra R$/m²" },
@@ -53,7 +79,7 @@ const resources = {
         close: "Fechar", 
         insight: "Análise Estratégica", 
         placeholder: "Pergunte sobre eficiência...",
-        limit_reached: "Limite de IA atingido para este cupom. Assine o Founder para acesso ilimitado." // <--- ADICIONADO
+        limit_reached: "Limite de IA atingido para este cupom. Assine o Founder para acesso ilimitado."
       },
 
       onboarding: { title: "Iniciar Análise", text: "Busque um endereço e use a ferramenta Desenhar para definir o terreno." },
@@ -61,7 +87,7 @@ const resources = {
       landing: { login: "Entrar", hero: { badge: "Beta Disponível", title_prefix: "O Sistema Operacional do", title_main: "Desenvolvimento Imobiliário.", title_anim: "Comece a Analisar.", subtitle: "Transforme dados de zoneamento em decisões de investimento em segundos.", btn_try: "Testar Beta Grátis", btn_plans: "Ver Plano Early Bird" }, roadmap_intro: "Estamos construindo o futuro da inteligência territorial.", footer_rights: "© 2026 Cytyos Inc." },
       roadmap: { title: "Visão & Roadmap", cta: "Garantir Acesso Early Bird", col1: { tag: "No Ar (Beta)", title: "Você Leva HOJE (Beta)", f1: "Visualização 3D Instantânea", f2: "Controle Manual de Terreno", f3: "Calculadora de VGV", f4: "Projetos Ilimitados" }, col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" }, col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" } },
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
-      pricing: { badge: "Oportunidade Founder", title: "Desbloqueie a Plataforma", warning: "Aviso: O preço aumentará no lançamento da v1.0.", beta_tag: "NO AR", beta_title: "Você Leva Hoje (Beta)", v1_tag: "GARANTIDO MARÇO", v1_title: "Versão 1.0 (Março)", v2_tag: "FUTURO 2026", v2_title: "Versão 2.0 (Core)", beta_f1: "Visualização 3D Instantânea", beta_f2: "Controle Manual de Terreno", beta_f3: "Calculadora de VGV", beta_f4: "Projetos Ilimitados", v1_f1: "Dados de Zoneamento Automáticos", v1_f2: "Volumetria Totalmente Modelável", v1_f3: "Exportação PDF Profissional", v1_f4: "Comparador de Terrenos", v2_f1: "Upload BIM/DWG para Análise", v2_f2: "Mapas de Calor Preditivos (IA)", v2_f3: "Recomendador 'Highest & Best Use'", v2_f4: "Inteligência Multicamadas", small_title: "Projeto pequeno?", small_desc: "Gere apenas um relatório PDF.", btn_pdf: "Comprar 1 Relatório ($17)", select_plan: "Escolha seu Plano", monthly: "Mensal", yearly: "Anual", save_pct: "ECONOMIZE 77%", save_amount_badge: "ECONOMIZE $999", plan_annual: "Founder Anual", plan_monthly: "Acesso Padrão", sub_annual: "Garante acesso v1.0 & v2.0.", sub_monthly: "Cancele quando quiser.", future_price: "Preço Futuro", btn_annual: "Garantir Preço Founder ($296)", btn_monthly: "Assinar Mensal", coupon_label: "Tem um código de acesso?", coupon_placeholder: "DIGITE SEU CUPOM", validate: "Validar", monthly_warning: "Ao selecionar mensal, você tem acesso apenas ao que está pronto hoje.", monthly_warning_highlight: "Mude para Anual para garantir V1.0 e V2.0" }
+      pricing: { badge: "Oportunidade Founder", title: "Desbloqueie a Plataforma", warning: "Aviso: O preço aumentará no lançamento da v1.0.", beta_tag: "NO AR", beta_title: "Você Leva Hoje (Beta)", v1_tag: "GARANTIDO MARÇO", v1_title: "Versão 1.0 (Março)", v2_tag: "FUTURO 2026", v2_title: "Versão 2.0 (Core)", beta_f1: "Visualização 3D Instantânea", beta_f2: "Controle Manual de Terreno", beta_f3: "Calculadora de VGV", beta_f4: "Projetos Ilimitados", v1_f1: "Dados de Zoneamento Automáticos", v1_f2: "Volumetria Totalmente Modelável", v1_f3: "Exportação PDF Profissional", v1_f4: "Comparador de Terrenos", v2_f1: "Upload BIM/DWG para Análise", v2_f2: "Mapas de Calor Preditivos (IA)", v2_f3: "Recomendador 'Highest & Best Use'", v2_f4: "Inteligência Multicamadas", small_title: "Projeto pequeno?", small_desc: "Gere apenas um relatório PDF.", btn_pdf: "Comprar 1 Relatório ($17)", select_plan: "Escolha seu Plano", monthly: "Mensual", yearly: "Anual", save_pct: "ECONOMIZE 77%", save_amount_badge: "ECONOMIZE $999", plan_annual: "Founder Anual", plan_monthly: "Acesso Padrão", sub_annual: "Garante acesso v1.0 & v2.0.", sub_monthly: "Cancele quando quiser.", future_price: "Preço Futuro", btn_annual: "Garantir Preço Founder ($296)", btn_monthly: "Assinar Mensal", coupon_label: "Tem um código de acesso?", coupon_placeholder: "DIGITE SEU CUPOM", validate: "Validar", monthly_warning: "Ao selecionar mensal, você tem acesso apenas ao que está pronto hoje.", monthly_warning_highlight: "Mude para Anual para garantir V1.0 e V2.0" }
     }
   },
 
@@ -74,6 +100,19 @@ const resources = {
         session_title: "Sesión de Diagnóstico Gratis", session_time: "Restante"
       },
       tabs: { design: "Diseño", economics: "Viabilidad" },
+      
+      // --- CORREÇÃO AQUI ---
+      blocks: { height: "Altura", setback: "Retranqueo" },
+      usage: { 
+        residential: "Residencial", 
+        corporate: "Corporativo", 
+        retail: "Comercial", 
+        hotel: "Hotel", 
+        parking: "Estacionamiento", 
+        amenities: "Amenidades" 
+      },
+      // ---------------------
+
       compliance: { title: "Normativa", legal: "Legal", violation: "Violación", far: "F.O.S", occ: "F.O.T" },
       results: { nsa: "Área Vendible", revenue: "Ingresos Totales", totalCost: "Costo Total", netProfit: "Ganancia Neta" },
       assumptions: { title: "Supuestos", maxFar: "Max FOS", maxOcc: "Max FOT %", landArea: "Área Terreno", landCost: "Costo Terreno", onerousGrant: "Impacto/Tasas", sales: "Venta $/m²", build: "Obra $/m²" },
@@ -84,7 +123,7 @@ const resources = {
         close: "Cerrar", 
         insight: "Insight Estratégico", 
         placeholder: "Pregunte sobre eficiencia...",
-        limit_reached: "Límite de IA alcanzado para este cupón. Actualice a Founder." // <--- ADICIONADO
+        limit_reached: "Límite de IA alcanzado para este cupón. Actualice a Founder."
       },
 
       onboarding: { title: "Iniciar Análisis", text: "Busque una ubicación y use la herramienta Dibujar." },
@@ -105,6 +144,19 @@ const resources = {
         session_title: "Session Diagnostic Gratuite", session_time: "Restant"
       },
       tabs: { design: "Conception", economics: "Économie" },
+      
+      // --- CORREÇÃO AQUI ---
+      blocks: { height: "Hauteur", setback: "Recul" },
+      usage: { 
+        residential: "Résidentiel", 
+        corporate: "Corporatif", 
+        retail: "Commerce", 
+        hotel: "Hôtel", 
+        parking: "Parking", 
+        amenities: "Équipements" 
+      },
+      // ---------------------
+
       compliance: { title: "Conformité", legal: "Légal", violation: "Violation", far: "COS", occ: "CES" },
       results: { nsa: "Surface Vendable", revenue: "Revenus Totaux", totalCost: "Coût Total", netProfit: "Bénéfice Net" },
       assumptions: { title: "Hypothèses", maxFar: "Max COS", maxOcc: "Max CES %", landArea: "Surface Terrain", landCost: "Coût Terrain", onerousGrant: "Taxes/Impact", sales: "Vente $/m²", build: "Construction $/m²" },
@@ -115,7 +167,7 @@ const resources = {
         close: "Fermer", 
         insight: "Aperçu Stratégique", 
         placeholder: "Demandez sur l'efficacité...",
-        limit_reached: "Limite IA atteinte pour ce coupon. Passez à Founder." // <--- ADICIONADO
+        limit_reached: "Limite IA atteinte pour ce coupon. Passez à Founder."
       },
 
       onboarding: { title: "Démarrer l'Analyse", text: "Cherchez un lieu et utilisez l'outil Dessiner." },
@@ -136,6 +188,19 @@ const resources = {
         session_title: "免费诊断会话", session_time: "剩余"
       },
       tabs: { design: "设计", economics: "经济" },
+      
+      // --- CORREÇÃO AQUI ---
+      blocks: { height: "高度", setback: "退界" },
+      usage: { 
+        residential: "住宅", 
+        corporate: "办公", 
+        retail: "商业", 
+        hotel: "酒店", 
+        parking: "停车场", 
+        amenities: "配套设施" 
+      },
+      // ---------------------
+
       compliance: { title: "合规", legal: "合法", violation: "违规", far: "容积率", occ: "覆盖率" },
       results: { nsa: "可售面积", revenue: "总收入", totalCost: "总成本", netProfit: "净利润" },
       assumptions: { title: "假设", maxFar: "最大容积率", maxOcc: "最大覆盖率 %", landArea: "土地面积", landCost: "土地成本", onerousGrant: "费用/税收", sales: "销售 $/m²", build: "建筑成本 $/m²" },
@@ -146,7 +211,7 @@ const resources = {
         close: "关闭", 
         insight: "战略洞察", 
         placeholder: "询问效率...",
-        limit_reached: "此优惠券的AI限制已达。升级至Founder。" // <--- ADICIONADO
+        limit_reached: "此优惠券的AI限制已达。升级至Founder。"
       },
 
       onboarding: { title: "开始分析", text: "搜索位置并使用绘图工具。" },
