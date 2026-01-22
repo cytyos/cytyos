@@ -59,11 +59,7 @@ export const MapControls = () => {
     setFlyToCoords(result.center);
     setSearchValue(result.place_name);
     setShowResults(false);
-    
-    trackEvent('search_select', {
-        location: result.place_name,
-        coordinates: result.center
-    });
+    trackEvent('search_select', { location: result.place_name, coordinates: result.center });
   };
 
   const clearSearch = () => { setSearchValue(''); setSearchResults([]); setShowResults(false); };
@@ -100,6 +96,7 @@ export const MapControls = () => {
                     </div>
                 )}
             </div>
+            {/* UNIT TOGGLE */}
             <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-xl p-1 flex items-center shadow-xl">
                 <button onClick={() => setMeasurementSystem('metric')} className={`px-3 py-1.5 h-full rounded-lg text-[10px] font-bold transition-all flex items-center ${measurementSystem === 'metric' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>M</button>
                 <div className="w-px h-3 bg-white/10 mx-1"></div>
@@ -107,6 +104,7 @@ export const MapControls = () => {
             </div>
         </div>
         
+        {/* Map Style & Draw Buttons */}
         <div className="bg-[#0f111a]/90 backdrop-blur-md border border-white/10 rounded-2xl p-1.5 flex justify-between items-center shadow-2xl relative z-40">
             <ControlButton active={mapStyle === 'satellite'} onClick={() => setMapStyle('satellite')} icon={<MapIcon className="w-4 h-4" />} label={t('map.sat')} />
             <ControlButton active={mapStyle === 'streets'} onClick={() => setMapStyle('streets')} icon={<Layers className="w-4 h-4" />} label={t('map.streets')} />
