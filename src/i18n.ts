@@ -7,13 +7,36 @@ const resources = {
   en: {
     translation: {
       app: { title: "Cytyos Beta" },
+      
+      // --- NOVO: Textos para o Login Inteligente ---
+      auth: {
+        tab_signin: "Sign In",
+        tab_signup: "Create Account",
+        email_label: "Email",
+        password_label: "Password",
+        forgot_link: "Forgot password?",
+        btn_signin: "Access Platform",
+        btn_signup: "Join for Free",
+        divider: "OR CONTINUE WITH",
+        google: "Google",
+        forgot_title: "Recover Password",
+        forgot_desc: "Enter your email to receive an instant access link.",
+        btn_send: "Send Link",
+        btn_back: "Back to Login",
+        success_signup: "Account created! Check your email to confirm.",
+        success_reset: "Recovery link sent to your email!",
+        error_invalid: "Invalid email or password.",
+        error_exists: "Email already registered. Try logging in.",
+        error_generic: "An error occurred. Please try again."
+      },
+      // ---------------------------------------------
+
       header: { 
         revenue: "Revenue (GDV)", margin: "Margin", export: "Export PDF", load: "Load", save: "Save", zoning: "Context", roadmap: "Roadmap",
         session_title: "Free Diagnostic Session", session_time: "Remaining" 
       },
       tabs: { design: "Design", economics: "Economics" },
       
-      // --- CORREÇÃO AQUI (O que faltava) ---
       blocks: { height: "Height", setback: "Setback" },
       usage: { 
         residential: "Residential", 
@@ -23,7 +46,6 @@ const resources = {
         parking: "Parking", 
         amenities: "Amenities" 
       },
-      // -------------------------------------
 
       compliance: { title: "Compliance", legal: "Legal", violation: "Violation", far: "FAR", occ: "Occupancy" },
       results: { nsa: "NSA (Sellable)", revenue: "Total Revenue", totalCost: "Total Cost", netProfit: "Net Profit" },
@@ -51,13 +73,36 @@ const resources = {
   pt: {
     translation: {
       app: { title: "Cytyos Beta" },
+      
+      // --- NOVO: Textos para o Login Inteligente ---
+      auth: {
+        tab_signin: "Entrar",
+        tab_signup: "Criar Conta",
+        email_label: "E-mail",
+        password_label: "Senha",
+        forgot_link: "Esqueceu a senha?",
+        btn_signin: "Acessar Plataforma",
+        btn_signup: "Cadastrar Grátis",
+        divider: "OU CONTINUE COM",
+        google: "Google",
+        forgot_title: "Recuperar Senha",
+        forgot_desc: "Digite seu e-mail para receber um link de acesso imediato.",
+        btn_send: "Enviar Link",
+        btn_back: "Voltar para Login",
+        success_signup: "Conta criada! Verifique seu e-mail para confirmar.",
+        success_reset: "Link de recuperação enviado para seu e-mail!",
+        error_invalid: "E-mail ou senha incorretos.",
+        error_exists: "Este e-mail já tem cadastro. Tente entrar.",
+        error_generic: "Ocorreu um erro. Tente novamente."
+      },
+      // ---------------------------------------------
+
       header: { 
         revenue: "VGV Total", margin: "Margem Líq.", export: "Exportar PDF", load: "Abrir", save: "Salvar", zoning: "Lei", roadmap: "Roadmap",
         session_title: "Sessão Diagnóstica Gratuita", session_time: "Restante"
       },
       tabs: { design: "Projeto", economics: "Viabilidade" },
       
-      // --- CORREÇÃO AQUI ---
       blocks: { height: "Altura", setback: "Recuo" },
       usage: { 
         residential: "Residencial", 
@@ -67,7 +112,6 @@ const resources = {
         parking: "Estacionamento", 
         amenities: "Áreas Comuns" 
       },
-      // ---------------------
 
       compliance: { title: "Legislação", legal: "Legal", violation: "Infração", far: "C.A.", occ: "T.O." },
       results: { nsa: "Área Privativa", revenue: "Receita (VGV)", totalCost: "Custo Total", netProfit: "Lucro Líquido" },
@@ -95,37 +139,37 @@ const resources = {
   es: {
     translation: {
       app: { title: "Cytyos Beta" },
+      auth: {
+        tab_signin: "Ingresar",
+        tab_signup: "Crear Cuenta",
+        email_label: "Correo",
+        password_label: "Contraseña",
+        forgot_link: "¿Olvidaste la contraseña?",
+        btn_signin: "Acceder a la Plataforma",
+        btn_signup: "Registrarse Gratis",
+        divider: "O CONTINUAR CON",
+        google: "Google",
+        forgot_title: "Recuperar Contraseña",
+        forgot_desc: "Ingresa tu correo para recibir un enlace de acceso.",
+        btn_send: "Enviar Enlace",
+        btn_back: "Volver al Login",
+        success_signup: "¡Cuenta creada! Verifica tu correo.",
+        success_reset: "¡Enlace de recuperación enviado!",
+        error_invalid: "Correo o contraseña inválidos.",
+        error_exists: "Este correo ya existe. Intenta ingresar.",
+        error_generic: "Ocurrió un error."
+      },
       header: { 
         revenue: "Ingresos (VGV)", margin: "Margen", export: "Exportar PDF", load: "Cargar", save: "Guardar", zoning: "Contexto", roadmap: "Roadmap",
         session_title: "Sesión de Diagnóstico Gratis", session_time: "Restante"
       },
       tabs: { design: "Diseño", economics: "Viabilidad" },
-      
-      // --- CORREÇÃO AQUI ---
       blocks: { height: "Altura", setback: "Retranqueo" },
-      usage: { 
-        residential: "Residencial", 
-        corporate: "Corporativo", 
-        retail: "Comercial", 
-        hotel: "Hotel", 
-        parking: "Estacionamiento", 
-        amenities: "Amenidades" 
-      },
-      // ---------------------
-
+      usage: { residential: "Residencial", corporate: "Corporativo", retail: "Comercial", hotel: "Hotel", parking: "Estacionamiento", amenities: "Amenidades" },
       compliance: { title: "Normativa", legal: "Legal", violation: "Violación", far: "F.O.S", occ: "F.O.T" },
       results: { nsa: "Área Vendible", revenue: "Ingresos Totales", totalCost: "Costo Total", netProfit: "Ganancia Neta" },
       assumptions: { title: "Supuestos", maxFar: "Max FOS", maxOcc: "Max FOT %", landArea: "Área Terreno", landCost: "Costo Terreno", onerousGrant: "Impacto/Tasas", sales: "Venta $/m²", build: "Obra $/m²" },
-      
-      ai: { 
-        btn: "Consultor IA", 
-        thinking: "Analizando...", 
-        close: "Cerrar", 
-        insight: "Insight Estratégico", 
-        placeholder: "Pregunte sobre eficiencia...",
-        limit_reached: "Límite de IA alcanzado para este cupón. Actualice a Founder."
-      },
-
+      ai: { btn: "Consultor IA", thinking: "Analizando...", close: "Cerrar", insight: "Insight Estratégico", placeholder: "Pregunte sobre eficiencia...", limit_reached: "Límite de IA alcanzado para este cupón. Actualice a Founder." },
       onboarding: { title: "Iniciar Análisis", text: "Busque una ubicación y use la herramienta Dibujar." },
       map: { search_placeholder: "Buscar ubicación...", search_provider: "Búsqueda vía Mapbox", sat: "Sat", streets: "Mapa", draw: "Dibujar", clear: "Limpiar", delete_confirm_title: "¿Borrar diseño?", confirm: "Confirmar", cancel: "Cancelar" },
       landing: { login: "Ingresar", hero: { badge: "Beta Disponible", title_prefix: "El Sistema Operativo del", title_main: "Desarrollo Inmobiliario.", title_anim: "Empieza a Analizar.", subtitle: "Transforma datos de zonificación en decisiones de inversión.", btn_try: "Probar Gratis", btn_plans: "Ver Planes" }, roadmap_intro: "Construyendo el futuro de la inteligencia territorial.", footer_rights: "© 2026 Cytyos Inc." },
@@ -139,37 +183,37 @@ const resources = {
   fr: {
     translation: {
       app: { title: "Cytyos Bêta" },
+      auth: {
+        tab_signin: "Connexion",
+        tab_signup: "Créer un Compte",
+        email_label: "E-mail",
+        password_label: "Mot de passe",
+        forgot_link: "Mot de passe oublié ?",
+        btn_signin: "Accéder à la Plateforme",
+        btn_signup: "Inscription Gratuite",
+        divider: "OU CONTINUER AVEC",
+        google: "Google",
+        forgot_title: "Récupérer le Mot de Passe",
+        forgot_desc: "Entrez votre e-mail pour recevoir un lien d'accès.",
+        btn_send: "Envoyer le Lien",
+        btn_back: "Retour à la Connexion",
+        success_signup: "Compte créé ! Vérifiez votre e-mail.",
+        success_reset: "Lien de récupération envoyé !",
+        error_invalid: "E-mail ou mot de passe incorrect.",
+        error_exists: "Cet e-mail existe déjà. Essayez de vous connecter.",
+        error_generic: "Une erreur s'est produite."
+      },
       header: { 
         revenue: "Revenus (VGV)", margin: "Marge", export: "Exporter PDF", load: "Ouvrir", save: "Sauver", zoning: "Contexte", roadmap: "Roadmap",
         session_title: "Session Diagnostic Gratuite", session_time: "Restant"
       },
       tabs: { design: "Conception", economics: "Économie" },
-      
-      // --- CORREÇÃO AQUI ---
       blocks: { height: "Hauteur", setback: "Recul" },
-      usage: { 
-        residential: "Résidentiel", 
-        corporate: "Corporatif", 
-        retail: "Commerce", 
-        hotel: "Hôtel", 
-        parking: "Parking", 
-        amenities: "Équipements" 
-      },
-      // ---------------------
-
+      usage: { residential: "Résidentiel", corporate: "Corporatif", retail: "Commerce", hotel: "Hôtel", parking: "Parking", amenities: "Équipements" },
       compliance: { title: "Conformité", legal: "Légal", violation: "Violation", far: "COS", occ: "CES" },
       results: { nsa: "Surface Vendable", revenue: "Revenus Totaux", totalCost: "Coût Total", netProfit: "Bénéfice Net" },
       assumptions: { title: "Hypothèses", maxFar: "Max COS", maxOcc: "Max CES %", landArea: "Surface Terrain", landCost: "Coût Terrain", onerousGrant: "Taxes/Impact", sales: "Vente $/m²", build: "Construction $/m²" },
-      
-      ai: { 
-        btn: "Consultant IA", 
-        thinking: "Analyse...", 
-        close: "Fermer", 
-        insight: "Aperçu Stratégique", 
-        placeholder: "Demandez sur l'efficacité...",
-        limit_reached: "Limite IA atteinte pour ce coupon. Passez à Founder."
-      },
-
+      ai: { btn: "Consultant IA", thinking: "Analyse...", close: "Fermer", insight: "Aperçu Stratégique", placeholder: "Demandez sur l'efficacité...", limit_reached: "Limite IA atteinte pour ce coupon. Passez à Founder." },
       onboarding: { title: "Démarrer l'Analyse", text: "Cherchez un lieu et utilisez l'outil Dessiner." },
       map: { search_placeholder: "Chercher un lieu...", search_provider: "Recherche via Mapbox", sat: "Sat", streets: "Plan", draw: "Dessiner", clear: "Effacer", delete_confirm_title: "Effacer le dessin ?", confirm: "Confirmer", cancel: "Annuler" },
       landing: { login: "Connexion", hero: { badge: "Bêta En Ligne", title_prefix: "Le Système d'Opération du", title_main: "Développement Immobilier.", title_anim: "Commencez l'Analyse.", subtitle: "Transformez les données de zonage en décisions d'investissement.", btn_try: "Essai Gratuit", btn_plans: "Voir Plans" }, roadmap_intro: "Nous construisons le futur de l'intelligence territoriale.", footer_rights: "© 2026 Cytyos Inc." },
@@ -183,37 +227,37 @@ const resources = {
   zh: {
     translation: {
       app: { title: "Cytyos Beta" },
+      auth: {
+        tab_signin: "登录",
+        tab_signup: "创建账户",
+        email_label: "电子邮件",
+        password_label: "密码",
+        forgot_link: "忘记密码？",
+        btn_signin: "进入平台",
+        btn_signup: "免费注册",
+        divider: "或继续使用",
+        google: "谷歌",
+        forgot_title: "找回密码",
+        forgot_desc: "输入您的电子邮件以接收访问链接。",
+        btn_send: "发送链接",
+        btn_back: "返回登录",
+        success_signup: "账户已创建！请查收邮件。",
+        success_reset: "恢复链接已发送！",
+        error_invalid: "电子邮件或密码无效。",
+        error_exists: "此电子邮件已注册。请尝试登录。",
+        error_generic: "发生错误。"
+      },
       header: { 
         revenue: "总收入 (GDV)", margin: "利润率", export: "导出 PDF", load: "加载", save: "保存", zoning: "背景", roadmap: "路线图",
         session_title: "免费诊断会话", session_time: "剩余"
       },
       tabs: { design: "设计", economics: "经济" },
-      
-      // --- CORREÇÃO AQUI ---
       blocks: { height: "高度", setback: "退界" },
-      usage: { 
-        residential: "住宅", 
-        corporate: "办公", 
-        retail: "商业", 
-        hotel: "酒店", 
-        parking: "停车场", 
-        amenities: "配套设施" 
-      },
-      // ---------------------
-
+      usage: { residential: "住宅", corporate: "办公", retail: "商业", hotel: "酒店", parking: "停车场", amenities: "配套设施" },
       compliance: { title: "合规", legal: "合法", violation: "违规", far: "容积率", occ: "覆盖率" },
       results: { nsa: "可售面积", revenue: "总收入", totalCost: "总成本", netProfit: "净利润" },
       assumptions: { title: "假设", maxFar: "最大容积率", maxOcc: "最大覆盖率 %", landArea: "土地面积", landCost: "土地成本", onerousGrant: "费用/税收", sales: "销售 $/m²", build: "建筑成本 $/m²" },
-      
-      ai: { 
-        btn: "AI 顾问", 
-        thinking: "分析中...", 
-        close: "关闭", 
-        insight: "战略洞察", 
-        placeholder: "询问效率...",
-        limit_reached: "此优惠券的AI限制已达。升级至Founder。"
-      },
-
+      ai: { btn: "AI 顾问", thinking: "分析中...", close: "关闭", insight: "战略洞察", placeholder: "询问效率...", limit_reached: "此优惠券的AI限制已达。升级至Founder。" },
       onboarding: { title: "开始分析", text: "搜索位置并使用绘图工具。" },
       map: { search_placeholder: "搜索位置...", search_provider: "Mapbox 搜索", sat: "卫星", streets: "地图", draw: "绘图", clear: "清除", delete_confirm_title: "删除设计？", confirm: "确认", cancel: "取消" },
       landing: { login: "登录", hero: { badge: "Beta 上线", title_prefix: "房地产开发的", title_main: "操作系统。", title_anim: "开始分析。", subtitle: "瞬间将复杂的区划数据转化为投资决策。", btn_try: "免费试用", btn_plans: "查看计划" }, roadmap_intro: "我们正在构建领土智能的未来。", footer_rights: "© 2026 Cytyos Inc." },
