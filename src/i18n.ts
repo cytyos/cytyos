@@ -41,7 +41,23 @@ const resources = {
       ai: { btn: "AI Consultant", thinking: "Analyzing...", close: "Close", insight: "AI Strategic Insight", placeholder: "Ask about efficiency...", limit_reached: "AI limit reached for this coupon. Upgrade to Founder for unlimited access." },
       onboarding: { title: "Start Analysis", text: "Search for a location or address, then use the Draw tool." },
       map: { search_placeholder: "Search location...", search_provider: "Search via Mapbox", sat: "Sat", streets: "Map", draw: "Draw", clear: "Clear", delete_confirm_title: "Delete design?", confirm: "Confirm", cancel: "Cancel" },
-      landing: { login: "Login", hero: { badge: "Beta Live Now", title_prefix: "The Operating System for", title_main: "Real Estate Development.", title_anim: "Start Analyzing.", subtitle: "Cytyos transforms complex zoning data into investment decisions in seconds.", btn_try: "Try Beta Free", btn_plans: "View Early Bird Plan" }, roadmap_intro: "We are building the future of territorial intelligence. Secure your position now.", footer_rights: "© 2026 Cytyos Inc." },
+      
+      // ATUALIZADO (EN)
+      landing: {
+        login: "Login",
+        hero: { 
+            badge: "Beta Live Now", 
+            title_prefix: "AI for Feasibility Studies", 
+            title_main: "and Massing in Seconds.", 
+            title_anim: "Start Analyzing.", 
+            subtitle: "Draw the plot and receive the 3D massing, area schedule, and GDV instantly.", 
+            btn_try: "Start Now (Free)", 
+            btn_plans: "View Early Bird Plan" 
+        },
+        roadmap_intro: "We are building the future of territorial intelligence. Secure your position now.",
+        footer_rights: "© 2026 Cytyos Inc."
+      },
+      
       roadmap: { title: "The Vision & Roadmap", cta: "Secure Early Bird Access", col1: { tag: "Live Now", title: "Get Today (Beta)", f1: "Instant 3D Zoning Visualization", f2: "Manual Plot Control", f3: "Basic ROI & GFA Calculator", f4: "Unlimited Projects" }, col2: { tag: "Included", subtag: "Coming March", title: "Guarantee for March (v1.0)", f1: "Automatic Zoning Data", f2: "Site Comparison Tool", f3: "PDF Export for Investors", f4: "Smart Volumetry" }, col3: { tag: "Founders Edition", title: "The Future 2026 (v2.0)", f1: "Predictive AI Heatmaps", f2: "Highest & Best Use Recommender", f3: "Global Expansion Pack", f4: "Multi-layer Intelligence" } },
       footer: { disclaimer: "Cytyos is a decision support tool. AI results may vary. Always consult a technical professional." },
       pricing: { badge: "Founder Opportunity", title: "Unlock the Full Platform", warning: "Warning: Price increases when v1.0 launches.", beta_tag: "LIVE NOW", beta_title: "Get Today (Beta)", v1_tag: "COMING MARCH", v1_title: "Guarantee for March (v1.0)", v2_tag: "FOUNDERS EDITION", v2_title: "The Future 2026 (v2.0)", beta_f1: "Instant 3D Zoning Visualization", beta_f2: "Manual Plot Control", beta_f3: "Basic ROI & GFA Calculator", beta_f4: "Unlimited Projects", v1_f1: "Automatic Zoning Data", v1_f2: "Fully Modelable Volumetry", v1_f3: "PDF Export for Investors", v1_f4: "Site Comparison Tool", v2_f1: "BIM/DWG Upload for Analysis", v2_f2: "Predictive AI Heatmaps", v2_f3: "Highest & Best Use Recommender", v2_f4: "Multi-layer Intelligence", small_title: "Small project?", small_desc: "Generate a single PDF report.", btn_pdf: "Buy One Report ($17)", select_plan: "Select your Plan", monthly: "Monthly", yearly: "Yearly", save_pct: "SAVE 77%", save_amount_badge: "SAVE $999", plan_annual: "Founder Annual", plan_monthly: "Standard Access", sub_annual: "Secure v1.0 & v2.0 access.", sub_monthly: "Cancel anytime.", future_price: "Future Price", btn_annual: "Lock in Founder Price ($296)", btn_monthly: "Subscribe Monthly", coupon_label: "Have an access key?", coupon_placeholder: "ENTER COUPON CODE", validate: "Validate", monthly_warning: "By selecting monthly, you only get access to what is ready today.", monthly_warning_highlight: "Switch to Annual to secure v1.0 & v2.0" }
@@ -87,7 +103,7 @@ const resources = {
       onboarding: { title: "Iniciar Análise", text: "Busque um endereço e use a ferramenta Desenhar para definir o terreno." },
       map: { search_placeholder: "Buscar local...", search_provider: "Busca via Mapbox", sat: "Sat", streets: "Mapa", draw: "Desenhar", clear: "Limpar", delete_confirm_title: "Apagar desenho?", confirm: "Confirmar", cancel: "Cancelar" },
       
-      // --- AQUI ESTÃO AS ALTERAÇÕES SOLICITADAS ---
+      // ATUALIZADO (PT)
       landing: {
         login: "Entrar",
         hero: { 
@@ -102,7 +118,6 @@ const resources = {
         roadmap_intro: "Estamos construindo o futuro da inteligência territorial. Garanta sua posição agora.",
         footer_rights: "© 2026 Cytyos Inc."
       },
-      // ---------------------------------------------
 
       roadmap: { title: "Visão & Roadmap", cta: "Garantir Acesso Early Bird", col1: { tag: "No Ar (Beta)", title: "Você Leva HOJE (Beta)", f1: "Visualização 3D Instantânea", f2: "Controle Manual de Terreno", f3: "Calculadora de VGV", f4: "Projetos Ilimitados" }, col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" }, col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" } },
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
@@ -141,14 +156,30 @@ const resources = {
       },
       tabs: { design: "Diseño", economics: "Viabilidad" },
       blocks: { height: "Altura", setback: "Retranqueo" },
-      usage: { residential: "Residencial", corporate: "Corporativo", retail: "Comercial", hotel: "Hotel", parking: "Estacionamiento", amenities: "Amenidades" },
+      usage: { residential: "Residencial", corporate: "Corporativo", retail: "Comercial", hotel: "Hotel", parking: "Estacionamento", amenities: "Amenidades" },
       compliance: { title: "Normativa", legal: "Legal", violation: "Violación", far: "F.O.S", occ: "F.O.T" },
       results: { nsa: "Área Vendible", revenue: "Ingresos Totales", totalCost: "Costo Total", netProfit: "Ganancia Neta" },
       assumptions: { title: "Supuestos", maxFar: "Max FOS", maxOcc: "Max FOT %", landArea: "Área Terreno", landCost: "Costo Terreno", onerousGrant: "Impacto/Tasas", sales: "Venta $/m²", build: "Obra $/m²" },
       ai: { btn: "Consultor IA", thinking: "Analizando...", close: "Cerrar", insight: "Insight Estratégico", placeholder: "Pregunte sobre eficiencia...", limit_reached: "Límite de IA alcanzado para este cupón. Actualice a Founder." },
       onboarding: { title: "Iniciar Análisis", text: "Busque una ubicación y use la herramienta Dibujar." },
       map: { search_placeholder: "Buscar ubicación...", search_provider: "Búsqueda vía Mapbox", sat: "Sat", streets: "Mapa", draw: "Dibujar", clear: "Limpiar", delete_confirm_title: "¿Borrar diseño?", confirm: "Confirmar", cancel: "Cancelar" },
-      landing: { login: "Ingresar", hero: { badge: "Beta Disponible", title_prefix: "El Sistema Operativo del", title_main: "Desarrollo Inmobiliario.", title_anim: "Empieza a Analizar.", subtitle: "Transforma datos de zonificación en decisiones de inversión.", btn_try: "Probar Gratis", btn_plans: "Ver Planes" }, roadmap_intro: "Construyendo el futuro de la inteligencia territorial.", footer_rights: "© 2026 Cytyos Inc." },
+      
+      // ATUALIZADO (ES)
+      landing: {
+        login: "Ingresar",
+        hero: { 
+            badge: "Beta Disponible", 
+            title_prefix: "IA para Estudios de", 
+            title_main: "Viabilidad y Volumetría en Segundos.", 
+            title_anim: "Empieza a Analizar.", 
+            subtitle: "Dibuja el terreno y recibe la masa 3D, cuadro de áreas y VGV al instante.", 
+            btn_try: "Empezar Ahora", 
+            btn_plans: "Ver Planes" 
+        },
+        roadmap_intro: "Construyendo el futuro de la inteligencia territorial.",
+        footer_rights: "© 2026 Cytyos Inc."
+      },
+
       roadmap: { title: "Visión y Futuro", cta: "Acceso Early Bird", col1: { tag: "En Vivo", title: "Hoy (Beta)", f1: "Visualización 3D", f2: "Control Manual", f3: "Calculadora ROI", f4: "Proyectos Ilimitados" }, col2: { tag: "Incluido", subtag: "Marzo", title: "Garantía Marzo (v1.0)", f1: "Datos Automáticos", f2: "Comparador", f3: "Exportar PDF", f4: "Volumetría Smart" }, col3: { tag: "Edición Founders", title: "Futuro 2026 (v2.0)", f1: "Mapas de Calor IA", f2: "Recomendador", f3: "Expansión Global", f4: "Multi-capas" } },
       footer: { disclaimer: "Cytyos es una herramienta de soporte. Resultados de IA varían." },
       pricing: { badge: "Oportunidad Founder", title: "Desbloquea la Plataforma", warning: "Precio subirá con v1.0.", beta_tag: "EN VIVO", beta_title: "Hoy (Beta)", v1_tag: "LLEGA MARZO", v1_title: "Garantía Marzo (v1.0)", v2_tag: "FUTURO 2026", v2_title: "Versión 2.0", beta_f1: "Visualización 3D", beta_f2: "Control Manual", beta_f3: "Calc. ROI", beta_f4: "Proyectos Ilimitados", v1_f1: "Datos Auto", v1_f2: "Volumetría Smart", v1_f3: "Exportar PDF", v1_f4: "Comparador", v2_f1: "Upload BIM/DWG", v2_f2: "Mapas de Calor IA", v2_f3: "Recomendador", v2_f4: "Multi-capas", small_title: "¿Proyecto pequeño?", small_desc: "1 Reporte PDF.", btn_pdf: "Comprar 1 Reporte ($17)", select_plan: "Elige tu Plan", monthly: "Mensual", yearly: "Anual", save_pct: "AHORRA 77%", save_amount_badge: "AHORRA $999", plan_annual: "Founder Anual", plan_monthly: "Acceso Estándar", sub_annual: "Acceso v1.0 & v2.0.", sub_monthly: "Cancela cuando quieras.", future_price: "Precio Futuro", btn_annual: "Asegurar Precio ($296)", btn_monthly: "Suscribir Mensual", coupon_label: "¿Tienes código?", coupon_placeholder: "CÓDIGO", validate: "Validar", monthly_warning: "Mensual solo da acceso a lo actual.", monthly_warning_highlight: "Cambia a Anual para v1.0 y v2.0" }
@@ -193,7 +224,23 @@ const resources = {
       ai: { btn: "Consultant IA", thinking: "Analyse...", close: "Fermer", insight: "Aperçu Stratégique", placeholder: "Demandez sur l'efficacité...", limit_reached: "Limite IA atteinte pour ce coupon. Passez à Founder." },
       onboarding: { title: "Démarrer l'Analyse", text: "Cherchez un lieu et utilisez l'outil Dessiner." },
       map: { search_placeholder: "Chercher un lieu...", search_provider: "Recherche via Mapbox", sat: "Sat", streets: "Plan", draw: "Dessiner", clear: "Effacer", delete_confirm_title: "Effacer le dessin ?", confirm: "Confirmer", cancel: "Annuler" },
-      landing: { login: "Connexion", hero: { badge: "Bêta En Ligne", title_prefix: "Le Système d'Opération du", title_main: "Développement Immobilier.", title_anim: "Commencez l'Analyse.", subtitle: "Transformez les données de zonage en décisions d'investissement.", btn_try: "Essai Gratuit", btn_plans: "Voir Plans" }, roadmap_intro: "Nous construisons le futur de l'intelligence territoriale.", footer_rights: "© 2026 Cytyos Inc." },
+      
+      // ATUALIZADO (FR)
+      landing: {
+        login: "Connexion",
+        hero: { 
+            badge: "Bêta En Ligne", 
+            title_prefix: "IA pour Études de", 
+            title_main: "Faisabilité et Volumétrie en Secondes.", 
+            title_anim: "Commencez l'Analyse.", 
+            subtitle: "Dessinez le terrain et recevez la masse 3D, le tableau des surfaces et le GDV instantanément.", 
+            btn_try: "Commencer Maintenant", 
+            btn_plans: "Voir Plans" 
+        },
+        roadmap_intro: "Nous construisons le futur de l'intelligence territoriale.",
+        footer_rights: "© 2026 Cytyos Inc."
+      },
+
       roadmap: { title: "Vision", cta: "Accès Early Bird", col1: { tag: "En Ligne", title: "Aujourd'hui (Bêta)", f1: "Visualisation 3D", f2: "Contrôle Manuel", f3: "Calculateur ROI", f4: "Projets Illimités" }, col2: { tag: "Inclus", subtag: "Mars", title: "Garanti Mars (v1.0)", f1: "Données Auto", f2: "Comparateur", f3: "Export PDF", f4: "Volumétrie Smart" }, col3: { tag: "Édition Founders", title: "Futur 2026 (v2.0)", f1: "Cartes Thermiques IA", f2: "Recommandations", f3: "Expansion Globale", f4: "Intelligence Multi-couches" } },
       footer: { disclaimer: "Outil d'aide à la décision. Résultats IA variables." },
       pricing: { badge: "Opportunité Founder", title: "Débloquez tout", warning: "Prix augmente avec v1.0.", beta_tag: "EN LIGNE", beta_title: "Aujourd'hui (Bêta)", v1_tag: "ARRIVE MARS", v1_title: "Garanti Mars (v1.0)", v2_tag: "FUTUR 2026", v2_title: "Version 2.0", beta_f1: "Visu 3D", beta_f2: "Contrôle Manuel", beta_f3: "Calc. ROI", beta_f4: "Projets Illimités", v1_f1: "Données Auto", v1_f2: "Volumétrie Smart", v1_f3: "Export PDF", v1_f4: "Comparateur", v2_f1: "Upload BIM/DWG", v2_f2: "Cartes Thermiques IA", v2_f3: "Recommandations", v2_f4: "Multi-couches", small_title: "Petit projet ?", small_desc: "1 Rapport PDF.", btn_pdf: "Acheter 1 Rapport (17$)", select_plan: "Votre Plan", monthly: "Mensuel", yearly: "Annuel", save_pct: "-77%", save_amount_badge: "ÉCONOMISEZ 999$", plan_annual: "Founder Annuel", plan_monthly: "Accès Standard", sub_annual: "Accès v1.0 & v2.0.", sub_monthly: "Annulez quand vous voulez.", future_price: "Prix Futur", btn_annual: "Bloquer Prix (296$)", btn_monthly: "S'abonner", coupon_label: "Code d'accès ?", coupon_placeholder: "CODE", validate: "Valider", monthly_warning: "Mensuel donne accès uniquement à l'actuel.", monthly_warning_highlight: "Passez à l'Annuel pour v1.0 et v2.0" }
@@ -238,7 +285,23 @@ const resources = {
       ai: { btn: "AI 顾问", thinking: "分析中...", close: "关闭", insight: "战略洞察", placeholder: "询问效率...", limit_reached: "此优惠券的AI限制已达。升级至Founder。" },
       onboarding: { title: "开始分析", text: "搜索位置并使用绘图工具。" },
       map: { search_placeholder: "搜索位置...", search_provider: "Mapbox 搜索", sat: "卫星", streets: "地图", draw: "绘图", clear: "清除", delete_confirm_title: "删除设计？", confirm: "确认", cancel: "取消" },
-      landing: { login: "登录", hero: { badge: "Beta 上线", title_prefix: "房地产开发的", title_main: "操作系统。", title_anim: "开始分析。", subtitle: "瞬间将复杂的区划数据转化为投资决策。", btn_try: "免费试用", btn_plans: "查看计划" }, roadmap_intro: "我们正在构建领土智能的未来。", footer_rights: "© 2026 Cytyos Inc." },
+      
+      // ATUALIZADO (ZH)
+      landing: {
+        login: "登录",
+        hero: { 
+            badge: "Beta 上线", 
+            title_prefix: "用于可行性研究和", 
+            title_main: "体量分析的 AI，仅需几秒。", 
+            title_anim: "开始分析。", 
+            subtitle: "绘制地块，即刻获得 3D 体量、面积表和总开发价值 (GDV)。", 
+            btn_try: "立即开始", 
+            btn_plans: "查看计划" 
+        },
+        roadmap_intro: "我们正在构建领土智能的未来。",
+        footer_rights: "© 2026 Cytyos Inc."
+      },
+
       roadmap: { title: "愿景", cta: "早鸟特惠", col1: { tag: "在线", title: "今日 (Beta)", f1: "3D 可视化", f2: "手动控制", f3: "ROI 计算器", f4: "无限项目" }, col2: { tag: "包含", subtag: "三月", title: "三月更新 (v1.0)", f1: "自动数据", f2: "场地比较", f3: "PDF 导出", f4: "智能体量" }, col3: { tag: "创始人版", title: "未来 2026 (v2.0)", f1: "AI 热力图", f2: "最佳用途推荐", f3: "全球扩展", f4: "多层智能" } },
       footer: { disclaimer: "决策支持工具。AI 结果可能不同。" },
       pricing: { badge: "创始人机会", title: "解锁平台", warning: "v1.0 后价格上涨。", beta_tag: "上线", beta_title: "今日可用 (Beta)", v1_tag: "三月发布", v1_title: "三月保证 (v1.0)", v2_tag: "创始人版", v2_title: "未来 2026 (v2.0)", beta_f1: "3D 可视化", beta_f2: "手动控制", beta_f3: "ROI 计算器", beta_f4: "无限项目", v1_f1: "自动数据", v1_f2: "智能体量", v1_f3: "PDF 导出", v1_f4: "比较工具", v2_f1: "BIM/DWG 上传", v2_f2: "AI 热力图", v2_f3: "最佳推荐", v2_f4: "多层智能", small_title: "小型项目？", small_desc: "1 份 PDF 报告。", btn_pdf: "购买报告 ($17)", select_plan: "选择计划", monthly: "按月", yearly: "按年", save_pct: "省 77%", save_amount_badge: "省 $999", plan_annual: "创始人年度", plan_monthly: "标准访问", sub_annual: "包含 v1.0 & v2.0。", sub_monthly: "随时取消。", future_price: "未来价格", btn_annual: "锁定价格 ($296)", btn_monthly: "订阅", coupon_label: "有代码？", coupon_placeholder: "代码", validate: "验证", monthly_warning: "按月仅包含当前功能。", monthly_warning_highlight: "切换按年以锁定 v1.0 & v2.0" }
