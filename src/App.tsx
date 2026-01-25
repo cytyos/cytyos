@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { X, Monitor } from 'lucide-react';
+import { X, Monitor, Zap } from 'lucide-react'; // Adicionei Zap
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -13,6 +13,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { subscriptionService } from './services/subscriptionService';
 import './i18n';
 
+// --- NOVAS PÁGINAS (OPERACAO BRASIL) ---
+import { BrazilOfferPage } from './pages/BrazilOfferPage';
+import { ThankYouPage } from './pages/ThankYouPage';
+
 // --- LAZY IMPORTS (SAFE MODE) ---
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
@@ -21,10 +25,8 @@ const PricingModal = React.lazy(() => import('./components/PricingModal').then(m
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(module => ({ default: module.PrivacyPage })));
 
-// ⏱️ CONFIGURAÇÃO DE TEMPO: 15 MINUTOS
 const FREE_USAGE_MS = 15 * 60 * 1000;
 
-// --- LOADING SCREEN ---
 const LoadingScreen = () => (
   <div className="h-screen w-screen bg-[#0f111a] flex flex-col items-center justify-center space-y-4">
     <div className="relative w-16 h-16">
@@ -35,94 +37,86 @@ const LoadingScreen = () => (
   </div>
 );
 
-// --- MOBILE WARNING ---
+// --- MOBILE WARNING (ATUALIZADO PARA UPSELL) ---
 const MobileOptimizationWarning = () => {
   const [isVisible, setIsVisible] = useState(true);
+  const navigate = useNavigate(); // Hook para navegar
+
   if (!isVisible) return null;
   return (
     <div className="md:hidden fixed inset-0 z-[99999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
       <div className="bg-[#1a1d26] border border-white/10 rounded-2xl p-6 max-w-sm w-full text-center relative shadow-2xl">
         <button onClick={() => setIsVisible(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
-        <div className="w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><Monitor className="w-6 h-6 text-indigo-400" /></div>
-        <h3 className="text-white font-bold text-lg mb-2">Desktop Recommended</h3>
-        <p className="text-gray-400 text-sm mb-6 leading-relaxed">Cytyos is a professional 3D analysis tool optimized for large screens.</p>
-        <button onClick={() => setIsVisible(false)} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-colors border border-white/5">Continue on Mobile</button>
+        <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><Zap className="w-6 h-6 text-green-400" /></div>
+        
+        {/* COPY ALTERADA - UPSELL BRASIL */}
+        <h3 className="text-white font-bold text-lg mb-2">Oferta Exclusiva Brasil</h3>
+        <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+          Bem-vindo! A modelagem 3D é otimizada para Desktop. Mas aproveite que está aqui para garantir o preço especial do Brasil (12x R$ 97).
+        </p>
+        
+        <button onClick={() => { setIsVisible(false); navigate('/oferta-brasil'); }} className="w-full py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-green-900/20 mb-3">
+            Ver Oferta R$ 97,10
+        </button>
+        <button onClick={() => setIsVisible(false)} className="text-xs text-gray-500 hover:text-white underline">
+            Continuar para o App (Modo Limitado)
+        </button>
       </div>
     </div>
   );
 };
 
-// --- PAYWALL CONTROL (SISTEMA BLINDADO) ---
 const PaywallGlobal = () => {
   const { isPaywallOpen, setPaywallOpen } = useSettingsStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, user } = useAuth(); // Pegamos o USER para travar pelo ID
+  const { session, user } = useAuth(); 
 
   useEffect(() => {
-    // Se não estiver logado ou não estiver no app, não faz nada
     if (!user || !location.pathname.startsWith('/app')) return;
 
-    // Chave única por usuário para impedir que ele limpe cache de sessão
-    // Se ele trocar de navegador, ele ganha +15min (inevitável sem backend), 
-    // mas no mesmo navegador está travado para sempre.
     const storageKey = `cytyos_trial_start_${user.id}`;
-
-    // Inicializa o timer se não existir
     if (!localStorage.getItem(storageKey)) {
         localStorage.setItem(storageKey, Date.now().toString());
     }
 
-    // Função de verificação
     const verifySubscription = async () => {
-        // 1. Verifica Assinatura Real (VIP)
-        // O checkAccess verifica no banco se ele pagou
         const hasPremiumAccess = await subscriptionService.checkAccess();
         if (hasPremiumAccess) {
-            localStorage.setItem('cytyos_license_type', 'VIP'); // Cache local para evitar request
+            localStorage.setItem('cytyos_license_type', 'VIP'); 
             setPaywallOpen(false);
             return; 
         }
 
-        // 2. Verifica Tempo Restante (Lógica Freemium)
         const startStr = localStorage.getItem(storageKey);
         const startTime = startStr ? parseInt(startStr) : Date.now();
         const timeUsed = Date.now() - startTime;
         
-        // Verifica se tem cupom de trial estendido
         const trialEnd = localStorage.getItem('cytyos_trial_end');
         const hasActiveCoupon = trialEnd && Date.now() < Number(trialEnd);
 
-        // A Lógica Final:
-        // Se NÃO é VIP E NÃO tem cupom E o tempo de uso passou de 15min... BLOQUEIA.
         if (!hasActiveCoupon && timeUsed > FREE_USAGE_MS) {
             if (!isPaywallOpen) {
-                console.log("Tempo de diagnóstico expirado. Bloqueando...");
                 setPaywallOpen(true);
             }
         }
     };
 
-    // Verifica a cada 1 segundo para ser preciso no cronômetro
     const interval = setInterval(verifySubscription, 1000); 
-    verifySubscription(); // Roda imediatamente também
+    verifySubscription(); 
 
     return () => clearInterval(interval);
   }, [setPaywallOpen, isPaywallOpen, location.pathname, session, user]); 
 
-  // --- TENTATIVA DE FECHAMENTO ---
   const handleCloseAttempt = () => {
-      // 1. Na Landing Page é livre
       if (location.pathname === '/') {
           setPaywallOpen(false);
           return;
       }
 
-      // 2. No App, recalculamos tudo para garantir que ele não burlou o HTML
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
       
-      // Recalcula o tempo baseado no ID do usuário
       const storageKey = user ? `cytyos_trial_start_${user.id}` : 'cytyos_anon';
       const startStr = localStorage.getItem(storageKey);
       const startTime = startStr ? parseInt(startStr) : 0;
@@ -132,20 +126,14 @@ const PaywallGlobal = () => {
       const hasCoupon = trialEnd && Date.now() < Number(trialEnd);
 
       if (isVip || hasCoupon || hasTimeLeft) {
-          // Se tem direito, fecha o modal
           setPaywallOpen(false);
       } else {
-          // Se NÃO tem direito e tentou fechar:
-          // Não deixamos fechar e forçamos o usuário a ficar olhando pro modal
-          // Opcional: Redirecionar para Home se quiser ser agressivo
-          // navigate('/'); 
           alert("Sua sessão de diagnóstico gratuita expirou. Para continuar editando, libere o acesso Founder.");
       }
   };
 
   return (
     <Suspense fallback={null}>
-        {/* Adicionei backdrop-blur-sm aqui para dar o efeito de bloqueio visual do conteúdo atrás */}
         <div className={isPaywallOpen && location.pathname.startsWith('/app') ? "fixed inset-0 z-[9999] backdrop-blur-sm" : ""}>
             <PricingModal isOpen={isPaywallOpen} onClose={handleCloseAttempt} />
         </div>
@@ -153,7 +141,6 @@ const PaywallGlobal = () => {
   );
 };
 
-// --- GUARDS ---
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   if (loading) return <LoadingScreen />;
@@ -177,6 +164,11 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             
+            {/* --- NOVAS ROTAS DA OPERAÇÃO BRASIL --- */}
+            <Route path="/oferta-brasil" element={<BrazilOfferPage />} />
+            <Route path="/obrigado" element={<ThankYouPage />} />
+            {/* -------------------------------------- */}
+
             <Route path="/privacy" element={
                 <Suspense fallback={<LoadingScreen />}>
                     <PrivacyPage />
