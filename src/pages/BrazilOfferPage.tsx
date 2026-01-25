@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Zap, ShieldCheck, CalendarClock } from 'lucide-react'; // Adicionei CalendarClock
+import { CheckCircle2, Zap, ShieldCheck, Clock } from 'lucide-react'; // Troquei CalendarClock por Clock (mais seguro)
 import logoFull from '../assets/logo-full.png';
 
 export const BrazilOfferPage = () => {
@@ -49,7 +49,7 @@ export const BrazilOfferPage = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 text-left w-full max-w-md">
             <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Volumetria 3D Ilimitada</div>
             <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Exportação PDF</div>
-            <div className="flex items-center gap-2 text-xs text-gray-400"><CalendarClock className="w-4 h-4 text-green-500"/> Acesso por 12 Meses</div>
+            <div className="flex items-center gap-2 text-xs text-gray-400"><Clock className="w-4 h-4 text-green-500"/> Acesso por 12 Meses</div>
             <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Atualizações v1.0 e v2.0</div>
         </div>
 
