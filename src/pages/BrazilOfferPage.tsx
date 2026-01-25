@@ -1,15 +1,37 @@
 import React from 'react';
-import { CheckCircle2, Zap, ShieldCheck, Clock, FileText, Layers, TrendingUp, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Zap, ShieldCheck, Clock, Layers, TrendingUp, Star, FileText, ArrowRight, LogIn } from 'lucide-react';
 import logoFull from '../assets/logo-full.png';
 
 export const BrazilOfferPage = () => {
+  const navigate = useNavigate();
+
+  // Função Inteligente:
+  // Marca o navegador do usuário com a oferta e manda ele para o cadastro.
+  // Assim, quando ele entrar no App, o botão de "Resgatar Oferta" vai aparecer lá dentro.
+  const handleTestDrive = () => {
+      localStorage.setItem('cytyos_brazil_offer_active', 'true');
+      navigate('/login', { state: { tab: 'signup' } });
+  };
+
+  const handleLogin = () => {
+      localStorage.setItem('cytyos_brazil_offer_active', 'true'); // Marca também, caso ele queira comprar depois
+      navigate('/login', { state: { tab: 'signin' } });
+  };
+
   return (
     <div className="min-h-screen bg-[#050608] text-white font-sans selection:bg-indigo-500 selection:text-white">
-      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 flex flex-col items-center text-center">
-        
-        {/* HEADER */}
-        <img src={logoFull} alt="Cytyos" className="h-8 mb-10 opacity-90" />
+      
+      {/* Navbar Minimalista */}
+      <nav className="absolute top-0 w-full p-6 flex justify-between items-center max-w-4xl left-1/2 -translate-x-1/2">
+        <img src={logoFull} alt="Cytyos" className="h-6 opacity-70" />
+        <button onClick={handleLogin} className="text-xs font-bold text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+            JÁ TENHO CONTA <LogIn className="w-3 h-3" />
+        </button>
+      </nav>
 
+      <div className="max-w-4xl mx-auto px-6 py-24 md:py-32 flex flex-col items-center text-center">
+        
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 animate-pulse">
           <Zap className="w-3 h-3" /> Condição Exclusiva Brasil
         </div>
@@ -25,7 +47,7 @@ export const BrazilOfferPage = () => {
         </p>
 
         {/* PRICING CARD */}
-        <div className="bg-[#0f111a] border border-white/10 rounded-2xl p-6 mb-10 w-full max-w-lg shadow-2xl shadow-indigo-900/10">
+        <div className="bg-[#0f111a] border border-white/10 rounded-2xl p-6 mb-8 w-full max-w-lg shadow-2xl shadow-indigo-900/10">
             <div className="flex flex-col gap-2 mb-6 border-b border-white/5 pb-6">
                 <div className="flex justify-between items-center text-gray-500 line-through decoration-red-500/50 text-sm">
                     <span>Preço Global (USD)</span>
@@ -46,6 +68,27 @@ export const BrazilOfferPage = () => {
             </div>
         </div>
 
+        {/* BOTOES DE AÇÃO (O DUPLO FLUXO) */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mb-10 max-w-lg">
+            {/* Botão 1: Compra Direta */}
+            <a 
+                href="https://buy.stripe.com/14A4gy75b8ey0ZE1C2gMw07" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-xl font-bold text-sm shadow-xl shadow-indigo-900/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 text-center"
+            >
+                Quero Garantir Agora
+            </a>
+            
+            {/* Botão 2: Teste Grátis (Leva para o App) */}
+            <button 
+                onClick={handleTestDrive}
+                className="flex-1 bg-[#1a1d26] hover:bg-[#252a36] text-white border border-gray-700 hover:border-gray-500 px-6 py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 text-center group"
+            >
+                Testar a Plataforma <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+        </div>
+
         {/* ALERTA DE ATIVAÇÃO */}
         <div className="bg-yellow-500/5 border border-yellow-500/20 p-4 rounded-xl text-left mb-10 w-full max-w-lg flex gap-3">
             <ShieldCheck className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
@@ -60,19 +103,9 @@ export const BrazilOfferPage = () => {
             </div>
         </div>
 
-        {/* CTA BUTTON */}
-        <a 
-            href="https://buy.stripe.com/14A4gy75b8ey0ZE1C2gMw07" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-indigo-900/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 mb-16"
-        >
-            Quero meu Acesso Agora
-        </a>
-
-        {/* LISTA DE BENEFÍCIOS DETALHADA */}
-        <div className="w-full text-left">
-            <h3 className="text-xl font-bold text-white mb-6 text-center">O que está incluso no Early Bird?</h3>
+        {/* LISTA DE BENEFÍCIOS */}
+        <div className="w-full text-left max-w-4xl border-t border-white/5 pt-12">
+            <h3 className="text-xl font-bold text-white mb-8 text-center">O que está incluso no Early Bird?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 <div className="bg-[#1a1d26] p-4 rounded-xl border border-white/5 flex gap-3">
@@ -126,7 +159,7 @@ export const BrazilOfferPage = () => {
             </div>
         </div>
 
-        <div className="mt-16 text-[10px] text-gray-600">
+        <div className="mt-16 text-[10px] text-gray-600 pb-10">
             © 2026 Cytyos Inc. Oferta válida por tempo limitado.
         </div>
 
