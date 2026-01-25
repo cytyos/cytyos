@@ -17,10 +17,10 @@ import './i18n';
 import { BrazilOfferPage } from './pages/BrazilOfferPage';
 import { ThankYouPage } from './pages/ThankYouPage';
 
-// --- NOVO COMPONENTE (PROMO BAR) ---
+// --- COMPONENTES ---
 import { PromoBar } from './components/PromoBar';
 
-// --- LAZY IMPORTS (SAFE MODE) ---
+// --- LAZY IMPORTS ---
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
 const SmartPanel = React.lazy(() => import('./components/SmartPanel').then(module => ({ default: module.SmartPanel })));
 const MapControls = React.lazy(() => import('./components/MapControls').then(module => ({ default: module.MapControls })));
@@ -40,7 +40,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-// --- MOBILE WARNING (ATUALIZADO PARA UPSELL) ---
+// --- MOBILE WARNING ---
 const MobileOptimizationWarning = () => {
   const [isVisible, setIsVisible] = useState(true);
   const navigate = useNavigate();
@@ -51,12 +51,10 @@ const MobileOptimizationWarning = () => {
       <div className="bg-[#1a1d26] border border-white/10 rounded-2xl p-6 max-w-sm w-full text-center relative shadow-2xl">
         <button onClick={() => setIsVisible(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
         <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><Zap className="w-6 h-6 text-green-400" /></div>
-        
         <h3 className="text-white font-bold text-lg mb-2">Oferta Exclusiva Brasil</h3>
         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
           Bem-vindo! A modelagem 3D é otimizada para Desktop. Mas aproveite que está aqui para garantir o preço especial do Brasil (12x R$ 97).
         </p>
-        
         <button onClick={() => { setIsVisible(false); navigate('/oferta-brasil'); }} className="w-full py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-green-900/20 mb-3">
             Ver Oferta R$ 97,10
         </button>
@@ -115,15 +113,12 @@ const PaywallGlobal = () => {
           setPaywallOpen(false);
           return;
       }
-
       const isVip = localStorage.getItem('cytyos_license_type') === 'VIP';
       const trialEnd = localStorage.getItem('cytyos_trial_end');
-      
       const storageKey = user ? `cytyos_trial_start_${user.id}` : 'cytyos_anon';
       const startStr = localStorage.getItem(storageKey);
       const startTime = startStr ? parseInt(startStr) : 0;
       const timeUsed = Date.now() - startTime;
-      
       const hasTimeLeft = timeUsed < FREE_USAGE_MS;
       const hasCoupon = trialEnd && Date.now() < Number(trialEnd);
 
@@ -166,7 +161,6 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             
-            {/* --- NOVAS ROTAS DA OPERAÇÃO BRASIL --- */}
             <Route path="/oferta-brasil" element={<BrazilOfferPage />} />
             <Route path="/obrigado" element={<ThankYouPage />} />
             
@@ -188,28 +182,26 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    {/* CORREÇÃO AQUI: Removemos 'flex flex-col' e usamos apenas 'relative'. */}
-                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
+                    {/* VOLTAMOS PARA FLEX-COL: Mais seguro para renderização */}
+                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none flex flex-col">
                         
-                        {/* A PromoBar agora flutua POR CIMA do mapa (z-60) */}
-                        <div className="absolute top-0 left-0 w-full z-[60]">
-                           <PromoBar />
-                        </div>
+                        {/* PromoBar no fluxo normal (empurra o mapa para baixo) */}
+                        <PromoBar />
 
-                        <MobileOptimizationWarning />
-
-                        <Suspense fallback={<LoadingScreen />}>
-                            <MapboxMap />
-                            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                                {/* Adicionamos uma margem extra no Desktop (md:mt-8) para a busca não ficar escondida atrás da PromoBar */}
-                                <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4 md:mt-8"> 
-                                    <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
+                        <div className="relative flex-1 w-full h-full overflow-hidden">
+                            <MobileOptimizationWarning />
+                            <Suspense fallback={<LoadingScreen />}>
+                                <MapboxMap />
+                                <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
+                                    <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
+                                        <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
+                                    </div>
+                                    <div className="flex-1"></div>
                                 </div>
-                                <div className="flex-1"></div>
-                            </div>
-                            <SmartPanel />
-                        </Suspense>
-                        <Footer />
+                                <SmartPanel />
+                            </Suspense>
+                            <Footer />
+                        </div>
                     </div>
                 </ProtectedRoute>
             } />
