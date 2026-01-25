@@ -11,7 +11,7 @@ const resources = {
         tab_signin: "Sign In",
         tab_signup: "Create Account",
         email_label: "Email",
-        email_placeholder: "name@company.com", // <--- NOVO (Inglês)
+        email_placeholder: "name@company.com", 
         password_label: "Password",
         forgot_link: "Forgot password?",
         btn_signin: "Access Platform",
@@ -56,7 +56,7 @@ const resources = {
         tab_signin: "Entrar",
         tab_signup: "Criar Conta",
         email_label: "E-mail",
-        email_placeholder: "seu@email.com", // <--- NOVO (Português)
+        email_placeholder: "seu@email.com", 
         password_label: "Senha",
         forgot_link: "Esqueceu a senha?",
         btn_signin: "Acessar Plataforma",
@@ -86,7 +86,24 @@ const resources = {
       ai: { btn: "Consultor IA", thinking: "Analisando...", close: "Fechar", insight: "Análise Estratégica", placeholder: "Pergunte sobre eficiência...", limit_reached: "Limite de IA atingido para este cupom. Assine o Founder para acesso ilimitado." },
       onboarding: { title: "Iniciar Análise", text: "Busque um endereço e use a ferramenta Desenhar para definir o terreno." },
       map: { search_placeholder: "Buscar local...", search_provider: "Busca via Mapbox", sat: "Sat", streets: "Mapa", draw: "Desenhar", clear: "Limpar", delete_confirm_title: "Apagar desenho?", confirm: "Confirmar", cancel: "Cancelar" },
-      landing: { login: "Entrar", hero: { badge: "Beta Disponível", title_prefix: "O Sistema Operacional do", title_main: "Desenvolvimento Imobiliário.", title_anim: "Comece a Analisar.", subtitle: "Transforme dados de zoneamento em decisões de investimento em segundos.", btn_try: "Testar Beta Grátis", btn_plans: "Ver Plano Early Bird" }, roadmap_intro: "Estamos construindo o futuro da inteligência territorial.", footer_rights: "© 2026 Cytyos Inc." },
+      
+      // --- AQUI ESTÃO AS ALTERAÇÕES SOLICITADAS ---
+      landing: {
+        login: "Entrar",
+        hero: { 
+            badge: "Beta Disponível", 
+            title_prefix: "IA para Estudos de", 
+            title_main: "Viabilidade e Volumetria em Segundos.", 
+            title_anim: "Comece a Analisar.", 
+            subtitle: "Desenhe o terreno e receba a massa 3D, quadro de áreas e VGV instantaneamente.", 
+            btn_try: "Começar Agora", 
+            btn_plans: "Ver Plano Early Bird" 
+        },
+        roadmap_intro: "Estamos construindo o futuro da inteligência territorial. Garanta sua posição agora.",
+        footer_rights: "© 2026 Cytyos Inc."
+      },
+      // ---------------------------------------------
+
       roadmap: { title: "Visão & Roadmap", cta: "Garantir Acesso Early Bird", col1: { tag: "No Ar (Beta)", title: "Você Leva HOJE (Beta)", f1: "Visualização 3D Instantânea", f2: "Controle Manual de Terreno", f3: "Calculadora de VGV", f4: "Projetos Ilimitados" }, col2: { tag: "Incluso", subtag: "Chega em Março", title: "Garantia para MARÇO (v1.0)", f1: "Dados Automáticos", f2: "Comparador de Terrenos", f3: "Exportação PDF", f4: "Volumetria Inteligente" }, col3: { tag: "Edição Founders", title: "O Futuro 2026 (v2.0)", f1: "Mapas de Calor Preditivos", f2: "Recomendador 'Best Use'", f3: "Expansão Global", f4: "Inteligência Multicamadas" } },
       footer: { disclaimer: "O Cytyos é uma ferramenta de suporte à decisão. A IA pode variar. Consulte sempre um responsável técnico." },
       pricing: { badge: "Oportunidade Founder", title: "Desbloqueie a Plataforma", warning: "Aviso: O preço aumentará no lançamento da v1.0.", beta_tag: "NO AR", beta_title: "Você Leva Hoje (Beta)", v1_tag: "GARANTIDO MARÇO", v1_title: "Versão 1.0 (Março)", v2_tag: "FUTURO 2026", v2_title: "Versão 2.0 (Core)", beta_f1: "Visualização 3D Instantânea", beta_f2: "Controle Manual de Terreno", beta_f3: "Calculadora de VGV", beta_f4: "Projetos Ilimitados", v1_f1: "Dados de Zoneamento Automáticos", v1_f2: "Volumetria Totalmente Modelável", v1_f3: "Exportação PDF Profissional", v1_f4: "Comparador de Terrenos", v2_f1: "Upload BIM/DWG para Análise", v2_f2: "Mapas de Calor Preditivos (IA)", v2_f3: "Recomendador 'Highest & Best Use'", v2_f4: "Inteligência Multicamadas", small_title: "Projeto pequeno?", small_desc: "Gere apenas um relatório PDF.", btn_pdf: "Comprar 1 Relatório ($17)", select_plan: "Escolha seu Plano", monthly: "Mensual", yearly: "Anual", save_pct: "ECONOMIZE 77%", save_amount_badge: "ECONOMIZE $999", plan_annual: "Founder Anual", plan_monthly: "Acesso Padrão", sub_annual: "Garante acesso v1.0 & v2.0.", sub_monthly: "Cancele quando quiser.", future_price: "Preço Futuro", btn_annual: "Garantir Preço Founder ($296)", btn_monthly: "Assinar Mensal", coupon_label: "Tem um código de acesso?", coupon_placeholder: "DIGITE SEU CUPOM", validate: "Validar", monthly_warning: "Ao selecionar mensal, você tem acesso apenas ao que está pronto hoje.", monthly_warning_highlight: "Mude para Anual para garantir V1.0 e V2.0" }
@@ -101,7 +118,7 @@ const resources = {
         tab_signin: "Ingresar",
         tab_signup: "Crear Cuenta",
         email_label: "Correo",
-        email_placeholder: "nombre@empresa.com", // <--- NOVO (Espanhol)
+        email_placeholder: "nombre@empresa.com", 
         password_label: "Contraseña",
         forgot_link: "¿Olvidaste la contraseña?",
         btn_signin: "Acceder a la Plataforma",
@@ -146,7 +163,7 @@ const resources = {
         tab_signin: "Connexion",
         tab_signup: "Créer un Compte",
         email_label: "E-mail",
-        email_placeholder: "nom@entreprise.com", // <--- NOVO (Francês)
+        email_placeholder: "nom@entreprise.com", 
         password_label: "Mot de passe",
         forgot_link: "Mot de passe oublié ?",
         btn_signin: "Accéder à la Plateforme",
@@ -191,7 +208,7 @@ const resources = {
         tab_signin: "登录",
         tab_signup: "创建账户",
         email_label: "电子邮件",
-        email_placeholder: "name@company.com", // <--- NOVO (Inglês padrão p/ Tech)
+        email_placeholder: "name@company.com", 
         password_label: "密码",
         forgot_link: "忘记密码？",
         btn_signin: "进入平台",
