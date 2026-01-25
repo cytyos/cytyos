@@ -169,8 +169,7 @@ function App() {
             {/* --- NOVAS ROTAS DA OPERAÇÃO BRASIL --- */}
             <Route path="/oferta-brasil" element={<BrazilOfferPage />} />
             <Route path="/obrigado" element={<ThankYouPage />} />
-            {/* -------------------------------------- */}
-
+            
             <Route path="/privacy" element={
                 <Suspense fallback={<LoadingScreen />}>
                     <PrivacyPage />
@@ -189,26 +188,20 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    {/* LAYOUT RESTAURADO E OTIMIZADO: 
-                        Removemos o flex-col que causava delay no mobile.
-                        O container agora é apenas RELATIVE.
-                    */}
+                    {/* CORREÇÃO AQUI: Removemos 'flex flex-col' e usamos apenas 'relative'. */}
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
                         
-                        {/* PROMO BAR (OVERLAY): 
-                           Fica absoluta no topo (z-60). 
-                           O mapa carrega por baixo dela sem esperar layout calculation.
-                        */}
+                        {/* A PromoBar agora flutua POR CIMA do mapa (z-60) */}
                         <div className="absolute top-0 left-0 w-full z-[60]">
-                            <PromoBar />
+                           <PromoBar />
                         </div>
 
                         <MobileOptimizationWarning />
-                        
+
                         <Suspense fallback={<LoadingScreen />}>
                             <MapboxMap />
                             <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                                {/* Adicionamos md:mt-8 para empurrar a busca para baixo no Desktop se a barra aparecer */}
+                                {/* Adicionamos uma margem extra no Desktop (md:mt-8) para a busca não ficar escondida atrás da PromoBar */}
                                 <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4 md:mt-8"> 
                                     <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
                                 </div>
