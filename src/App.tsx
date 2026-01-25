@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { X, Monitor, Zap } from 'lucide-react'; // Adicionei Zap
+import { X, Monitor, Zap } from 'lucide-react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -16,6 +16,9 @@ import './i18n';
 // --- NOVAS PÁGINAS (OPERACAO BRASIL) ---
 import { BrazilOfferPage } from './pages/BrazilOfferPage';
 import { ThankYouPage } from './pages/ThankYouPage';
+
+// --- NOVO COMPONENTE (PROMO BAR) ---
+import { PromoBar } from './components/PromoBar';
 
 // --- LAZY IMPORTS (SAFE MODE) ---
 const MapboxMap = React.lazy(() => import('./components/map/MapboxMap').then(module => ({ default: module.MapboxMap })));
@@ -40,7 +43,7 @@ const LoadingScreen = () => (
 // --- MOBILE WARNING (ATUALIZADO PARA UPSELL) ---
 const MobileOptimizationWarning = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const navigate = useNavigate(); // Hook para navegar
+  const navigate = useNavigate();
 
   if (!isVisible) return null;
   return (
@@ -49,7 +52,6 @@ const MobileOptimizationWarning = () => {
         <button onClick={() => setIsVisible(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
         <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><Zap className="w-6 h-6 text-green-400" /></div>
         
-        {/* COPY ALTERADA - UPSELL BRASIL */}
         <h3 className="text-white font-bold text-lg mb-2">Oferta Exclusiva Brasil</h3>
         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
           Bem-vindo! A modelagem 3D é otimizada para Desktop. Mas aproveite que está aqui para garantir o preço especial do Brasil (12x R$ 97).
@@ -167,8 +169,7 @@ function App() {
             {/* --- NOVAS ROTAS DA OPERAÇÃO BRASIL --- */}
             <Route path="/oferta-brasil" element={<BrazilOfferPage />} />
             <Route path="/obrigado" element={<ThankYouPage />} />
-            {/* -------------------------------------- */}
-
+            
             <Route path="/privacy" element={
                 <Suspense fallback={<LoadingScreen />}>
                     <PrivacyPage />
@@ -187,19 +188,30 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none">
-                        <MobileOptimizationWarning />
-                        <Suspense fallback={<LoadingScreen />}>
-                            <MapboxMap />
-                            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
-                                <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
-                                    <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
+                    {/* LAYOUT ATUALIZADO PARA PROMO BAR:
+                        - flex-col: Para empilhar a PromoBar e o Mapa.
+                        - PromoBar: Fica no topo.
+                        - div flex-1: Ocupa o resto da tela para o Mapa.
+                    */}
+                    <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none flex flex-col">
+                        
+                        {/* BARRA PROMOCIONAL (SÓ APARECE SE FOR BRASIL + FREE) */}
+                        <PromoBar />
+
+                        <div className="relative flex-1 w-full h-full overflow-hidden">
+                            <MobileOptimizationWarning />
+                            <Suspense fallback={<LoadingScreen />}>
+                                <MapboxMap />
+                                <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between">
+                                    <div className="w-full p-4 flex justify-center items-start pt-16 md:pt-4"> 
+                                        <div className="pointer-events-auto w-full max-w-md"><MapControls /></div>
+                                    </div>
+                                    <div className="flex-1"></div>
                                 </div>
-                                <div className="flex-1"></div>
-                            </div>
-                            <SmartPanel />
-                        </Suspense>
-                        <Footer />
+                                <SmartPanel />
+                            </Suspense>
+                            <Footer />
+                        </div>
                     </div>
                 </ProtectedRoute>
             } />
