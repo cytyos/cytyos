@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Zap, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Zap, ShieldCheck, CalendarClock } from 'lucide-react'; // Adicionei CalendarClock
 import logoFull from '../assets/logo-full.png';
 
 export const BrazilOfferPage = () => {
@@ -15,13 +15,13 @@ export const BrazilOfferPage = () => {
 
         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
           IA de Viabilidade:<br />
-          <span className="text-green-400">Acesso Vitalício (Lote Brasil)</span>
+          <span className="text-green-400">Acesso Anual (Lote Brasil)</span>
         </h1>
 
         <p className="text-gray-400 text-base md:text-lg mb-8 leading-relaxed max-w-lg">
-          Garanta acesso anual à IA que gera estudos de viabilidade e volumetria em segundos.
+          Garanta <strong>1 ano de acesso completo</strong> à IA que gera estudos de viabilidade e volumetria em segundos. Inclui todas as atualizações (v1.0 e v2.0).
           <br /><br />
-          Preço Global: <span className="line-through text-gray-600">US$ 296</span>
+          Preço Global: <span className="line-through text-gray-600">US$ 296/ano</span>
           <br />
           <span className="text-white font-bold text-xl">Preço por este link: 12x R$ 97,10</span>
         </p>
@@ -33,7 +33,7 @@ export const BrazilOfferPage = () => {
             </h4>
             <p className="text-gray-400 text-xs leading-relaxed">
                 Esta é uma oferta exclusiva offline. Ao entrar na plataforma, você poderá ver preços em Dólar. 
-                <strong className="text-white"> Ignore.</strong> Seu status será atualizado para PREMIUM manualmente em até 2 horas após o pagamento.
+                <strong className="text-white"> Ignore.</strong> Seu status será atualizado para PREMIUM (Plano Anual) manualmente em até 2 horas após o pagamento.
             </p>
         </div>
 
@@ -43,14 +43,14 @@ export const BrazilOfferPage = () => {
             rel="noopener noreferrer"
             className="w-full md:w-auto bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-green-900/20 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
         >
-            Quero meu Acesso (R$ 97,10)
+            Garantir Acesso Anual (R$ 97,10/mês)
         </a>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 text-left w-full max-w-md">
             <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Volumetria 3D Ilimitada</div>
             <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Exportação PDF</div>
-            <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Dados de Zoneamento</div>
-            <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Garantia de 7 Dias</div>
+            <div className="flex items-center gap-2 text-xs text-gray-400"><CalendarClock className="w-4 h-4 text-green-500"/> Acesso por 12 Meses</div>
+            <div className="flex items-center gap-2 text-xs text-gray-400"><CheckCircle2 className="w-4 h-4 text-green-500"/> Atualizações v1.0 e v2.0</div>
         </div>
 
       </div>
