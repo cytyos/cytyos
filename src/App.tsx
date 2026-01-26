@@ -152,6 +152,18 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 };
 
 function App() {
+  
+  // --- INICIALIZAÇÃO DO CLARITY (MANUAL) ---
+  useEffect(() => {
+    // @ts-ignore
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "v7h3wruqnl"); // SEU ID AQUI
+  }, []);
+  // ----------------------------------------
+
   return (
     <AuthProvider>
         <SpeedInsights /> <Analytics />
@@ -182,10 +194,10 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    {/* VOLTAMOS PARA FLEX-COL: Mais seguro para renderização */}
+                    {/* LAYOUT: Flex-Col (Mais seguro para renderização do Mapa) */}
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none flex flex-col">
                         
-                        {/* PromoBar no fluxo normal (empurra o mapa para baixo) */}
+                        {/* PromoBar no fluxo normal */}
                         <PromoBar />
 
                         <div className="relative flex-1 w-full h-full overflow-hidden">
