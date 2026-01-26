@@ -61,10 +61,19 @@ export const BrazilOfferPage = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in">
+            
+            {/* ALTERAÇÃO AQUI: 
+               Transformado de div para button.
+               Adicionado onClick={handleTestDrive}.
+               Adicionado classes de hover e cursor pointer.
+            */}
+            <button 
+                onClick={handleTestDrive}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
+            >
                 <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
                 Inteligência Artificial para Arquitetura & Real Estate
-            </div>
+            </button>
 
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]">
                 Estudos de Viabilidade e <br className="hidden md:block" />
