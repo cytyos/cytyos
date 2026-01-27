@@ -37,13 +37,10 @@ export const BrazilOfferPage = () => {
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full z-50 bg-[#050608]/95 backdrop-blur-none md:backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            {/* CORREÇÃO DO LOGO ALONGADO:
-               Adicionado 'w-auto' para manter a proporção correta baseada na altura (h-6/h-7).
-            */}
             <img 
                 src={logoFull} 
                 alt="Cytyos" 
-                className="h-6 md:h-7 w-auto opacity-90" // w-auto é o segredo aqui
+                className="h-6 md:h-7 w-auto opacity-90"
                 height="28"
                 // @ts-ignore
                 fetchPriority="high"
@@ -61,30 +58,33 @@ export const BrazilOfferPage = () => {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="pt-32 pb-16 px-6 relative overflow-hidden">
+      {/* AJUSTE AQUI: pt-24 no mobile (antes era pt-32). Traz tudo para cima. */}
+      <section className="pt-24 md:pt-32 pb-12 md:pb-16 px-6 relative overflow-hidden">
         
-        {/* Optimization: Heavy blur hidden on mobile */}
+        {/* Background Glow (Desktop Only) */}
         <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
             
-            {/* PILL BUTTON (Botão Superior) */}
+            {/* PILL BUTTON */}
             <button 
                 onClick={handleTestDrive}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 md:animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                // AJUSTE: mb-4 no mobile (era mb-6)
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-4 md:mb-6 md:animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
             >
                 <span className="w-2 h-2 rounded-full bg-indigo-400 md:animate-pulse" />
                 Inteligência Artificial para Arquitetura & Real Estate
             </button>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1] text-white">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 md:mb-6 leading-[1.1] text-white">
                 Estudos de Viabilidade e <br className="hidden md:block" />
                 <span className="text-indigo-300 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-white md:via-indigo-200 md:to-indigo-400">
                     Volumetria em Segundos.
                 </span>
             </h1>
 
-            <p className="text-gray-300 md:text-gray-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
+            {/* AJUSTE: mb-6 no mobile (era mb-10) */}
+            <p className="text-gray-300 md:text-gray-400 text-lg md:text-xl mb-6 md:mb-10 leading-relaxed max-w-2xl mx-auto">
                 Não perca dias calculando áreas e desenhando massas manualmente. 
                 Teste a ferramenta que automatiza o zoneamento e o VGV do seu terreno.
             </p>
@@ -100,26 +100,25 @@ export const BrazilOfferPage = () => {
                 </button>
             </div>
             
-            {/* --- NOVA SEÇÃO DE GARANTIA EM EVIDÊNCIA --- */}
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 animate-fade-in relative z-20">
+            {/* --- SEÇÃO DE GARANTIA --- */}
+            {/* AJUSTE: mt-6 no mobile (era mt-8), um pouco mais compacto */}
+            <div className="mt-6 md:mt-8 flex flex-col items-center justify-center gap-3 animate-fade-in relative z-20">
                 {/* Badge da Garantia */}
-                <div className="inline-flex items-center gap-3 text-indigo-100 bg-[#151720] px-5 py-3 rounded-2xl border border-indigo-500/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]">
-                    <div className="bg-indigo-500/20 p-2 rounded-full shrink-0">
-                         <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                <div className="inline-flex items-center gap-3 text-indigo-100 bg-[#151720] px-4 py-2 md:px-5 md:py-3 rounded-2xl border border-indigo-500/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]">
+                    <div className="bg-indigo-500/20 p-1.5 md:p-2 rounded-full shrink-0">
+                         <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-indigo-400" />
                     </div>
                     <span className="text-xs md:text-sm text-left leading-snug">
                         <strong className="text-white font-extrabold block mb-0.5">Garantia Incondicional de 7 Dias.</strong>
-                        <span className="opacity-90">Devolvemos seu valor integral se você não gostar da plataforma.</span>
+                        <span className="opacity-90">Devolvemos seu valor integral se você não gostar.</span>
                     </span>
                 </div>
                 
                 {/* Aviso de Teste Grátis */}
-                 <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-2 opacity-80">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Não é necessário cartão de crédito para o teste gratuito.
+                 <p className="text-[10px] md:text-[11px] text-gray-500 flex items-center gap-1.5 mt-1 opacity-80">
+                    <CheckCircle2 className="w-3 h-3 md:w-3.5 md:h-3.5" /> Não é necessário cartão de crédito para testar.
                 </p>
             </div>
-             {/* ------------------------------------------- */}
-
         </div>
       </section>
 
@@ -192,7 +191,6 @@ export const BrazilOfferPage = () => {
                 Quero Garantir a Oferta Brasil
             </a>
 
-            {/* REMOVIDO O BADGE DE GARANTIA DAQUI POIS JÁ ESTÁ NO TOPO */}
             <p className="text-[9px] text-gray-600 mt-4 leading-tight">
                 *Ativação manual em até 2h. Você receberá um e-mail de confirmação.
             </p>
