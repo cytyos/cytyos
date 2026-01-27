@@ -34,15 +34,16 @@ export const BrazilOfferPage = () => {
   return (
     <div className="min-h-screen bg-[#050608] text-white font-sans selection:bg-indigo-500 selection:text-white pb-20">
       
-      {/* NAVBAR: Optimized for LCP */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 w-full z-50 bg-[#050608]/95 backdrop-blur-none md:backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            {/* Added fetchPriority for LCP optimization */}
+            {/* CORREÇÃO DO LOGO ALONGADO:
+               Adicionado 'w-auto' para manter a proporção correta baseada na altura (h-6/h-7).
+            */}
             <img 
                 src={logoFull} 
                 alt="Cytyos" 
-                className="h-6 md:h-7 opacity-90"
-                width="120"
+                className="h-6 md:h-7 w-auto opacity-90" // w-auto é o segredo aqui
                 height="28"
                 // @ts-ignore
                 fetchPriority="high"
@@ -62,22 +63,20 @@ export const BrazilOfferPage = () => {
       {/* --- HERO SECTION --- */}
       <section className="pt-32 pb-16 px-6 relative overflow-hidden">
         
-        {/* OPTIMIZATION: Heavy blur hidden on mobile (LCP fix), visible only on Desktop */}
+        {/* Optimization: Heavy blur hidden on mobile */}
         <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
             
-            {/* PILL BUTTON */}
+            {/* PILL BUTTON (Botão Superior) */}
             <button 
                 onClick={handleTestDrive}
                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 md:animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
             >
-                {/* Pulse animation only on desktop to save mobile GPU */}
                 <span className="w-2 h-2 rounded-full bg-indigo-400 md:animate-pulse" />
                 Inteligência Artificial para Arquitetura & Real Estate
             </button>
 
-            {/* TITLE: Flat render on mobile, Gradient on Desktop (optional, but gradient usually ok) */}
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1] text-white">
                 Estudos de Viabilidade e <br className="hidden md:block" />
                 <span className="text-indigo-300 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-white md:via-indigo-200 md:to-indigo-400">
@@ -90,7 +89,8 @@ export const BrazilOfferPage = () => {
                 Teste a ferramenta que automatiza o zoneamento e o VGV do seu terreno.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center items-center">
+            {/* BOTÕES PRINCIPAIS */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center items-center relative z-20">
                 <button 
                     onClick={handleTestDrive}
                     className="w-full sm:w-auto bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-xl font-bold text-base shadow-none md:shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
@@ -98,13 +98,28 @@ export const BrazilOfferPage = () => {
                     <Play className="w-4 h-4 fill-current" />
                     Testar Plataforma Gratuitamente
                 </button>
-                <p className="text-xs text-gray-500 sm:hidden mt-2">Não requer cartão de crédito para testar.</p>
             </div>
             
-            <div className="mt-6 flex justify-center items-center gap-6 text-xs text-gray-500 font-medium">
-                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Sem cartão para começar</span>
-                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Resultados imediatos</span>
+            {/* --- NOVA SEÇÃO DE GARANTIA EM EVIDÊNCIA --- */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 animate-fade-in relative z-20">
+                {/* Badge da Garantia */}
+                <div className="inline-flex items-center gap-3 text-indigo-100 bg-[#151720] px-5 py-3 rounded-2xl border border-indigo-500/30 shadow-[0_4px_20px_rgba(79,70,229,0.15)]">
+                    <div className="bg-indigo-500/20 p-2 rounded-full shrink-0">
+                         <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <span className="text-xs md:text-sm text-left leading-snug">
+                        <strong className="text-white font-extrabold block mb-0.5">Garantia Incondicional de 7 Dias.</strong>
+                        <span className="opacity-90">Devolvemos seu valor integral se você não gostar da plataforma.</span>
+                    </span>
+                </div>
+                
+                {/* Aviso de Teste Grátis */}
+                 <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-2 opacity-80">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Não é necessário cartão de crédito para o teste gratuito.
+                </p>
             </div>
+             {/* ------------------------------------------- */}
+
         </div>
       </section>
 
@@ -177,16 +192,10 @@ export const BrazilOfferPage = () => {
                 Quero Garantir a Oferta Brasil
             </a>
 
-            {/* TRUST BADGE (ADDED) */}
-            <div className="mt-4 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1.5 text-[#A1A1AA]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                    <span className="text-[10px] font-medium tracking-wide">7-Day Money-Back Guarantee</span>
-                </div>
-                <p className="text-[9px] text-gray-600 leading-tight">
-                    *Ativação manual em até 2h. Você receberá um e-mail de confirmação.
-                </p>
-            </div>
+            {/* REMOVIDO O BADGE DE GARANTIA DAQUI POIS JÁ ESTÁ NO TOPO */}
+            <p className="text-[9px] text-gray-600 mt-4 leading-tight">
+                *Ativação manual em até 2h. Você receberá um e-mail de confirmação.
+            </p>
         </div>
 
       </section>
