@@ -4,29 +4,24 @@ import {
   CheckCircle2, Zap, ShieldCheck, Clock, Layers, TrendingUp, 
   Star, FileText, ArrowRight, Play, LogIn, ChevronDown 
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext'; // Importando contexto de Auth
+import { useAuth } from '../contexts/AuthContext';
 import logoFull from '../assets/logo-full.png';
 
 export const BrazilOfferPage = () => {
   const navigate = useNavigate();
-  const { session } = useAuth(); // Verifica se já está logado
+  const { session } = useAuth();
 
-  // AÇÃO PRINCIPAL: CAPTURA DE LEAD (SOFT SELL)
+  // LEAD CAPTURE ACTION (SOFT SELL)
   const handleTestDrive = () => {
-      // 1. Marca que o usuário tem direito à oferta (para a PromoBar aparecer no app depois)
       localStorage.setItem('cytyos_brazil_offer_active', 'true');
       
-      // 2. Roteamento Inteligente
       if (session) {
-          // Se já está logado, vai direto pro app trabalhar
           navigate('/app');
       } else {
-          // Se não, vai para o cadastro (SignUp)
           navigate('/login', { state: { tab: 'signup' } });
       }
   };
 
-  // AÇÃO SECUNDÁRIA: LOGIN
   const handleLogin = () => {
       localStorage.setItem('cytyos_brazil_offer_active', 'true');
       navigate('/login', { state: { tab: 'signin' } });
@@ -39,10 +34,19 @@ export const BrazilOfferPage = () => {
   return (
     <div className="min-h-screen bg-[#050608] text-white font-sans selection:bg-indigo-500 selection:text-white pb-20">
       
-      {/* NAVBAR MINIMALISTA */}
-      <nav className="fixed top-0 w-full z-50 bg-[#050608]/80 backdrop-blur-md border-b border-white/5">
+      {/* NAVBAR: Optimized for LCP */}
+      <nav className="fixed top-0 w-full z-50 bg-[#050608]/95 backdrop-blur-none md:backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <img src={logoFull} alt="Cytyos" className="h-6 md:h-7 opacity-90" />
+            {/* Added fetchPriority for LCP optimization */}
+            <img 
+                src={logoFull} 
+                alt="Cytyos" 
+                className="h-6 md:h-7 opacity-90"
+                width="120"
+                height="28"
+                // @ts-ignore
+                fetchPriority="high"
+            />
             <div className="flex items-center gap-4">
                 <button onClick={scrollToPricing} className="hidden md:block text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-wider">
                     Ver Oferta Brasil
@@ -55,34 +59,33 @@ export const BrazilOfferPage = () => {
         </div>
       </nav>
 
-      {/* --- HERO SECTION (NOVA: FOCO EM CADASTRO/TESTE) --- */}
+      {/* --- HERO SECTION --- */}
       <section className="pt-32 pb-16 px-6 relative overflow-hidden">
-        {/* Background Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
+        
+        {/* OPTIMIZATION: Heavy blur hidden on mobile (LCP fix), visible only on Desktop */}
+        <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
             
-            {/* ALTERAÇÃO AQUI: 
-               Transformado de div para button.
-               Adicionado onClick={handleTestDrive}.
-               Adicionado classes de hover e cursor pointer.
-            */}
+            {/* PILL BUTTON */}
             <button 
                 onClick={handleTestDrive}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6 md:animate-fade-in hover:bg-indigo-500/20 transition-colors cursor-pointer"
             >
-                <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                {/* Pulse animation only on desktop to save mobile GPU */}
+                <span className="w-2 h-2 rounded-full bg-indigo-400 md:animate-pulse" />
                 Inteligência Artificial para Arquitetura & Real Estate
             </button>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+            {/* TITLE: Flat render on mobile, Gradient on Desktop (optional, but gradient usually ok) */}
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1] text-white">
                 Estudos de Viabilidade e <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
+                <span className="text-indigo-300 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-white md:via-indigo-200 md:to-indigo-400">
                     Volumetria em Segundos.
                 </span>
             </h1>
 
-            <p className="text-gray-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-gray-300 md:text-gray-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
                 Não perca dias calculando áreas e desenhando massas manualmente. 
                 Teste a ferramenta que automatiza o zoneamento e o VGV do seu terreno.
             </p>
@@ -90,7 +93,7 @@ export const BrazilOfferPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center items-center">
                 <button 
                     onClick={handleTestDrive}
-                    className="w-full sm:w-auto bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-xl font-bold text-base shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
+                    className="w-full sm:w-auto bg-white text-black hover:bg-gray-200 px-8 py-4 rounded-xl font-bold text-base shadow-none md:shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
                 >
                     <Play className="w-4 h-4 fill-current" />
                     Testar Plataforma Gratuitamente
@@ -105,7 +108,7 @@ export const BrazilOfferPage = () => {
         </div>
       </section>
 
-      {/* --- GRID DE BENEFÍCIOS (A PONTE) --- */}
+      {/* --- BENEFITS GRID --- */}
       <section className="py-12 border-y border-white/5 bg-[#0a0c10]">
         <div className="max-w-5xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -128,7 +131,7 @@ export const BrazilOfferPage = () => {
         </div>
       </section>
 
-      {/* --- OFERTA (HARD SELL NO FUNDO) --- */}
+      {/* --- OFFER SECTION --- */}
       <section id="offer-section" className="pt-20 px-6 max-w-4xl mx-auto flex flex-col items-center text-center">
         
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
@@ -139,7 +142,7 @@ export const BrazilOfferPage = () => {
         </p>
 
         {/* PRICING CARD */}
-        <div className="bg-[#0f111a] border border-indigo-500/30 rounded-3xl p-8 w-full max-w-lg shadow-[0_0_50px_rgba(79,70,229,0.1)] relative overflow-hidden">
+        <div className="bg-[#0f111a] border border-indigo-500/30 rounded-3xl p-8 w-full max-w-lg shadow-none md:shadow-[0_0_50px_rgba(79,70,229,0.1)] relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
                 Lote Brasil
             </div>
@@ -164,7 +167,7 @@ export const BrazilOfferPage = () => {
                 <li className="flex items-center gap-2 text-xs text-gray-300"><CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0"/> <span>Preço travado para v2.0 (IA Preditiva)</span></li>
             </ul>
 
-            {/* BOTÃO DE COMPRA */}
+            {/* CTA BUTTON */}
             <a 
                 href="https://buy.stripe.com/14A4gy75b8ey0ZE1C2gMw07" 
                 target="_blank" 
@@ -173,10 +176,17 @@ export const BrazilOfferPage = () => {
             >
                 Quero Garantir a Oferta Brasil
             </a>
-            
-            <p className="text-[10px] text-gray-500 mt-4 leading-tight">
-                *Ativação manual em até 2h. Você receberá um e-mail de confirmação.
-            </p>
+
+            {/* TRUST BADGE (ADDED) */}
+            <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="flex items-center gap-1.5 text-[#A1A1AA]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                    <span className="text-[10px] font-medium tracking-wide">7-Day Money-Back Guarantee</span>
+                </div>
+                <p className="text-[9px] text-gray-600 leading-tight">
+                    *Ativação manual em até 2h. Você receberá um e-mail de confirmação.
+                </p>
+            </div>
         </div>
 
       </section>
