@@ -153,16 +153,34 @@ const AdminGuard = ({ children, allowedEmail }: { children: React.ReactNode, all
 
 function App() {
   
-  // --- INICIALIZAÇÃO DO CLARITY (MANUAL) ---
+  // --- MICROSOFT CLARITY INIT ---
   useEffect(() => {
     // @ts-ignore
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "v7h3wruqnl"); // SEU ID AQUI
+    })(window, document, "clarity", "script", "v7h3wruqnl"); 
   }, []);
-  // ----------------------------------------
+
+  // --- FACEBOOK PIXEL INIT (GLOBAL) ---
+  useEffect(() => {
+    // @ts-ignore
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    
+    // @ts-ignore
+    window.fbq('init', '1969268386987761'); // SEU ID DE PIXEL
+    // @ts-ignore
+    window.fbq('track', 'PageView');
+  }, []);
+  // ------------------------------------
 
   return (
     <AuthProvider>
@@ -194,10 +212,9 @@ function App() {
             
             <Route path="/app" element={
                 <ProtectedRoute>
-                    {/* LAYOUT: Flex-Col (Mais seguro para renderização do Mapa) */}
+                    {/* LAYOUT SEGURO: Flex-Col */}
                     <div className="h-[100dvh] w-full overflow-hidden bg-gray-900 relative overscroll-none touch-none flex flex-col">
                         
-                        {/* PromoBar no fluxo normal */}
                         <PromoBar />
 
                         <div className="relative flex-1 w-full h-full overflow-hidden">
