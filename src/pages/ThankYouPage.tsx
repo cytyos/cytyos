@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
 import logoFull from '../assets/logo-full.png';
 
 export const ThankYouPage = () => {
   const navigate = useNavigate();
+
+  // --- FACEBOOK PIXEL TRACKING ---
+  useEffect(() => {
+    // Verifica se o objeto fbq existe (se o Pixel carregou no App.tsx)
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'Purchase', {
+        currency: "BRL",
+        value: 97.00, // Valor enviado para otimização do Ads
+        content_name: "Assinatura Cytios - Oferta Brasil"
+      });
+      
+      // Opcional: Log para você ver no console se disparou
+      console.log("✅ Pixel Purchase Event Fired: R$ 97.00");
+    }
+  }, []);
+  // -------------------------------
 
   return (
     <div className="min-h-screen bg-[#050608] text-white flex items-center justify-center p-6">
